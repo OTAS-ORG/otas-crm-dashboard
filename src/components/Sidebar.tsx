@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, UserCheck, Settings, LogOut, X } from 'lucide-react';
+import { Users, UserCheck, LogOut, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -29,12 +29,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     <>
       {/* Mobile Backdrop overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden transition-opacity"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar container */}
       <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0A0F1C] text-slate-300 flex flex-col border-r border-slate-800/50 shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shadow-xl min-h-screen ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between">
@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
             </div>
           </div>
           {/* Close button for mobile */}
-          <button 
+          <button
             onClick={onClose}
             className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors"
           >
