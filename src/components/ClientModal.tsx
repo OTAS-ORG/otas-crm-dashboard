@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Client, AuditLog, ClientStatus } from '../types';
 import { clientService } from '../services/api';
-import { X, Save, MessageSquare, History, User, Phone, Building2, Calendar, FileText, CheckCircle } from 'lucide-react';
+import { X, Save, MessageSquare, History, User, Phone, Building2, Calendar, FileText, CheckCircle, Trash2 } from 'lucide-react';
 
 interface ClientModalProps {
   clientId?: string;
@@ -73,6 +73,22 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
     }
   };
 
+  const handleDelete = async () => {
+    if (!clientId) return;
+    if (window.confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+      try {
+        setLoading(true);
+        await clientService.deleteClient(clientId);
+        onSave();
+        onClose();
+      } catch (error) {
+        console.error('Error deleting client:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleAddLog = async () => {
     if (!newLog.trim() || !clientId) return;
     try {
@@ -86,9 +102,23 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
 
   if (!isOpen) return null;
 
-  const statuses: ClientStatus[] = [
+  const preSaleStatuses: ClientStatus[] = [
     'Inquiry', 'Service Explained', 'Meeting Made', 'Sent Proposal',
     'Sent Contract', 'Signed', 'Ghosted', 'Follow-up needed'
+  ];
+
+  const postSaleStatuses: ClientStatus[] = [
+    'Signed', 'In-Development', 'Delivered'
+  ];
+
+  const currentStatuses = (client.isPostSale || client.status === 'Signed') 
+    ? postSaleStatuses 
+    : preSaleStatuses;
+
+  const industries = [
+    'Technology', 'E-commerce', 'Real Estate', 'Education', 
+    'Healthcare', 'Finance', 'Food & Beverage', 'Manufacturing', 
+    'Logistics', 'Other'
   ];
 
   return (
@@ -143,17 +173,34 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                 {/* Basic Info */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Basic Information</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <Building2 className="w-4 h-4 mr-2" /> Company Name
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                      value={client.companyName}
-                      onChange={(e) => setClient({ ...client, companyName: e.target.value })}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                        <Building2 className="w-4 h-4 mr-2" /> Company Name
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
+                        value={client.companyName}
+                        onChange={(e) => setClient({ ...client, companyName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                        Industry
+                      </label>
+                      <select
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
+                        value={client.industry || ''}
+                        onChange={(e) => setClient({ ...client, industry: e.target.value })}
+                      >
+                        <option value="">Select Industry</option>
+                        {industries.map(ind => (
+                          <option key={ind} value={ind}>{ind}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -194,6 +241,18 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      Client Background Note
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Key info about the client, their business, or previous interactions..."
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
+                      value={client.backgroundNote}
+                      onChange={(e) => setClient({ ...client, backgroundNote: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                       <Calendar className="w-4 h-4 mr-2" /> Inquiry Date
                     </label>
                     <input
@@ -230,7 +289,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                       value={client.status}
                       onChange={(e) => setClient({ ...client, status: e.target.value as ClientStatus })}
                     >
-                      {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                      {currentStatuses.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   {client.status === 'Follow-up needed' && (
@@ -313,22 +372,37 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                 </div>
               )}
 
-              <div className="flex justify-end pt-6 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="mr-4 px-6 py-2 border border-gray-300 rounded-lg text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center"
-                >
-                  <Save className="w-5 h-5 mr-2" />
-                  {loading ? 'Saving...' : 'Save Client'}
-                </button>
+              <div className="flex justify-between items-center pt-6 border-t border-gray-100">
+                <div>
+                  {clientId && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={loading}
+                      className="px-6 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition-colors flex items-center"
+                    >
+                      <Trash2 className="w-5 h-5 mr-2" />
+                      Delete Client
+                    </button>
+                  )}
+                </div>
+                <div className="flex">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="mr-4 px-6 py-2 border border-gray-300 rounded-lg text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center"
+                  >
+                    <Save className="w-5 h-5 mr-2" />
+                    {loading ? 'Saving...' : 'Save Client'}
+                  </button>
+                </div>
               </div>
             </form>
           )}

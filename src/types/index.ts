@@ -12,11 +12,15 @@ export type ClientStatus =
   | 'Sent Contract' 
   | 'Signed' 
   | 'Ghosted' 
-  | 'Follow-up needed';
+  | 'Follow-up needed'
+  | 'In-Development'
+  | 'Delivered';
 
 export interface Client {
   _id: string;
   companyName: string;
+  industry?: string;
+  backgroundNote?: string;
   contactPerson: string;
   contactInfo: string;
   inquiryDate: string;

@@ -47,5 +47,10 @@ export const clientService = {
   addLog: async (id: string, text: string) => {
     const response = await api.post<ApiResponse<Client>>(`/clients/${id}/logs`, { text });
     return response.data.data;
+  },
+  
+  deleteClient: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/clients/${id}`);
+    return response.data;
   }
 };

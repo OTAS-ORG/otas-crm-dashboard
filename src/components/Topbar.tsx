@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Bell, User, Menu } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface TopbarProps {
   onSearch: (query: string) => void;
@@ -7,6 +8,8 @@ interface TopbarProps {
 }
 
 const Topbar: React.FC<TopbarProps> = ({ onSearch, onMenuToggle }) => {
+  const { user } = useAuth();
+
   return (
     <div className="h-16 md:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 shadow-sm transition-all">
       <div className="flex items-center gap-3 md:gap-4 flex-1">
@@ -35,8 +38,8 @@ const Topbar: React.FC<TopbarProps> = ({ onSearch, onMenuToggle }) => {
         
         <div className="flex items-center space-x-4 pl-3 md:pl-6 border-l border-slate-200">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-slate-700">Admin User</p>
-            <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Core Team</p>
+            <p className="text-sm font-semibold text-slate-700">{user?.username}</p>
+            <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{user?.role}</p>
           </div>
           <button className="w-8 h-8 md:w-10 md:h-10 bg-primary/10 hover:bg-primary/20 rounded-full flex items-center justify-center text-primary transition-colors border border-primary/20 shadow-sm">
             <User className="w-4 h-4 md:w-5 md:h-5" />
