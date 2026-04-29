@@ -87,7 +87,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
   if (!isOpen) return null;
 
   const statuses: ClientStatus[] = [
-    'Inquiry', 'Service Explained', 'Meeting Made', 'Sent Proposal', 
+    'Inquiry', 'Service Explained', 'Meeting Made', 'Sent Proposal',
     'Sent Contract', 'Signed', 'Ghosted', 'Follow-up needed'
   ];
 
@@ -114,19 +114,19 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
         {/* Tabs */}
         {clientId && (
           <div className="flex border-b border-gray-100 px-6">
-            <button 
+            <button
               onClick={() => setActiveTab('details')}
               className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'details' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
               Details
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('logs')}
               className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'logs' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
               Conversation Logs ({client.conversationLogs?.length || 0})
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('audit')}
               className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'audit' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
@@ -388,9 +388,9 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                   Total Events: {auditLogs.length}
                 </span>
               </div>
-              
+
               <div className="relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
-                {auditLogs.map((log, i) => (
+                {auditLogs.map((log) => (
                   <div key={log._id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active pb-8 last:pb-0">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-300 group-[.is-active]:bg-blue-500 text-slate-500 group-[.is-active]:text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
                       {log.action === 'CREATE' ? <CheckCircle className="w-5 h-5" /> : <History className="w-5 h-5" />}
