@@ -1,0 +1,50 @@
+export interface ConversationLog {
+  _id?: string;
+  text: string;
+  date: string;
+}
+
+export type ClientStatus = 
+  | 'Inquiry' 
+  | 'Service Explained' 
+  | 'Meeting Made' 
+  | 'Sent Proposal' 
+  | 'Sent Contract' 
+  | 'Signed' 
+  | 'Ghosted' 
+  | 'Follow-up needed';
+
+export interface Client {
+  _id: string;
+  companyName: string;
+  contactPerson: string;
+  contactInfo: string;
+  inquiryDate: string;
+  sourceChannel: string;
+  currentProblems?: string;
+  desiredOutcome?: string;
+  servicesExplained?: string;
+  conversationLogs: ConversationLog[];
+  status: ClientStatus;
+  isPostSale: boolean;
+  nextActionDate?: string;
+  contactPersonPosition?: string;
+  
+  // Post-Sale
+  projectId?: string;
+  projectStartDate?: string;
+  projectDeliveryDate?: string;
+  deliverablesSummary?: string;
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditLog {
+  _id: string;
+  clientId: string;
+  user: string;
+  action: string;
+  details: any;
+  timestamp: string;
+}
