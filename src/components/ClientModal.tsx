@@ -24,6 +24,8 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [newLog, setNewLog] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (clientId && isOpen) {
@@ -44,14 +46,14 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
 
   const fetchClientData = async () => {
     try {
-      setLoading(true);
+      setIsFetching(true);
       const data = await clientService.getClient(clientId!);
       setClient(data.client);
       setAuditLogs(data.auditLogs);
     } catch (error) {
       console.error('Error fetching client data:', error);
     } finally {
-      setLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -73,19 +75,18 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
     }
   };
 
-  const handleDelete = async () => {
+  const confirmDelete = async () => {
     if (!clientId) return;
-    if (window.confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
-      try {
-        setLoading(true);
-        await clientService.deleteClient(clientId);
-        onSave();
-        onClose();
-      } catch (error) {
-        console.error('Error deleting client:', error);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      setLoading(true);
+      await clientService.deleteClient(clientId);
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting client:', error);
+    } finally {
+      setLoading(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -123,7 +124,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <div>
@@ -131,9 +132,13 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
               {clientId ? 'Client Details' : 'New Client Inquiry'}
             </h2>
             {clientId && (
-              <p className="text-sm text-gray-500 mt-1">
-                {client.isPostSale ? 'Post-Sale Active' : 'Pre-Sale Lead'} • {client.companyName}
-              </p>
+              <div className="text-sm text-gray-500 mt-1 h-5 flex items-center">
+                {isFetching ? (
+                  <span className="w-48 h-4 bg-gray-200 rounded animate-pulse"></span>
+                ) : (
+                  <>{client.isPostSale ? 'Post-Sale Active' : 'Pre-Sale Lead'} • {client.companyName}</>
+                )}
+              </div>
             )}
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
@@ -166,32 +171,49 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {activeTab === 'details' && (
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex-1 overflow-y-auto p-8 relative">
+          {isFetching ? (
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+              <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-500 font-medium animate-pulse">Loading client details...</p>
+            </div>
+          ) : (
+            <>
+              {activeTab === 'details' && (
+            <form onSubmit={handleSave} className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
                 {/* Basic Info */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Basic Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Building2 className="w-4 h-4 mr-2" /> Company Name
-                      </label>
-                      <input
-                        required
-                        type="text"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                        value={client.companyName}
-                        onChange={(e) => setClient({ ...client, companyName: e.target.value })}
-                      />
+                <div className="space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                      <User className="w-5 h-5" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        Industry
-                      </label>
+                      <h3 className="text-base font-bold text-gray-900">Basic Information</h3>
+                      <p className="text-xs text-gray-500">Essential client details</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Company Name</label>
+                      <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <input
+                          required
+                          type="text"
+                          className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                          value={client.companyName}
+                          onChange={(e) => setClient({ ...client, companyName: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Industry</label>
                       <select
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium"
                         value={client.industry || ''}
                         onChange={(e) => setClient({ ...client, industry: e.target.value })}
                       >
@@ -202,115 +224,142 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                       </select>
                     </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <User className="w-4 h-4 mr-2" /> Contact Person
-                      </label>
-                      <input
-                        required
-                        type="text"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                        value={client.contactPerson}
-                        onChange={(e) => setClient({ ...client, contactPerson: e.target.value })}
-                      />
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Contact Person</label>
+                      <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <input
+                          required
+                          type="text"
+                          className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                          value={client.contactPerson}
+                          onChange={(e) => setClient({ ...client, contactPerson: e.target.value })}
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        Position
-                      </label>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Position</label>
                       <input
                         type="text"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium"
                         value={client.contactPersonPosition}
                         onChange={(e) => setClient({ ...client, contactPersonPosition: e.target.value })}
                       />
                     </div>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <Phone className="w-4 h-4 mr-2" /> Contact Info (Phone/Email)
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                      value={client.contactInfo}
-                      onChange={(e) => setClient({ ...client, contactInfo: e.target.value })}
-                    />
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Contact Info</label>
+                    <div className="relative">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <input
+                        required
+                        type="text"
+                        placeholder="Phone or Email"
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                        value={client.contactInfo}
+                        onChange={(e) => setClient({ ...client, contactInfo: e.target.value })}
+                      />
+                    </div>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      Client Background Note
-                    </label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Client Background</label>
                     <textarea
                       rows={3}
-                      placeholder="Key info about the client, their business, or previous interactions..."
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
+                      placeholder="Key info about the client, business, or previous interactions..."
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium resize-none"
                       value={client.backgroundNote}
                       onChange={(e) => setClient({ ...client, backgroundNote: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" /> Inquiry Date
-                    </label>
-                    <input
-                      required
-                      type="date"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                      value={client.inquiryDate?.split('T')[0]}
-                      onChange={(e) => setClient({ ...client, inquiryDate: e.target.value })}
                     />
                   </div>
                 </div>
 
                 {/* Sales Context */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Sales Context</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Source Channel</label>
-                    <select
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                      value={client.sourceChannel}
-                      onChange={(e) => setClient({ ...client, sourceChannel: e.target.value })}
-                    >
-                      <option>Facebook</option>
-                      <option>TikTok</option>
-                      <option>Client Reference</option>
-                      <option>Social Media Groups</option>
-                      <option>Other</option>
-                    </select>
+                <div className="space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">Sales Context</h3>
+                      <p className="text-xs text-gray-500">Pipeline & status tracking</p>
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Source Channel</label>
+                      <select
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                        value={client.sourceChannel}
+                        onChange={(e) => setClient({ ...client, sourceChannel: e.target.value })}
+                      >
+                        <option>Facebook</option>
+                        <option>TikTok</option>
+                        <option>Client Reference</option>
+                        <option>Social Media Groups</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Inquiry Date</label>
+                      <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <input
+                          required
+                          type="date"
+                          className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                          value={client.inquiryDate?.split('T')[0]}
+                          onChange={(e) => setClient({ ...client, inquiryDate: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status / Stage</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Status / Stage</label>
                     <select
-                      className={`w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700 font-bold ${client.status === 'Signed' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : ''}`}
+                      className={`w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 font-bold ${client.status === 'Signed' ? 'text-emerald-700 bg-emerald-50 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/20' : ''}`}
                       value={client.status}
                       onChange={(e) => setClient({ ...client, status: e.target.value as ClientStatus })}
                     >
                       {currentStatuses.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
+
                   {client.status === 'Follow-up needed' && (
-                    <div className="animate-pulse bg-red-50 p-3 rounded-lg border border-red-100">
-                      <label className="block text-sm font-bold text-red-700 mb-1">Next Action Date *</label>
-                      <input
-                        required
-                        type="date"
-                        className="w-full px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all text-red-700"
-                        value={client.nextActionDate?.split('T')[0]}
-                        onChange={(e) => setClient({ ...client, nextActionDate: e.target.value })}
-                      />
+                    <div className="p-4 bg-red-50/50 border border-red-100 rounded-xl">
+                      <label className="block text-xs font-bold text-red-600 uppercase tracking-wide mb-2">Next Action Date *</label>
+                      <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-red-400">
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <input
+                          required
+                          type="date"
+                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-red-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-red-700 font-bold shadow-sm"
+                          value={client.nextActionDate?.split('T')[0]}
+                          onChange={(e) => setClient({ ...client, nextActionDate: e.target.value })}
+                        />
+                      </div>
                     </div>
                   )}
+
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <FileText className="w-4 h-4 mr-2" /> Desired Outcome
-                    </label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Desired Outcome</label>
                     <textarea
-                      rows={2}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
+                      rows={4}
+                      placeholder="What is the client trying to achieve?"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-medium resize-none"
                       value={client.desiredOutcome}
                       onChange={(e) => setClient({ ...client, desiredOutcome: e.target.value })}
                     />
@@ -320,53 +369,61 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
 
               {/* Post-Sale Section */}
               {(client.isPostSale || client.status === 'Signed') && (
-                <div className="mt-8 pt-8 border-t border-gray-100 bg-blue-50/30 -mx-8 px-8 pb-8">
-                  <div className="flex items-center mb-6">
-                    <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
-                    <h3 className="text-lg font-bold text-gray-800">Post-Sale Project Details</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Project ID *</label>
-                        <input
-                          required={client.isPostSale}
-                          type="text"
-                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                          value={client.projectId}
-                          onChange={(e) => setClient({ ...client, projectId: e.target.value })}
-                        />
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                        <CheckCircle className="w-5 h-5" />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                          <input
-                            type="date"
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                            value={client.projectStartDate?.split('T')[0]}
-                            onChange={(e) => setClient({ ...client, projectStartDate: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Date</label>
-                          <input
-                            type="date"
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                            value={client.projectDeliveryDate?.split('T')[0]}
-                            onChange={(e) => setClient({ ...client, projectDeliveryDate: e.target.value })}
-                          />
-                        </div>
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900">Post-Sale Project Details</h3>
+                        <p className="text-xs text-gray-500">Active development tracking</p>
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Deliverables Summary</label>
-                      <textarea
-                        rows={4}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                        value={client.deliverablesSummary}
-                        onChange={(e) => setClient({ ...client, deliverablesSummary: e.target.value })}
-                        placeholder="Project milestones, handover notes..."
-                      />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-5">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Project ID *</label>
+                          <input
+                            required={client.isPostSale}
+                            type="text"
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-800 font-medium shadow-sm"
+                            value={client.projectId}
+                            onChange={(e) => setClient({ ...client, projectId: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Start Date</label>
+                            <input
+                              type="date"
+                              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-800 font-medium shadow-sm"
+                              value={client.projectStartDate?.split('T')[0]}
+                              onChange={(e) => setClient({ ...client, projectStartDate: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Delivery Date</label>
+                            <input
+                              type="date"
+                              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-800 font-medium shadow-sm"
+                              value={client.projectDeliveryDate?.split('T')[0]}
+                              onChange={(e) => setClient({ ...client, projectDeliveryDate: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Deliverables Summary</label>
+                        <textarea
+                          rows={5}
+                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-gray-800 font-medium resize-none shadow-sm"
+                          value={client.deliverablesSummary}
+                          onChange={(e) => setClient({ ...client, deliverablesSummary: e.target.value })}
+                          placeholder="Project milestones, handover notes, specific feature requests..."
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -377,27 +434,27 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                   {clientId && (
                     <button
                       type="button"
-                      onClick={handleDelete}
+                      onClick={() => setShowDeleteConfirm(true)}
                       disabled={loading}
-                      className="px-6 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition-colors flex items-center"
+                      className="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center"
                     >
                       <Trash2 className="w-5 h-5 mr-2" />
-                      Delete Client
+                      Delete
                     </button>
                   )}
                 </div>
-                <div className="flex">
+                <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="mr-4 px-6 py-2 border border-gray-300 rounded-lg text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
+                    className="px-6 py-2.5 border border-gray-200 rounded-xl text-gray-600 font-bold hover:bg-gray-50 hover:text-gray-900 transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center"
+                    className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/20 transition-all active:scale-95 flex items-center"
                   >
                     <Save className="w-5 h-5 mr-2" />
                     {loading ? 'Saving...' : 'Save Client'}
@@ -488,8 +545,41 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
               </div>
             </div>
           )}
+            </>
+          )}
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Client</h3>
+              <p className="text-gray-500 mb-6">
+                Are you sure you want to delete this client? This action cannot be undone and all associated data will be lost.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={loading}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={loading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center"
+                >
+                  {loading ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
