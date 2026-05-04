@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/Layout';
 import PreSale from './pages/PreSale';
 import PostSale from './pages/PostSale';
+import ClientPortal from './pages/ClientPortal';
+import PublicFormPage from './pages/PublicFormPage';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -25,9 +27,11 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/public/form/:type/:clientId" element={<PublicFormPage />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<PreSale />} />
             <Route path="post-sale" element={<PostSale />} />
+            <Route path="portal/:id" element={<ClientPortal />} />
           </Route>
         </Routes>
       </Router>

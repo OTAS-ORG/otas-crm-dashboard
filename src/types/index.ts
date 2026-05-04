@@ -44,6 +44,30 @@ export interface Client {
   updatedAt: string;
 }
 
+export interface EmailPair {
+  email: string;
+  password: string;
+}
+
+export interface Submission {
+  _id?: string;
+  clientId: string;
+  formType: string;
+  submittedBy: {
+    name: string;
+    position: string;
+  };
+  formData: any;
+  status: 'Pending' | 'Verified' | 'Rejected';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientDashboardData {
+  profile: Client;
+  submissions: Submission[];
+}
+
 export interface AuditLog {
   _id: string;
   clientId: string;
