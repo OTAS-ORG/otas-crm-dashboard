@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserCheck, LayoutDashboard, LogOut, X } from 'lucide-react';
+import { Users, UserCheck, LogOut, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
