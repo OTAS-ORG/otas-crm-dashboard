@@ -58,15 +58,15 @@ const PublicFormPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <img src={logo} alt="OTAS" className="h-10 w-10 object-contain" />
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">OTAS Requirements Form</h1>
+              <h1 className="text-lg md:text-2xl font-bold text-slate-900">OTAS Requirements Form</h1>
               <div className="flex items-center gap-2 text-primary font-semibold mt-1">
                 <Building2 className="w-4 h-4" />
                 <span>{clientInfo.companyName}</span>
               </div>
             </div>
           </div>
-          <div className="text-right">
-            <span className="bg-primary/10 text-primary px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-primary/20">
+          <div className="text-left md:text-right">
+            <span className="bg-primary/10 text-primary px-4 py-2 rounded-xl text-xs md:text-sm font-bold uppercase tracking-widest border border-primary/20">
               {type === 'email' ? 'Business Email Setup' : 'Website Content Brief'}
             </span>
           </div>
