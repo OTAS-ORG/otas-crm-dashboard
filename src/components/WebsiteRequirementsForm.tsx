@@ -130,19 +130,19 @@ const WebsiteRequirementsForm: React.FC<WebsiteRequirementsFormProps> = ({ clien
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
       {/* Stepper Header */}
-      <div className="bg-slate-50 border-b border-slate-200 px-8 py-4 flex justify-between items-center">
+      <div className="bg-slate-50 border-b border-slate-200 px-4 md:px-8 py-4 flex justify-between items-center">
         {[1, 2, 3, 4, 5].map((s) => (
           <div key={s} className="flex items-center">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step === s ? 'bg-primary text-white' : step > s ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
               }`}>
               {step > s ? <CheckCircle className="w-5 h-5" /> : s}
             </div>
-            {s < 5 && <div className={`w-8 md:w-16 h-1 mx-2 rounded ${step > s ? 'bg-emerald-500' : 'bg-slate-200'}`} />}
+            {s < 5 && <div className={`w-4 md:w-16 h-1 mx-1 md:mx-2 rounded ${step > s ? 'bg-emerald-500' : 'bg-slate-200'}`} />}
           </div>
         ))}
       </div>
 
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 border border-red-100">{error}</div>}
 
         {/* SECTION A: General */}
@@ -235,7 +235,7 @@ const WebsiteRequirementsForm: React.FC<WebsiteRequirementsFormProps> = ({ clien
               {formData.homePage.testimonials.map((t, idx) => (
                 <div key={idx} className="p-4 bg-emerald-50/30 rounded-xl space-y-4 border border-emerald-100 relative">
                   <button onClick={() => setFormData({ ...formData, homePage: { ...formData.homePage, testimonials: formData.homePage.testimonials.filter((_, i) => i !== idx) } })} className="absolute top-2 right-2 text-emerald-400 hover:text-emerald-600"><Trash2 className="w-4 h-4" /></button>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input placeholder="Client Name" className="p-2 text-sm border rounded-lg" value={t.name.en} onChange={(e) => {
                       const newT = [...formData.homePage.testimonials];
                       newT[idx].name.en = e.target.value;

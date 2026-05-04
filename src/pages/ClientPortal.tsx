@@ -4,6 +4,7 @@ import { clientService } from '../services/api';
 import type { ClientDashboardData, EmailPair } from '../types';
 import BusinessEmailForm from '../components/BusinessEmailForm';
 import WebsiteRequirementsForm from '../components/WebsiteRequirementsForm';
+import SuccessModal from '../components/SuccessModal';
 import {
   ArrowLeft, Mail, Building, User as UserIcon, ShieldCheck,
   Globe, Link as LinkIcon, Share2, MessageSquare,
@@ -16,6 +17,8 @@ const ClientPortal: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<ClientDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successType, setSuccessType] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -39,7 +42,8 @@ const ClientPortal: React.FC = () => {
   const copyShareLink = (type: 'email' | 'website') => {
     const link = `${window.location.origin}/public/form/${type}/${id}`;
     navigator.clipboard.writeText(link);
-    alert('Public share link copied to clipboard!');
+    setSuccessType(type === 'email' ? 'Business Email' : 'Website Brief');
+    setShowSuccess(true);
   };
 
   if (loading) {
@@ -70,7 +74,7 @@ const ClientPortal: React.FC = () => {
   const websiteSubmission = submissions.find(s => s.formType === 'website_requirements');
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8 pb-20">
+    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6 md:space-y-8 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between">
         <button
@@ -89,13 +93,13 @@ const ClientPortal: React.FC = () => {
       </div>
 
       {/* Hero Client Card */}
-      <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-12 opacity-5">
           <Building className="w-48 h-48" />
         </div>
         <div className="relative z-10 space-y-8">
           <div>
-            <h1 className="text-4xl font-black tracking-tight mb-2">{profile.companyName}</h1>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight mb-2">{profile.companyName}</h1>
             <p className="text-slate-400 font-medium flex items-center gap-2">
               <MapPin className="w-4 h-4" /> {profile.industry || 'Tech Solution Client'}
             </p>
@@ -144,13 +148,13 @@ const ClientPortal: React.FC = () => {
           </div>
         ) : (
           <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-50 px-8 py-4 border-b border-slate-100 flex justify-between items-center">
+            <div className="bg-slate-50 px-4 md:px-8 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                 Submitted by {emailSubmission.submittedBy.name} • {new Date(emailSubmission.createdAt).toLocaleDateString()}
               </p>
               <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-tighter">Verified Secure</span>
             </div>
-            <div className="p-8 overflow-x-auto">
+            <div className="p-4 md:p-8 overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
@@ -205,18 +209,18 @@ const ClientPortal: React.FC = () => {
             <WebsiteRequirementsForm clientId={profile._id} onSuccess={() => fetchDashboardData(profile._id)} />
           </div>
         ) : (
-          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-[#4F46E5] text-white px-10 py-6 flex justify-between items-center">
+          <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-[#4F46E5] text-white px-6 md:px-10 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-1">Full Requirement Document</p>
-                <h3 className="text-2xl font-black tracking-tight">Content Summary</h3>
+                <h3 className="text-xl md:text-2xl font-black tracking-tight">Content Summary</h3>
               </div>
               <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/20">
                 Status: Completed
               </div>
             </div>
 
-            <div className="p-10 space-y-12">
+            <div className="p-6 md:p-10 space-y-8 md:space-y-12">
               {/* Branding & Social */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 <div className="lg:col-span-1 space-y-4">
@@ -256,10 +260,10 @@ const ClientPortal: React.FC = () => {
               {/* Home Page Content */}
               <div className="space-y-6 pt-10 border-t border-slate-100">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Home Page Architecture</p>
-                <div className="p-8 bg-indigo-50/30 rounded-[2.5rem] border border-indigo-100 space-y-8">
+                <div className="p-6 md:p-8 bg-indigo-50/30 rounded-3xl md:rounded-[2.5rem] border border-indigo-100 space-y-8">
                   <div>
                     <p className="text-[10px] font-black text-indigo-400 uppercase mb-2">Hero Welcome Text</p>
-                    <h4 className="text-3xl font-black text-indigo-900 leading-tight">"{websiteSubmission.formData.homePage.hero.en}"</h4>
+                    <h4 className="text-xl md:text-3xl font-black text-indigo-900 leading-tight">"{websiteSubmission.formData.homePage.hero.en}"</h4>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {websiteSubmission.formData.homePage.whyChooseUs.map((f: any, i: number) => (
@@ -365,6 +369,13 @@ const ClientPortal: React.FC = () => {
           </div>
         )}
       </div>
+
+      <SuccessModal 
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        title="Link Copied!"
+        message={`${successType} form link has been copied to your clipboard.`}
+      />
     </div>
   );
 };

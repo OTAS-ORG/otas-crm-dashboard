@@ -171,7 +171,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 relative">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative">
           {isFetching ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
               <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
@@ -194,7 +194,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Company Name</label>
                       <div className="relative">
@@ -225,7 +225,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Contact Person</label>
                       <div className="relative">
@@ -293,7 +293,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Source Channel</label>
                       <select
@@ -393,7 +393,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ clientId, isOpen, onClose, on
                             onChange={(e) => setClient({ ...client, projectId: e.target.value })}
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Start Date</label>
                             <input

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { clientService } from '../services/api';
+import { Plus, Trash2 } from 'lucide-react';
 import type { EmailPair } from '../types';
 
 interface BusinessEmailFormProps {
@@ -12,7 +13,7 @@ const BusinessEmailForm: React.FC<BusinessEmailFormProps> = ({ clientId, onSucce
   const [contactPersonName, setContactPersonName] = useState('');
   const [position, setPosition] = useState('');
   const [emails, setEmails] = useState<EmailPair[]>(
-    Array(5).fill({ email: '', password: '' })
+    [{ email: '', password: '' }]
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +22,16 @@ const BusinessEmailForm: React.FC<BusinessEmailFormProps> = ({ clientId, onSucce
     const newEmails = [...emails];
     newEmails[index] = { ...newEmails[index], [field]: value };
     setEmails(newEmails);
+  };
+
+  const addEmailRow = () => {
+    setEmails([...emails, { email: '', password: '' }]);
+  };
+
+  const removeEmailRow = (index: number) => {
+    if (emails.length > 1) {
+      setEmails(emails.filter((_, i) => i !== index));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,12 +64,12 @@ const BusinessEmailForm: React.FC<BusinessEmailFormProps> = ({ clientId, onSucce
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white p-4 md:p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-bold mb-4">Business Email Submission</h2>
       {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Contact Person Name</label>
             <input
@@ -82,9 +93,28 @@ const BusinessEmailForm: React.FC<BusinessEmailFormProps> = ({ clientId, onSucce
         </div>
 
         <div className="space-y-3">
-          <p className="font-medium">Email Accounts (Provide exactly 5)</p>
+          <div className="flex justify-between items-center">
+            <p className="font-medium">Email Accounts</p>
+            <button
+              type="button"
+              onClick={addEmailRow}
+              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-bold"
+            >
+              <Plus className="w-4 h-4" /> Add Email
+            </button>
+          </div>
+          
           {emails.map((pair, index) => (
-            <div key={index} className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded border border-gray-200">
+            <div key={index} className="relative grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-gray-50 rounded border border-gray-200">
+              {emails.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeEmailRow(index)}
+                  className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full border border-red-100 p-1 hover:bg-red-50 shadow-sm transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <div>
                 <label className="block text-xs text-gray-500">Email Address {index + 1}</label>
                 <input

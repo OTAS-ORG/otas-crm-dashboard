@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SuccessModal from './SuccessModal';
 import type { Client } from '../types';
 import { Calendar, Phone, Building2, User, ChevronRight, LayoutDashboard, Mail, Globe } from 'lucide-react';
 
@@ -11,11 +12,15 @@ interface ClientCardProps {
 const ClientCard: React.FC<ClientCardProps> = ({ client, onClick }) => {
   const navigate = useNavigate();
   
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successType, setSuccessType] = useState('');
+
   const copyLink = (e: React.MouseEvent, type: 'email' | 'website') => {
     e.stopPropagation();
     const link = `${window.location.origin}/public/form/${type}/${client._id}`;
     navigator.clipboard.writeText(link);
-    alert(`${type === 'email' ? 'Business Email' : 'Website Brief'} link copied!`);
+    setSuccessType(type === 'email' ? 'Business Email' : 'Website Brief');
+    setShowSuccess(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -106,6 +111,13 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onClick }) => {
           Web Link
         </button>
       </div>
+
+      <SuccessModal 
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        title="Link Copied!"
+        message={`${successType} form link has been copied to your clipboard.`}
+      />
     </div>
   );
 };

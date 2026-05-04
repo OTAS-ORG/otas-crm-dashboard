@@ -36,14 +36,14 @@ const PublicFormPage: React.FC = () => {
   if (submitted) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 text-center space-y-6">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center space-y-6">
           <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-12 h-12" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900">Thank You!</h1>
           <p className="text-slate-600">Your information for <span className="font-bold text-slate-800">{clientInfo.companyName}</span> has been successfully submitted to the OTAS Team.</p>
           <div className="pt-4">
-             <img src={logo} alt="OTAS" className="h-8 mx-auto grayscale opacity-50" />
+            <img src={logo} alt="OTAS" className="h-8 mx-auto grayscale opacity-50" />
           </div>
         </div>
       </div>
@@ -51,10 +51,10 @@ const PublicFormPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-6">
+    <div className="min-h-screen bg-slate-50 py-6 md:py-12 px-4 md:px-6">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Public Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
           <div className="flex items-center gap-4">
             <img src={logo} alt="OTAS" className="h-10 w-10 object-contain" />
             <div>
@@ -75,22 +75,22 @@ const PublicFormPage: React.FC = () => {
         {/* Dynamic Form Rendering */}
         <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
           {type === 'email' ? (
-            <BusinessEmailForm 
-              clientId={clientId!} 
-              onSuccess={() => setSubmitted(true)} 
+            <BusinessEmailForm
+              clientId={clientId!}
+              onSuccess={() => setSubmitted(true)}
               isPublic={true}
             />
           ) : (
-            <WebsiteRequirementsForm 
-              clientId={clientId!} 
-              onSuccess={() => setSubmitted(true)} 
+            <WebsiteRequirementsForm
+              clientId={clientId!}
+              onSuccess={() => setSubmitted(true)}
               isPublic={true}
             />
           )}
         </div>
 
         <p className="text-center text-slate-400 text-sm font-medium">
-          Securely processed by OTAS CRM Enterprise
+          Securely processed by OTAS Tech Solutions
         </p>
       </div>
     </div>
