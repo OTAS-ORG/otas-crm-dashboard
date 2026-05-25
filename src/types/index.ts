@@ -4,17 +4,17 @@ export interface ConversationLog {
   date: string;
 }
 
-export type ClientStatus = 
-  | 'Inquiry' 
-  | 'Service Explained' 
-  | 'Meeting Made' 
-  | 'Sent Proposal' 
-  | 'Sent Contract' 
-  | 'Signed' 
-  | 'Ghosted' 
-  | 'Follow-up needed'
-  | 'In-Development'
-  | 'Delivered';
+export type ClientStatus =
+  | "Inquiry"
+  | "Service Explained"
+  | "Meeting Made"
+  | "Sent Proposal"
+  | "Sent Contract"
+  | "Signed"
+  | "Ghosted"
+  | "Follow-up needed"
+  | "In-Development"
+  | "Delivered";
 
 export interface Client {
   _id: string;
@@ -33,13 +33,13 @@ export interface Client {
   isPostSale: boolean;
   nextActionDate?: string;
   contactPersonPosition?: string;
-  
+
   // Post-Sale
   projectId?: string;
   projectStartDate?: string;
   projectDeliveryDate?: string;
   deliverablesSummary?: string;
-  
+
   createdAt: string;
   updatedAt: string;
 }
@@ -58,7 +58,7 @@ export interface Submission {
     position: string;
   };
   formData: any;
-  status: 'Pending' | 'Verified' | 'Rejected';
+  status: "Pending" | "Verified" | "Rejected";
   createdAt: string;
   updatedAt: string;
 }

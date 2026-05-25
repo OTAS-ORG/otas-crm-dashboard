@@ -6,7 +6,6 @@ import {
   Calendar,
   Phone,
   Building2,
-  User,
   ChevronRight,
   LayoutDashboard,
   Mail,
