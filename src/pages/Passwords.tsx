@@ -30,7 +30,7 @@ const Passwords: React.FC = () => {
   const [vaultUnlocked, setVaultUnlocked] = useState(false);
   const [pendingEntry, setPendingEntry] = useState<PasswordEntry | null>(null);
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, string>>({});
-  const [revealTimers, setRevealTimers] = useState<Record<string, NodeJS.Timeout>>({});
+  const [revealTimers, setRevealTimers] = useState<Record<string, ReturnType<typeof setTimeout>>>({});
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const fetchPasswords = useCallback(async () => {

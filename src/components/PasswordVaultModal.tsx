@@ -38,14 +38,14 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
   useEffect(() => {
     if (isOpen) {
       if (editData) {
-        setClientId(typeof editData.clientId === 'string' ? editData.clientId : editData.clientId._id);
+        setClientId(editData.clientId ? (typeof editData.clientId === 'string' ? editData.clientId : editData.clientId._id) : '');
         setName(editData.name);
         setUrl(editData.url || '');
         setUsername(editData.username || '');
         setPassword('');
         setCategory(editData.category);
         setNotes(editData.notes || '');
-        const client = clients.find(c => c._id === (typeof editData.clientId === 'string' ? editData.clientId : editData.clientId._id));
+        const client = clients.find(c => c._id === (editData.clientId ? (typeof editData.clientId === 'string' ? editData.clientId : editData.clientId._id) : ''));
         if (client) setClientSearch(client.companyName);
       } else {
         setClientId('');
