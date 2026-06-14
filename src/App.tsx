@@ -4,6 +4,9 @@ import PreSale from './pages/PreSale';
 import PostSale from './pages/PostSale';
 import ClientPortal from './pages/ClientPortal';
 import PublicFormPage from './pages/PublicFormPage';
+import Invoices from './pages/Invoices';
+import InvoiceDetail from './pages/InvoiceDetail';
+import Passwords from './pages/Passwords';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -32,6 +35,9 @@ function App() {
             <Route index element={<PreSale />} />
             <Route path="post-sale" element={<PostSale />} />
             <Route path="portal/:id" element={<ClientPortal />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="invoices/:id" element={<InvoiceDetail />} />
+            <Route path="vault" element={<Passwords />} />
           </Route>
         </Routes>
       </Router>

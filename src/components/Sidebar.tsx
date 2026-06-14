@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserCheck, LogOut, X } from 'lucide-react';
+import { Users, UserCheck, FileText, Lock, LogOut, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -21,7 +21,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   const navItems = [
     { name: 'Pre-Sale', path: '/', icon: Users },
     { name: 'Post-Sale', path: '/post-sale', icon: UserCheck },
-    // { name: 'Client Portal', path: '/portal', icon: LayoutDashboard },
+    { name: 'Invoices', path: '/invoices', icon: FileText },
+    { name: 'Vault', path: '/vault', icon: Lock },
   ];
 
   return (
