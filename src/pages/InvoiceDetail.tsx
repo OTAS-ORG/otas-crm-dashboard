@@ -1970,7 +1970,7 @@ const InvoiceDetail: React.FC = () => {
                               KBZPay
                             </h4>
                             <p style={{ margin: "0", fontWeight: 600 }}>
-                              09-XXX XXX XXX
+                              09-951 207 795
                             </p>
                           </div>
                           <div>
@@ -1986,7 +1986,7 @@ const InvoiceDetail: React.FC = () => {
                               AYA Pay
                             </h4>
                             <p style={{ margin: "0", fontWeight: 600 }}>
-                              09-XXX XXX XXX
+                              09-951 207 795
                             </p>
                           </div>
                           <div>
@@ -2002,7 +2002,7 @@ const InvoiceDetail: React.FC = () => {
                               WavePay
                             </h4>
                             <p style={{ margin: "0", fontWeight: 600 }}>
-                              09-XXX XXX XXX
+                              09-951 207 795
                             </p>
                           </div>
                         </div>
