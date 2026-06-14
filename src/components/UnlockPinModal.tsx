@@ -22,7 +22,6 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
     if (isOpen) {
       setPin('');
       setConfirmPin('');
-      setCurrentPassword('');
       setError('');
       setMode('unlock');
       setChecking(true);
@@ -82,11 +81,10 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
 
     setLoading(true);
     try {
-      const result = await passwordService.setVaultPin(pin, currentPassword);
+      const result = await passwordService.setVaultPin(pin, '');
       if (result.success) {
         setPin('');
         setConfirmPin('');
-        setCurrentPassword('');
         onVerified();
       }
     } catch (err: any) {
