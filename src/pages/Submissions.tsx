@@ -18,7 +18,7 @@ const Submissions: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId] = useState<string | null>(null);
 
   useEffect(() => {
     loadSubmissions();

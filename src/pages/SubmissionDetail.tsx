@@ -65,10 +65,6 @@ const SubmissionDetail: React.FC = () => {
     return /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(url);
   };
 
-  const isPdfUrl = (url: string): boolean => {
-    return /\.pdf(\?.*)?$/i.test(url);
-  };
-
   const downloadFile = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -137,7 +133,6 @@ const SubmissionDetail: React.FC = () => {
 
     // Array of strings (checkbox / file URLs)
     if (Array.isArray(value) && value.length > 0) {
-      const hasImageUrls = value.some(v => typeof v === 'string' && isImageUrl(v));
       const hasFileUrls = value.some(v => typeof v === 'string' && (v.startsWith('http') || v.includes('/')));
 
       if (hasFileUrls) {
@@ -148,7 +143,6 @@ const SubmissionDetail: React.FC = () => {
               {value.map((url: string, i: number) => {
                 const filename = url.split('/').pop() || `file-${i}`;
                 const isImg = isImageUrl(url);
-                const isPdf = isPdfUrl(url);
                 return (
                   <div key={i} className="flex items-center gap-3 p-2 bg-white border border-slate-200 rounded-xl">
                     {isImg ? (

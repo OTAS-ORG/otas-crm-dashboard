@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Link2, Check, Clock, Copy, Send } from "lucide-react";
+import { X, Link2, Check, Clock, Copy } from "lucide-react";
 import { onboardingService } from "../services/api";
 import type { ServiceType } from "../types";
 
