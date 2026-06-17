@@ -28,7 +28,7 @@ const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
     return depValue === field.conditions.value;
   };
 
-  const renderField = (field: FormField, sectionIndex: number, fieldIndex: number) => {
+  const renderField = (field: FormField, _sectionIndex: number, _fieldIndex: number) => {
     if (!shouldShowField(field)) return null;
 
     const value = formData[field.name] ?? '';
@@ -47,7 +47,7 @@ const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
             onChange={(e) => onChange(field.name, e.target.value)}
             placeholder={field.placeholder || field.label}
             className={baseInputClass}
-            disabled={disabled || isPreFilled}
+            disabled={disabled || !!isPreFilled}
             required={field.required}
           />
         );
@@ -60,7 +60,7 @@ const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
             placeholder={field.placeholder || field.label}
             rows={4}
             className={`${baseInputClass} resize-none`}
-            disabled={disabled || isPreFilled}
+            disabled={disabled || !!isPreFilled}
             required={field.required}
           />
         );

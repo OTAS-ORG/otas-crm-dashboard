@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, Save, Loader2, CheckCircle, Settings2, Copy, Trash2,
-  Download, Upload, ChevronUp, ChevronDown, GripVertical, Eye
+  Download, Upload, Eye, X
 } from 'lucide-react';
 import { onboardingService } from '../services/api';
 import FormSectionEditor from '../components/FormSectionEditor';
 import FormBuilderPreview from '../components/FormBuilderPreview';
-import type { OnboardingFormConfig, FormSection, FormConfigExport } from '../types';
+import type { OnboardingFormConfig, FormSection } from '../types';
 
 const FormBuilder: React.FC = () => {
   const [configs, setConfigs] = useState<OnboardingFormConfig[]>([]);

@@ -16,7 +16,6 @@ interface FileUploadFieldProps {
 }
 
 const FileUploadField: React.FC<FileUploadFieldProps> = ({
-  name,
   label,
   required,
   accept,

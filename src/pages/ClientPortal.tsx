@@ -556,8 +556,8 @@ const ClientPortal: React.FC = () => {
           if (id) checkOnboardingStatus(id);
         }}
         clientId={id || ''}
-        clientName={dashboardData?.client?.companyName || 'Client'}
-        initialServices={(dashboardData?.client?.purchasedServices || []).map(s => s.type)}
+        clientName={dashboardData?.profile?.companyName || 'Client'}
+        initialServices={(dashboardData?.profile?.purchasedServices || []).map((s: { type: string; name?: string; status?: string }) => s.type)}
       />
 
       <SuccessModal

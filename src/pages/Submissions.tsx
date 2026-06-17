@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, Loader2, FileText } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, Loader2, FileText, ExternalLink } from 'lucide-react';
 import { onboardingService } from '../services/api';
 import type { Submission } from '../types';
 
@@ -50,7 +50,7 @@ const Submissions: React.FC = () => {
   };
 
   const clientName = (sub: Submission) => {
-    const c = sub.clientId;
+    const c = sub.clientId as any;
     if (typeof c === 'object' && c !== null) return c.companyName || 'Unknown';
     return c || 'Unknown';
   };
@@ -141,7 +141,61 @@ const Submissions: React.FC = () => {
                     <div className="px-5 pb-5 pt-2 border-t border-slate-100">
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {Object.entries(sub.formData || {}).map(([key, value]) => {
-                          if (typeof value === 'object' && value !== null) return null;
+                          if (value === null || value === undefined || value === '') return null;
+
+                          // Array of objects (repeater)
+                          if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+                            return (
+                              <div key={key} className="col-span-2 md:col-span-3 space-y-2">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                <div className="space-y-2">
+                                  {value.map((item: any, i: number) => (
+                                    <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                      <p className="text-[10px] font-bold text-indigo-500 uppercase mb-2">#{i + 1}</p>
+                                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {Object.entries(item).map(([k, v]) => (
+                                          <div key={k} className="space-y-0.5">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">{k.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                            <p className="text-xs text-slate-700">{String(v)}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // Array of strings (checkbox / file URLs)
+                          if (Array.isArray(value) && value.length > 0) {
+                            const isFiles = typeof value[0] === 'string' && (value[0].startsWith('http') || value[0].includes('/'));
+                            return (
+                              <div key={key} className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                {isFiles ? (
+                                  <div className="flex flex-col gap-1">
+                                    {value.map((url: string, i: number) => (
+                                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium truncate max-w-xs">
+                                        <ExternalLink className="w-3 h-3 shrink-0" />
+                                        {url.split('/').pop() || 'File'}
+                                      </a>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-1">
+                                    {value.map((v: string, i: number) => (
+                                      <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-medium border border-indigo-100">
+                                        {v}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          // String / Number / Boolean
                           return (
                             <div key={key} className="space-y-1">
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
