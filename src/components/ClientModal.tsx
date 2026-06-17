@@ -595,7 +595,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
                   </div>
 
                   {/* Post-Sale Section */}
-                  {(client.isPostSale || client.status === "Signed") && (
+                  {/* {(client.isPostSale || client.status === "Signed") && (
                     <div className="mt-8 pt-6 border-t border-gray-100">
                       <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-6">
@@ -749,7 +749,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
                         </div>
                       </div>
                     </div>
-                  )}
+                  )} */}
 
                   <div className="flex justify-between items-center pt-6 border-t border-gray-100">
                     <div>

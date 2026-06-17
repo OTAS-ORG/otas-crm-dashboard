@@ -77,6 +77,9 @@ export interface InvoiceItem {
   quantity: number;
   unitPrice: number;
   amount: number;
+  paymentTerm?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface PaymentDetail {
@@ -89,10 +92,14 @@ export interface PaymentDetail {
 }
 
 export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'Cancelled';
+export type InvoiceType = 'customize_project' | 'service_fee';
+export type ServiceFeeType = 'server' | 'domain' | 'maintenance';
 
 export interface Invoice {
   _id: string;
   invoiceNumber: string;
+  type: InvoiceType;
+  serviceType?: ServiceFeeType;
   clientId: string;
   companyName: string;
   contactPerson?: string;

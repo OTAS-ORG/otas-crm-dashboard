@@ -10,6 +10,7 @@ const Invoices: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
 
   const fetchInvoices = async () => {
     try {
@@ -17,6 +18,7 @@ const Invoices: React.FC = () => {
       const params: any = {};
       if (searchQuery) params.search = searchQuery;
       if (statusFilter) params.status = statusFilter;
+      if (typeFilter) params.type = typeFilter;
       const data = await invoiceService.getInvoices(params);
       setInvoices(data);
     } catch (error) {
@@ -28,7 +30,7 @@ const Invoices: React.FC = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, typeFilter]);
 
   const getStatusColor = (status: string, type: 'status' | 'payment' | 'payout') => {
     if (type === 'status') {
@@ -93,6 +95,18 @@ const Invoices: React.FC = () => {
             <option value="Cancelled">Cancelled</option>
           </select>
         </div>
+        <div className="relative">
+          <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <select
+            className="pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm appearance-none"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="">All Types</option>
+            <option value="customize_project">Customize Project</option>
+            <option value="service_fee">Server / Domain / Maintenance</option>
+          </select>
+        </div>
       </div>
 
       {/* Invoice Table */}
@@ -107,6 +121,7 @@ const Invoices: React.FC = () => {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
                   <th className="text-left px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Invoice #</th>
+                  <th className="text-left px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type</th>
                   <th className="text-left px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Client</th>
                   <th className="text-left px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount</th>
                   <th className="text-left px-5 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
@@ -123,6 +138,13 @@ const Invoices: React.FC = () => {
                   >
                     <td className="px-5 py-4">
                       <span className="text-sm font-bold text-indigo-600">{inv.invoiceNumber}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${inv.type === 'service_fee' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
+                        {inv.type === 'service_fee'
+                          ? `Service - ${inv.serviceType === 'server' ? 'Server' : inv.serviceType === 'domain' ? 'Domain' : inv.serviceType === 'maintenance' ? 'Maintenance' : ''}`
+                          : 'Project'}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <span className="text-sm font-semibold text-slate-800">{inv.companyName}</span>

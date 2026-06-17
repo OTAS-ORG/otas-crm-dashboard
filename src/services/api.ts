@@ -187,6 +187,11 @@ export const clientService = {
     return response.data.data;
   },
 
+  deleteInvoice: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/invoices/${id}`);
+    return response.data;
+  },
+
   // Public Methods (No Auth)
   getPublicClientInfo: async (id: string) => {
     const response = await axios.get(`${API_URL}/public/client-info/${id}`);
@@ -293,6 +298,7 @@ export const invoiceService = {
   confirmPayout: clientService.confirmPayout,
   lockInvoice: clientService.lockInvoice,
   unlockInvoice: clientService.unlockInvoice,
+  deleteInvoice: clientService.deleteInvoice,
 };
 
 export const onboardingService = {
