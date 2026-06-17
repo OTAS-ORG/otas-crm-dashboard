@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
       )}
 
       {/* Sidebar container */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0A0F1C] text-slate-300 flex flex-col border-r border-slate-800/50 shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shadow-xl min-h-screen ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0A0F1C] text-slate-300 flex flex-col border-r border-slate-800/50 shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:shadow-xl min-h-screen ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logo} alt="OTAS Logo" className="w-8 h-8 object-contain" />

@@ -9,6 +9,7 @@ import InvoiceDetail from './pages/InvoiceDetail';
 import Passwords from './pages/Passwords';
 import FormBuilder from './pages/FormBuilder';
 import Submissions from './pages/Submissions';
+import SubmissionDetail from './pages/SubmissionDetail';
 import OnboardingFormPage from './pages/OnboardingFormPage';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -44,6 +45,7 @@ function App() {
             <Route path="vault" element={<Passwords />} />
             <Route path="admin/form-builder" element={<FormBuilder />} />
             <Route path="admin/submissions" element={<Submissions />} />
+            <Route path="admin/submissions/:id" element={<SubmissionDetail />} />
           </Route>
         </Routes>
       </Router>

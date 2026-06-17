@@ -62,7 +62,7 @@ const ClientPortal: React.FC = () => {
   };
 
   const buildLink = (tokenStr: string) => {
-    return `${window.location.origin}/onboarding/${tokenStr}`;
+    return `${import.meta.env.VITE_PUBLIC_URL || 'https://otas-crm-dashboard.vercel.app'}/onboarding/${tokenStr}`;
   };
 
   const copyToClipboard = (text: string) => {

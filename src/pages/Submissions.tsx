@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, Loader2, FileText, ExternalLink } from 'lucide-react';
 import { onboardingService } from '../services/api';
 import type { Submission } from '../types';
@@ -10,6 +11,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 const Submissions: React.FC = () => {
+  const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -107,7 +109,7 @@ const Submissions: React.FC = () => {
                 <div key={sub._id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                   <div
                     className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors"
-                    onClick={() => setExpandedId(expanded ? null : sub._id!)}
+                    onClick={() => navigate(`/admin/submissions/${sub._id}`)}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
