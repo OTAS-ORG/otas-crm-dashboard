@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { clientService } from '../services/api';
+import { clientService, onboardingService } from '../services/api';
 import type { ClientDashboardData, EmailPair } from '../types';
 import BusinessEmailForm from '../components/BusinessEmailForm';
 import WebsiteRequirementsForm from '../components/WebsiteRequirementsForm';
+import OnboardingLinkModal from '../components/OnboardingLinkModal';
 import SuccessModal from '../components/SuccessModal';
 import {
   ArrowLeft, Mail, Building, User as UserIcon, ShieldCheck,
   Globe, Link as LinkIcon, Share2, MessageSquare,
-  ExternalLink, Clock, MapPin, CheckCircle, Star
+  ExternalLink, Clock, MapPin, CheckCircle, Star, Link2,
+  Copy, AlertCircle, XCircle, Trash2
 } from 'lucide-react';
 
 const ClientPortal: React.FC = () => {
@@ -19,10 +21,15 @@ const ClientPortal: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successType, setSuccessType] = useState('');
+  const [onboardingTokens, setOnboardingTokens] = useState<any[]>([]);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
       fetchDashboardData(id);
+      checkOnboardingStatus(id);
     }
   }, [id]);
 
@@ -36,6 +43,52 @@ const ClientPortal: React.FC = () => {
       setError(err.response?.data?.message || 'Failed to load client data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkOnboardingStatus = async (clientId: string) => {
+    try {
+      const tokens = await onboardingService.getStatus(clientId);
+      setOnboardingTokens(Array.isArray(tokens) ? tokens : []);
+    } catch {
+      setOnboardingTokens([]);
+    }
+  };
+
+  const getTokenStatus = (token: any): 'active' | 'completed' | 'expired' => {
+    if (token.isCompleted) return 'completed';
+    if (new Date(token.expiresAt) < new Date()) return 'expired';
+    return 'active';
+  };
+
+  const buildLink = (tokenStr: string) => {
+    return `${window.location.origin}/onboarding/${tokenStr}`;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setSuccessType('Onboarding Link');
+    setShowSuccess(true);
+  };
+
+  const SERVICE_LABELS: Record<string, string> = {
+    general: 'General',
+    pos: 'POS',
+    ai_agent: 'AI Agent',
+    erp: 'ERP',
+    ecommerce: 'E-commerce',
+    software: 'Software',
+  };
+
+  const handleDeleteToken = async (tokenId: string) => {
+    try {
+      await onboardingService.deleteToken(tokenId, id!);
+      setOnboardingTokens(prev => prev.filter(t => t._id !== tokenId));
+    } catch (err) {
+      console.error('Failed to delete token', err);
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeleteTargetId(null);
     }
   };
 
@@ -368,14 +421,178 @@ const ClientPortal: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Onboarding Section */}
+        <div className="mt-8">
+            <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-[#4F46E5] text-white px-6 md:px-10 py-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-1">Client Onboarding</p>
+                    <h3 className="text-xl md:text-2xl font-black tracking-tight">Onboarding Form</h3>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/20 flex items-center gap-2">
+                    <Link2 className="w-3.5 h-3.5" />
+                    {onboardingTokens.length} Link{onboardingTokens.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 md:p-10 space-y-6">
+                {/* Generate Button */}
+                <button
+                  onClick={() => setShowOnboardingModal(true)}
+                  className="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
+                >
+                  <Link2 className="w-5 h-5" />
+                  Generate Onboarding Link
+                </button>
+
+                {/* Links List */}
+                {onboardingTokens.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generated Links</p>
+                    {onboardingTokens.map((tok) => {
+                      const status = getTokenStatus(tok);
+                      const link = buildLink(tok.token);
+                      const statusConfig = {
+                        active: { label: 'Active', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: <CheckCircle className="w-3.5 h-3.5" /> },
+                        completed: { label: 'Completed', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: <CheckCircle className="w-3.5 h-3.5" /> },
+                        expired: { label: 'Expired', color: 'text-slate-500', bg: 'bg-slate-50 border-slate-200', icon: <XCircle className="w-3.5 h-3.5" /> },
+                      }[status];
+
+                      return (
+                        <div key={tok._id} className={`border rounded-2xl p-4 transition-all ${statusConfig.bg}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0 space-y-2">
+                              {/* Status + Date */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border ${statusConfig.bg} ${statusConfig.color}`}>
+                                  {statusConfig.icon}
+                                  {statusConfig.label}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  Created {new Date(tok.createdAt).toLocaleDateString()} {new Date(tok.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+
+                              {/* Expiry / Completion */}
+                              <div className="flex items-center gap-4 text-xs">
+                                {status === 'completed' ? (
+                                  <span className="flex items-center gap-1 text-blue-600 font-medium">
+                                    <CheckCircle className="w-3 h-3" />
+                                    Completed {tok.completedAt ? new Date(tok.completedAt).toLocaleDateString() : ''}
+                                  </span>
+                                ) : status === 'expired' ? (
+                                  <span className="flex items-center gap-1 text-slate-400 font-medium">
+                                    <AlertCircle className="w-3 h-3" />
+                                    Expired {new Date(tok.expiresAt).toLocaleDateString()}
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                    <Clock className="w-3 h-3" />
+                                    Expires {new Date(tok.expiresAt).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Services */}
+                              {tok.serviceTypes && tok.serviceTypes.length > 0 && (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {tok.serviceTypes.map((svc: string) => (
+                                    <span key={svc} className="px-2 py-0.5 bg-white border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 uppercase">
+                                      {SERVICE_LABELS[svc] || svc}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Link */}
+                              <div className="flex items-center gap-2">
+                                <code className="text-[11px] text-slate-400 font-mono truncate max-w-md">{link}</code>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="shrink-0 flex items-center gap-2">
+                              {status === 'active' && (
+                                <button
+                                  onClick={() => copyToClipboard(link)}
+                                  className="px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-1.5"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                  Copy
+                                </button>
+                              )}
+                              <button
+                                onClick={() => { setDeleteTargetId(tok._id); setShowDeleteConfirm(true); }}
+                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                title="Delete link"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {onboardingTokens.length === 0 && (
+                  <p className="text-center text-xs text-slate-400">
+                    No links generated yet. Click the button above to create one.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
       </div>
 
-      <SuccessModal 
+      <OnboardingLinkModal
+        isOpen={showOnboardingModal}
+        onClose={() => {
+          setShowOnboardingModal(false);
+          if (id) checkOnboardingStatus(id);
+        }}
+        clientId={id || ''}
+        clientName={dashboardData?.client?.companyName || 'Client'}
+        initialServices={(dashboardData?.client?.purchasedServices || []).map(s => s.type)}
+      />
+
+      <SuccessModal
         isOpen={showSuccess}
         onClose={() => setShowSuccess(false)}
         title="Link Copied!"
         message={`${successType} form link has been copied to your clipboard.`}
       />
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Onboarding Link</h3>
+              <p className="text-gray-500 mb-6">Are you sure you want to delete this link? This action cannot be undone.</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteTargetId(null); }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteTargetId && handleDeleteToken(deleteTargetId)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

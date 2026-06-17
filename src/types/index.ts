@@ -40,6 +40,9 @@ export interface Client {
   projectDeliveryDate?: string;
   deliverablesSummary?: string;
 
+  // Purchased Services
+  purchasedServices?: { type: string; name?: string; status?: string }[];
+
   createdAt: string;
   updatedAt: string;
 }
@@ -127,6 +130,65 @@ export interface AuditLog {
 }
 
 export type PasswordCategory = 'hosting' | 'email' | 'social' | 'admin' | 'ftp' | 'database' | 'api' | 'other';
+
+export type ServiceType = 'pos' | 'ai_agent' | 'erp' | 'ecommerce' | 'software' | string;
+
+export interface FormField {
+  name: string;
+  label: string;
+  type: 'text' | 'number' | 'textarea' | 'file' | 'checkbox' | 'dropdown' | 'repeater';
+  required?: boolean;
+  placeholder?: string;
+  options?: string[];
+  accept?: string;
+  maxSize?: number;
+  conditions?: { dependsOn: string; value: string };
+  fields?: FormField[];
+}
+
+export interface FormSection {
+  title: string;
+  description?: string;
+  fields: FormField[];
+}
+
+export interface OnboardingFormConfig {
+  _id: string;
+  serviceType: string;
+  serviceName: string;
+  sections: FormSection[];
+  sortOrder?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OnboardingToken {
+  _id: string;
+  token: string;
+  clientId: { _id: string; companyName: string; contactPerson?: string } | string;
+  expiresAt: string;
+  formData: Record<string, any>;
+  isCompleted: boolean;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OnboardingFormData {
+  client: { companyName: string; contactPerson: string; contactInfo?: string; email?: string };
+  services: string[];
+  formConfigs: OnboardingFormConfig[];
+  savedFormData: Record<string, any>;
+  expiresAt: string;
+}
+
+export interface FormConfigExport {
+  serviceType: string;
+  serviceName: string;
+  sections: FormSection[];
+  exportedAt: string;
+  version: string;
+}
 
 export interface PasswordEntry {
   _id: string;

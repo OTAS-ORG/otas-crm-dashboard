@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Client, AuditLog, ClientStatus } from "../types";
 import { clientService } from "../services/api";
 import {
@@ -15,6 +16,7 @@ import {
   Trash2,
   Pencil,
   Maximize2,
+  LayoutDashboard,
 } from "lucide-react";
 
 interface ClientModalProps {
@@ -30,6 +32,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"details" | "logs" | "audit">(
     "details",
   );
@@ -201,12 +204,26 @@ const ClientModal: React.FC<ClientModalProps> = ({
               </div>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <X className="w-6 h-6 text-gray-500" />
-          </button>
+          <div className="flex items-center gap-2">
+            {clientId && client.isPostSale && (
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate(`/portal/${clientId}`);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 border border-indigo-200 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-50 transition-all"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                View Portal
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              <X className="w-6 h-6 text-gray-500" />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -592,6 +609,63 @@ const ClientModal: React.FC<ClientModalProps> = ({
                             <p className="text-xs text-gray-500">
                               Active development tracking
                             </p>
+                          </div>
+                        </div>
+
+                        <div className="mb-6">
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                            Purchased Services
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {(['pos', 'ai_agent', 'erp', 'ecommerce', 'software'] as const).map((svc) => {
+                              const checked = (client.purchasedServices || []).some(s => s.type === svc);
+                              const svcLabels: Record<string, string> = {
+                                pos: 'POS Software',
+                                ai_agent: 'AI Agent',
+                                erp: 'ERP Development',
+                                ecommerce: 'E-commerce',
+                                software: 'Custom Software',
+                              };
+                              return (
+                                <label
+                                  key={svc}
+                                  className={`inline-flex items-center gap-2 px-3 py-2 border rounded-xl cursor-pointer transition-all text-xs font-semibold ${
+                                    checked
+                                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    disabled={isViewMode}
+                                    onChange={() => {
+                                      const current = client.purchasedServices || [];
+                                      if (checked) {
+                                        setClient({
+                                          ...client,
+                                          purchasedServices: current.filter(s => s.type !== svc),
+                                        });
+                                      } else {
+                                        setClient({
+                                          ...client,
+                                          purchasedServices: [...current, { type: svc, name: svcLabels[svc], status: 'pending' }],
+                                        });
+                                      }
+                                    }}
+                                    className="sr-only"
+                                  />
+                                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                                    checked ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'
+                                  }`}>
+                                    {checked && (
+                                      <CheckCircle className="w-3 h-3 text-white" />
+                                    )}
+                                  </div>
+                                  {svcLabels[svc]}
+                                </label>
+                              );
+                            })}
                           </div>
                         </div>
 

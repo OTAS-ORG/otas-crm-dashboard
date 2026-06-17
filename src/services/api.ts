@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Client, AuditLog, Submission, Invoice, PasswordEntry, PasswordCategory } from '../types';
+import type { Client, AuditLog, Submission, Invoice, PasswordEntry, PasswordCategory, OnboardingFormConfig, OnboardingFormData } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -185,4 +185,71 @@ export const invoiceService = {
   confirmPayout: clientService.confirmPayout,
   lockInvoice: clientService.lockInvoice,
   unlockInvoice: clientService.unlockInvoice,
+};
+
+export const onboardingService = {
+  generateLink: async (clientId: string, serviceTypes: string[]) => {
+    const response = await api.post<ApiResponse<{ link: string; token: string; expiresAt: string }>>('/onboarding/generate-link', { clientId, serviceTypes });
+    return response.data.data;
+  },
+  getFormData: async (token: string) => {
+    const response = await api.get<ApiResponse<OnboardingFormData>>(`/onboarding/form/${token}`);
+    return response.data.data;
+  },
+  saveFormData: async (token: string, formData: Record<string, any>) => {
+    const response = await api.post<ApiResponse<null>>(`/onboarding/save/${token}`, { formData });
+    return response.data;
+  },
+  submitForm: async (token: string, formData: Record<string, any>) => {
+    const response = await api.post<ApiResponse<null>>(`/onboarding/submit/${token}`, { formData });
+    return response.data;
+  },
+  getStatus: async (clientId: string) => {
+    const response = await api.get<ApiResponse<any[]>>(`/onboarding/status/${clientId}`);
+    return response.data.data;
+  },
+  deleteToken: async (tokenId: string, clientId: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/onboarding/tokens/${tokenId}`, { params: { clientId } });
+    return response.data;
+  },
+  getConfigs: async () => {
+    const response = await api.get<ApiResponse<OnboardingFormConfig[]>>('/onboarding/configs');
+    return response.data.data;
+  },
+  updateConfig: async (serviceType: string, data: { sections: any[]; serviceName?: string }) => {
+    const response = await api.put<ApiResponse<OnboardingFormConfig>>(`/onboarding/config/${serviceType}`, data);
+    return response.data.data;
+  },
+  deleteConfig: async (serviceType: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/onboarding/config/${serviceType}`);
+    return response.data;
+  },
+  cloneConfig: async (serviceType: string, newServiceType: string, newServiceName: string) => {
+    const response = await api.post<ApiResponse<OnboardingFormConfig>>(`/onboarding/config/${serviceType}/clone`, { newServiceType, newServiceName });
+    return response.data.data;
+  },
+  exportConfig: async (serviceType: string) => {
+    const response = await api.get<ApiResponse<any>>(`/onboarding/config/${serviceType}/export`);
+    return response.data.data;
+  },
+  importConfig: async (config: any, overwrite?: boolean) => {
+    const response = await api.post<ApiResponse<OnboardingFormConfig>>('/onboarding/config/import', { config, overwrite });
+    return response.data.data;
+  },
+  reorderSections: async (serviceType: string, orderedSections: any[]) => {
+    const response = await api.put<ApiResponse<OnboardingFormConfig>>(`/onboarding/config/${serviceType}/reorder-sections`, { orderedSections });
+    return response.data.data;
+  },
+  reorderFields: async (serviceType: string, sectionIndex: number, orderedFields: any[]) => {
+    const response = await api.put<ApiResponse<OnboardingFormConfig>>(`/onboarding/config/${serviceType}/sections/${sectionIndex}/reorder-fields`, { orderedFields });
+    return response.data.data;
+  },
+  getSubmissions: async (params?: { status?: string; page?: number; limit?: number }) => {
+    const response = await api.get<ApiResponse<{ submissions: Submission[]; total: number; page: number; totalPages: number }>>('/onboarding/submissions', { params });
+    return response.data.data;
+  },
+  updateSubmissionStatus: async (id: string, status: string) => {
+    const response = await api.put<ApiResponse<Submission>>(`/onboarding/submissions/${id}/status`, { status });
+    return response.data.data;
+  },
 };

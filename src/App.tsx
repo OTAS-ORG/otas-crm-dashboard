@@ -7,6 +7,9 @@ import PublicFormPage from './pages/PublicFormPage';
 import Invoices from './pages/Invoices';
 import InvoiceDetail from './pages/InvoiceDetail';
 import Passwords from './pages/Passwords';
+import FormBuilder from './pages/FormBuilder';
+import Submissions from './pages/Submissions';
+import OnboardingFormPage from './pages/OnboardingFormPage';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -31,6 +34,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/public/form/:type/:clientId" element={<PublicFormPage />} />
+          <Route path="/onboarding/:token" element={<OnboardingFormPage />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<PreSale />} />
             <Route path="post-sale" element={<PostSale />} />
@@ -38,6 +42,8 @@ function App() {
             <Route path="invoices" element={<Invoices />} />
             <Route path="invoices/:id" element={<InvoiceDetail />} />
             <Route path="vault" element={<Passwords />} />
+            <Route path="admin/form-builder" element={<FormBuilder />} />
+            <Route path="admin/submissions" element={<Submissions />} />
           </Route>
         </Routes>
       </Router>
