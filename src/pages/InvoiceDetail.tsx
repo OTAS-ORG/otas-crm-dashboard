@@ -58,6 +58,8 @@ const InvoiceDetail: React.FC = () => {
     projectId: "",
     items: [{ description: "", paymentTerm: "", amount: 0 }],
     amount: 0,
+    currency: "MMK",
+    exchangeRate: 0,
     platformFeeRate: 0,
     additionalCharges: [] as { name: string; amount: number }[],
     date: new Date().toISOString().split("T")[0],
@@ -90,6 +92,8 @@ const InvoiceDetail: React.FC = () => {
                 ? [{ description: "", amount: 0, startDate: "", endDate: "" }]
                 : [{ description: "", quantity: 1, unitPrice: 0, amount: 0 }],
             amount: invData.amount || 0,
+            currency: invData.currency || "MMK",
+            exchangeRate: invData.exchangeRate || 0,
             platformFeeRate: invData.platformFeeRate || 0,
             additionalCharges: invData.additionalCharges || [],
             date: invData.date
@@ -418,6 +422,8 @@ const InvoiceDetail: React.FC = () => {
                       },
                     ],
               amount: 0,
+              currency: "MMK",
+              exchangeRate: 0,
               platformFeeRate: 0,
               additionalCharges: [],
               date: new Date().toISOString().split("T")[0],
@@ -747,7 +753,7 @@ const InvoiceDetail: React.FC = () => {
                                   </div>
                                   <div className="w-28">
                                     <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
-                                      Total (MMK)
+                                      {editData.currency === "USD" ? "Total (USD)" : "Total (MMK)"}
                                     </label>
                                     <input
                                       type="number"
@@ -866,6 +872,41 @@ const InvoiceDetail: React.FC = () => {
                             }
                           />
                         </div>
+                        <div>
+                          <label className={labelClasses}>Currency</label>
+                          <select
+                            className={inputClasses}
+                            value={editData.currency}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                currency: e.target.value,
+                                exchangeRate: e.target.value === "MMK" ? 0 : editData.exchangeRate,
+                              })
+                            }
+                          >
+                            <option value="MMK">MMK (Myanmar Kyat)</option>
+                            <option value="USD">USD (US Dollar)</option>
+                          </select>
+                        </div>
+                        {editData.currency === "USD" && (
+                          <div>
+                            <label className={labelClasses}>Exchange Rate (1 USD = ? MMK)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              className={inputClasses}
+                              value={editData.exchangeRate || ""}
+                              onChange={(e) =>
+                                setEditData({
+                                  ...editData,
+                                  exchangeRate: parseFloat(e.target.value) || 0,
+                                })
+                              }
+                              placeholder="e.g. 4490"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -922,7 +963,9 @@ const InvoiceDetail: React.FC = () => {
                           Subtotal (Items)
                         </span>
                         <span className="font-bold text-slate-700">
-                          {(editData.amount || 0).toLocaleString()} MMK
+                          {editData.currency === "USD"
+                            ? `${(editData.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                            : `${(editData.amount || 0).toLocaleString()} MMK`}
                         </span>
                       </div>
                       {editData.additionalCharges
@@ -940,12 +983,26 @@ const InvoiceDetail: React.FC = () => {
                             </span>
                           </div>
                         ))}
+                      {editData.currency === "USD" && editData.exchangeRate > 0 && (
+                        <>
+                          <div className="flex items-center justify-between text-sm mt-1">
+                            <span className="text-slate-500 text-xs">Exchange Rate</span>
+                            <span className="font-semibold text-slate-700">1 USD = {editData.exchangeRate.toLocaleString()} MMK</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mt-1">
+                            <span className="text-slate-500 text-xs">Total in MMK</span>
+                            <span className="font-semibold text-slate-700">{Math.round(grandTotal * editData.exchangeRate).toLocaleString()} MMK</span>
+                          </div>
+                        </>
+                      )}
                       <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-indigo-200">
                         <span className="font-bold text-slate-800 text-xs uppercase">
                           Grand Total
                         </span>
                         <span className="font-extrabold text-indigo-600">
-                          {grandTotal.toLocaleString()} MMK
+                          {editData.currency === "USD"
+                            ? `${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                            : `${grandTotal.toLocaleString()} MMK`}
                         </span>
                       </div>
                     </div>
@@ -1052,7 +1109,9 @@ const InvoiceDetail: React.FC = () => {
                               </p>
                             </div>
                             <span className="text-xs font-bold text-slate-700">
-                              {item.amount.toLocaleString()} MMK
+                              {displayData.currency === "USD"
+                                ? `${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                                : `${item.amount.toLocaleString()} MMK`}
                             </span>
                           </div>
                         ))}
@@ -1074,7 +1133,9 @@ const InvoiceDetail: React.FC = () => {
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-500">Subtotal</span>
                           <span className="font-semibold">
-                            {(displayData.amount || 0).toLocaleString()} MMK
+                            {displayData.currency === "USD"
+                              ? `${(displayData.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                              : `${(displayData.amount || 0).toLocaleString()} MMK`}
                           </span>
                         </div>
                         {displayData.additionalCharges
@@ -1090,12 +1151,26 @@ const InvoiceDetail: React.FC = () => {
                               </span>
                             </div>
                           ))}
+                        {displayData.currency === "USD" && displayData.exchangeRate > 0 && (
+                          <>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-slate-500">Exchange Rate</span>
+                              <span className="font-semibold">1 USD = {displayData.exchangeRate.toLocaleString()} MMK</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-slate-500">Total in MMK</span>
+                              <span className="font-semibold">{Math.round(grandTotal * displayData.exchangeRate).toLocaleString()} MMK</span>
+                            </div>
+                          </>
+                        )}
                         <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
                           <span className="font-bold text-slate-800">
                             Grand Total
                           </span>
                           <span className="font-extrabold text-indigo-600">
-                            {grandTotal.toLocaleString()} MMK
+                            {displayData.currency === "USD"
+                              ? `${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                              : `${grandTotal.toLocaleString()} MMK`}
                           </span>
                         </div>
                       </div>
@@ -1192,7 +1267,7 @@ const InvoiceDetail: React.FC = () => {
                         style={{
                           padding: "40px",
                           fontFamily:
-                            "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                            "'Poppins', sans-serif",
                           width: "800px",
                           minWidth: "800px",
                           minHeight: "1131px",
@@ -1517,8 +1592,8 @@ const InvoiceDetail: React.FC = () => {
                           <thead>
                             <tr>
                               {(invoiceType === "service_fee"
-                                ? ["DESCRIPTION", "START", "END", "MMK"]
-                                : ["DESCRIPTION", "PAYMENT TERM", "MMK"]
+                                ? ["DESCRIPTION", "START", "END", displayData.currency === "USD" ? "USD" : "MMK"]
+                                : ["DESCRIPTION", "PAYMENT TERM", displayData.currency === "USD" ? "USD" : "MMK"]
                               ).map((h, i) => {
                                 const isLast =
                                   invoiceType === "service_fee"
@@ -1633,7 +1708,9 @@ const InvoiceDetail: React.FC = () => {
                                       textAlign: "right",
                                     }}
                                   >
-                                    {item.amount.toLocaleString()} MMK
+                                    {displayData.currency === "USD"
+                                      ? `${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+                                      : `${item.amount.toLocaleString()} MMK`}
                                   </td>
                                 </tr>
                               ))}
@@ -1666,6 +1743,26 @@ const InvoiceDetail: React.FC = () => {
                         </table>
 
                         {/* Total */}
+                        {displayData.currency === "USD" ? (
+                          <div style={{ marginTop: "60px" }}>
+                            <div style={{ padding: "14px 0", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between" }}>
+                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b", textTransform: "uppercase" }}>TOTAL</span>
+                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b" }}>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $</span>
+                            </div>
+                            <div style={{ padding: "14px 0", borderBottom: "2px solid #1e293b", display: "flex", justifyContent: "space-between" }}>
+                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b", textTransform: "uppercase" }}>CURRENCY RATE</span>
+                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b" }}>{(displayData.exchangeRate || 0).toLocaleString()} MMK</span>
+                            </div>
+                            <div style={{ padding: "14px 0", borderBottom: "2px solid #1e293b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b", textTransform: "uppercase" }}>
+                                {viewMode === "customer" ? "TOTAL (MMK)" : invoiceType === "service_fee" ? "Total Service Fees (MMK)" : "Total Usage Charges (MMK)"}
+                              </span>
+                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b" }}>
+                                {Math.round(grandTotal * (displayData.exchangeRate || 0)).toLocaleString()} MMK
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
                         <div
                           style={{
                             marginTop: "60px",
@@ -1701,6 +1798,7 @@ const InvoiceDetail: React.FC = () => {
                             {grandTotal.toLocaleString()} MMK
                           </span>
                         </div>
+                        )}
 
                         <div
                           style={{

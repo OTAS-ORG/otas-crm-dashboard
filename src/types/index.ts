@@ -107,6 +107,8 @@ export interface Invoice {
   projectId?: string;
   items: InvoiceItem[];
   amount: number;
+  currency: 'MMK' | 'USD';
+  exchangeRate: number;
   platformFeeRate: number;
   platformFee: number;
   additionalCharges: { name: string; amount: number }[];
