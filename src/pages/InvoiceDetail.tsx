@@ -753,7 +753,9 @@ const InvoiceDetail: React.FC = () => {
                                   </div>
                                   <div className="w-28">
                                     <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
-                                      {editData.currency === "USD" ? "Total (USD)" : "Total (MMK)"}
+                                      {editData.currency === "USD"
+                                        ? "Total (USD)"
+                                        : "Total (MMK)"}
                                     </label>
                                     <input
                                       type="number"
@@ -881,7 +883,10 @@ const InvoiceDetail: React.FC = () => {
                               setEditData({
                                 ...editData,
                                 currency: e.target.value,
-                                exchangeRate: e.target.value === "MMK" ? 0 : editData.exchangeRate,
+                                exchangeRate:
+                                  e.target.value === "MMK"
+                                    ? 0
+                                    : editData.exchangeRate,
                               })
                             }
                           >
@@ -891,7 +896,9 @@ const InvoiceDetail: React.FC = () => {
                         </div>
                         {editData.currency === "USD" && (
                           <div>
-                            <label className={labelClasses}>Exchange Rate (1 USD = ? MMK)</label>
+                            <label className={labelClasses}>
+                              Exchange Rate (1 USD = ? MMK)
+                            </label>
                             <input
                               type="number"
                               min="0"
@@ -983,18 +990,31 @@ const InvoiceDetail: React.FC = () => {
                             </span>
                           </div>
                         ))}
-                      {editData.currency === "USD" && editData.exchangeRate > 0 && (
-                        <>
-                          <div className="flex items-center justify-between text-sm mt-1">
-                            <span className="text-slate-500 text-xs">Exchange Rate</span>
-                            <span className="font-semibold text-slate-700">1 USD = {editData.exchangeRate.toLocaleString()} MMK</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm mt-1">
-                            <span className="text-slate-500 text-xs">Total in MMK</span>
-                            <span className="font-semibold text-slate-700">{Math.round(grandTotal * editData.exchangeRate).toLocaleString()} MMK</span>
-                          </div>
-                        </>
-                      )}
+                      {editData.currency === "USD" &&
+                        editData.exchangeRate > 0 && (
+                          <>
+                            <div className="flex items-center justify-between text-sm mt-1">
+                              <span className="text-slate-500 text-xs">
+                                Exchange Rate
+                              </span>
+                              <span className="font-semibold text-slate-700">
+                                1 USD = {editData.exchangeRate.toLocaleString()}{" "}
+                                MMK
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm mt-1">
+                              <span className="text-slate-500 text-xs">
+                                Total in MMK
+                              </span>
+                              <span className="font-semibold text-slate-700">
+                                {Math.round(
+                                  grandTotal * editData.exchangeRate,
+                                ).toLocaleString()}{" "}
+                                MMK
+                              </span>
+                            </div>
+                          </>
+                        )}
                       <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-indigo-200">
                         <span className="font-bold text-slate-800 text-xs uppercase">
                           Grand Total
@@ -1151,18 +1171,32 @@ const InvoiceDetail: React.FC = () => {
                               </span>
                             </div>
                           ))}
-                        {displayData.currency === "USD" && displayData.exchangeRate > 0 && (
-                          <>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-slate-500">Exchange Rate</span>
-                              <span className="font-semibold">1 USD = {displayData.exchangeRate.toLocaleString()} MMK</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-slate-500">Total in MMK</span>
-                              <span className="font-semibold">{Math.round(grandTotal * displayData.exchangeRate).toLocaleString()} MMK</span>
-                            </div>
-                          </>
-                        )}
+                        {displayData.currency === "USD" &&
+                          displayData.exchangeRate > 0 && (
+                            <>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-slate-500">
+                                  Exchange Rate
+                                </span>
+                                <span className="font-semibold">
+                                  1 USD ={" "}
+                                  {displayData.exchangeRate.toLocaleString()}{" "}
+                                  MMK
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-slate-500">
+                                  Total in MMK
+                                </span>
+                                <span className="font-semibold">
+                                  {Math.round(
+                                    grandTotal * displayData.exchangeRate,
+                                  ).toLocaleString()}{" "}
+                                  MMK
+                                </span>
+                              </div>
+                            </>
+                          )}
                         <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
                           <span className="font-bold text-slate-800">
                             Grand Total
@@ -1266,8 +1300,7 @@ const InvoiceDetail: React.FC = () => {
                         className="relative bg-white"
                         style={{
                           padding: "40px",
-                          fontFamily:
-                            "'Poppins', sans-serif",
+                          fontFamily: "'Poppins', sans-serif",
                           width: "800px",
                           minWidth: "800px",
                           minHeight: "1131px",
@@ -1281,7 +1314,7 @@ const InvoiceDetail: React.FC = () => {
                           style={{
                             display: "flex",
                             justifyContent: "space-between",
-                            alignItems: "flex-start",
+                            alignItems: "center",
                             marginBottom: "0",
                           }}
                         >
@@ -1315,38 +1348,14 @@ const InvoiceDetail: React.FC = () => {
                             }}
                           >
                             <img
-                              src="/otas.png"
+                              src="/invoice.png"
                               alt="OTAS"
                               style={{
-                                width: "50px",
-                                height: "50px",
+                                width: "200px",
+                                height: "100px",
                                 objectFit: "contain",
                               }}
                             />
-                            <div>
-                              <span
-                                style={{
-                                  fontSize: "20px",
-                                  fontWeight: 800,
-                                  color: "#007FFF",
-                                  letterSpacing: "-0.5px",
-                                }}
-                              >
-                                OTAS
-                              </span>
-                              <p
-                                style={{
-                                  fontSize: "9px",
-                                  color: "#007FFF",
-                                  margin: 0,
-                                  fontWeight: 600,
-                                  letterSpacing: "1px",
-                                  textTransform: "uppercase",
-                                }}
-                              >
-                                Tech Solutions
-                              </p>
-                            </div>
                           </div>
                         </div>
 
@@ -1592,8 +1601,21 @@ const InvoiceDetail: React.FC = () => {
                           <thead>
                             <tr>
                               {(invoiceType === "service_fee"
-                                ? ["DESCRIPTION", "START", "END", displayData.currency === "USD" ? "USD" : "MMK"]
-                                : ["DESCRIPTION", "PAYMENT TERM", displayData.currency === "USD" ? "USD" : "MMK"]
+                                ? [
+                                    "DESCRIPTION",
+                                    "START",
+                                    "END",
+                                    displayData.currency === "USD"
+                                      ? "USD"
+                                      : "MMK",
+                                  ]
+                                : [
+                                    "DESCRIPTION",
+                                    "PAYMENT TERM",
+                                    displayData.currency === "USD"
+                                      ? "USD"
+                                      : "MMK",
+                                  ]
                               ).map((h, i) => {
                                 const isLast =
                                   invoiceType === "service_fee"
@@ -1745,59 +1767,142 @@ const InvoiceDetail: React.FC = () => {
                         {/* Total */}
                         {displayData.currency === "USD" ? (
                           <div style={{ marginTop: "60px" }}>
-                            <div style={{ padding: "14px 0", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b", textTransform: "uppercase" }}>TOTAL</span>
-                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b" }}>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $</span>
-                            </div>
-                            <div style={{ padding: "14px 0", borderBottom: "2px solid #1e293b", display: "flex", justifyContent: "space-between" }}>
-                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b", textTransform: "uppercase" }}>CURRENCY RATE</span>
-                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b" }}>{(displayData.exchangeRate || 0).toLocaleString()} MMK</span>
-                            </div>
-                            <div style={{ padding: "14px 0", borderBottom: "2px solid #1e293b", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b", textTransform: "uppercase" }}>
-                                {viewMode === "customer" ? "TOTAL (MMK)" : invoiceType === "service_fee" ? "Total Service Fees (MMK)" : "Total Usage Charges (MMK)"}
+                            <div
+                              style={{
+                                padding: "14px 0",
+                                borderBottom: "1px solid #e5e7eb",
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                TOTAL
                               </span>
-                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#1e293b" }}>
-                                {Math.round(grandTotal * (displayData.exchangeRate || 0)).toLocaleString()} MMK
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                }}
+                              >
+                                {grandTotal.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}{" "}
+                                $
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                padding: "14px 0",
+                                borderBottom: "2px solid #1e293b",
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                CURRENCY RATE
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                }}
+                              >
+                                {(
+                                  displayData.exchangeRate || 0
+                                ).toLocaleString()}{" "}
+                                MMK
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                padding: "14px 0",
+                                borderBottom: "2px solid #1e293b",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {viewMode === "customer"
+                                  ? "TOTAL (MMK)"
+                                  : invoiceType === "service_fee"
+                                    ? "Total Service Fees (MMK)"
+                                    : "Total Usage Charges (MMK)"}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                }}
+                              >
+                                {Math.round(
+                                  grandTotal * (displayData.exchangeRate || 0),
+                                ).toLocaleString()}{" "}
+                                MMK
                               </span>
                             </div>
                           </div>
                         ) : (
-                        <div
-                          style={{
-                            marginTop: "60px",
-                            padding: "14px 0",
-                            borderTop: "2px solid #1e293b",
-                            borderBottom: "2px solid #1e293b",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <span
+                          <div
                             style={{
-                              fontSize: "14px",
-                              fontWeight: 900,
-                              color: "#1e293b",
-                              textTransform: "uppercase",
+                              marginTop: "60px",
+                              padding: "14px 0",
+                              borderTop: "2px solid #1e293b",
+                              borderBottom: "2px solid #1e293b",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
                             }}
                           >
-                            {viewMode === "customer"
-                              ? "TOTAL (MMK)"
-                              : invoiceType === "service_fee"
-                                ? "Total Service Fees (MMK)"
-                                : "Total Usage Charges (MMK)"}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "14px",
-                              fontWeight: 900,
-                              color: "#1e293b",
-                            }}
-                          >
-                            {grandTotal.toLocaleString()} MMK
-                          </span>
-                        </div>
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: 900,
+                                color: "#1e293b",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {viewMode === "customer"
+                                ? "TOTAL (MMK)"
+                                : invoiceType === "service_fee"
+                                  ? "Total Service Fees (MMK)"
+                                  : "Total Usage Charges (MMK)"}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: 900,
+                                color: "#1e293b",
+                              }}
+                            >
+                              {grandTotal.toLocaleString()} MMK
+                            </span>
+                          </div>
                         )}
 
                         <div
@@ -1830,22 +1935,74 @@ const InvoiceDetail: React.FC = () => {
                             </p>
                             {viewMode === "customer" ? (
                               (() => {
-                                const channel = invoice?.paymentDetails?.channel || "KBZPay (Kpay)";
-                                const channelMap: Record<string, { label: string; accNumber: string; accName: string }> = {
-                                  "KBZPay (Kpay)": { label: "K PAY", accNumber: "09951207795", accName: "Thant Sin Oo" },
-                                  "WavePay": { label: "WAVE PAY", accNumber: "09951207795", accName: "Thant Sin Oo" },
-                                  "AYAPay": { label: "AYA PAY", accNumber: "09951207795", accName: "Thant Sin Oo" },
-                                  "KBZ Bank Transfer": { label: "KBZ BANK", accNumber: "25650126200260401", accName: "Thant Sin Oo" },
-                                  "AYA Bank Transfer": { label: "AYA BANK", accNumber: "40034035740", accName: "Thant Sin Oo" },
+                                const channel =
+                                  invoice?.paymentDetails?.channel ||
+                                  "KBZPay (Kpay)";
+                                const channelMap: Record<
+                                  string,
+                                  {
+                                    label: string;
+                                    accNumber: string;
+                                    accName: string;
+                                  }
+                                > = {
+                                  "KBZPay (Kpay)": {
+                                    label: "K PAY",
+                                    accNumber: "09951207795",
+                                    accName: "Thant Sin Oo",
+                                  },
+                                  WavePay: {
+                                    label: "WAVE PAY",
+                                    accNumber: "09951207795",
+                                    accName: "Thant Sin Oo",
+                                  },
+                                  AYAPay: {
+                                    label: "AYA PAY",
+                                    accNumber: "09951207795",
+                                    accName: "Thant Sin Oo",
+                                  },
+                                  "KBZ Bank Transfer": {
+                                    label: "KBZ BANK",
+                                    accNumber: "25650126200260401",
+                                    accName: "Thant Sin Oo",
+                                  },
+                                  "AYA Bank Transfer": {
+                                    label: "AYA BANK",
+                                    accNumber: "40034035740",
+                                    accName: "Thant Sin Oo",
+                                  },
                                 };
-                                const info = channelMap[channel] || channelMap["KBZPay (Kpay)"];
+                                const info =
+                                  channelMap[channel] ||
+                                  channelMap["KBZPay (Kpay)"];
                                 return (
-                                  <div style={{ fontSize: "11px", color: "#374151" }}>
-                                    <h4 style={{ fontSize: "13px", fontWeight: 900, color: "#1e293b", margin: "0 0 3px", textTransform: "uppercase" }}>
+                                  <div
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "#374151",
+                                    }}
+                                  >
+                                    <h4
+                                      style={{
+                                        fontSize: "13px",
+                                        fontWeight: 900,
+                                        color: "#1e293b",
+                                        margin: "0 0 3px",
+                                        textTransform: "uppercase",
+                                      }}
+                                    >
                                       {info.label}
                                     </h4>
-                                    <p style={{ margin: "0", fontSize: "11px" }}>AccNumber - {info.accNumber}</p>
-                                    <p style={{ margin: "0", fontSize: "11px" }}>AccName - {info.accName}</p>
+                                    <p
+                                      style={{ margin: "0", fontSize: "11px" }}
+                                    >
+                                      AccNumber - {info.accNumber}
+                                    </p>
+                                    <p
+                                      style={{ margin: "0", fontSize: "11px" }}
+                                    >
+                                      AccName - {info.accName}
+                                    </p>
                                   </div>
                                 );
                               })()
