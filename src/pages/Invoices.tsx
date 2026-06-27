@@ -150,7 +150,11 @@ const Invoices: React.FC = () => {
                       <span className="text-sm font-semibold text-slate-800">{inv.companyName}</span>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-sm font-bold text-slate-800">{inv.grandTotal?.toLocaleString()} MMK</span>
+                      <span className="text-sm font-bold text-slate-800">
+                        {inv.currency === 'USD'
+                          ? `${Math.round(inv.grandTotal * (inv.exchangeRate || 0)).toLocaleString()} MMK`
+                          : `${inv.grandTotal?.toLocaleString()} MMK`}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${getStatusColor(inv.status, 'status')}`}>

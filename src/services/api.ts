@@ -8,6 +8,10 @@ import type {
   PasswordCategory,
   OnboardingFormConfig,
   OnboardingFormData,
+  Expense,
+  ExpenseCategory,
+  ExpenseSummary,
+  DashboardAnalytics,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -443,6 +447,66 @@ export const onboardingService = {
       `/onboarding/submissions/${id}/status`,
       { status },
     );
+    return response.data.data;
+  },
+};
+
+export const expenseService = {
+  getExpenses: async (params?: {
+    dateFrom?: string;
+    dateTo?: string;
+    category?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const response = await api.get<ApiResponse<{ expenses: Expense[]; total: number; page: number; pages: number }>>(
+      "/expenses",
+      { params },
+    );
+    return response.data.data;
+  },
+  getExpense: async (id: string) => {
+    const response = await api.get<ApiResponse<Expense>>(`/expenses/${id}`);
+    return response.data.data;
+  },
+  createExpense: async (data: Partial<Expense>) => {
+    const response = await api.post<ApiResponse<Expense>>("/expenses", data);
+    return response.data.data;
+  },
+  updateExpense: async (id: string, data: Partial<Expense>) => {
+    const response = await api.put<ApiResponse<Expense>>(`/expenses/${id}`, data);
+    return response.data.data;
+  },
+  deleteExpense: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/expenses/${id}`);
+    return response.data;
+  },
+  getCategories: async () => {
+    const response = await api.get<ApiResponse<ExpenseCategory[]>>("/expenses/categories");
+    return response.data.data;
+  },
+  createCategory: async (name: string) => {
+    const response = await api.post<ApiResponse<ExpenseCategory>>("/expenses/categories", { name });
+    return response.data.data;
+  },
+  deleteCategory: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/expenses/categories/${id}`);
+    return response.data;
+  },
+  getSummary: async (year?: number) => {
+    const response = await api.get<ApiResponse<ExpenseSummary>>("/expenses/summary", {
+      params: year ? { year } : {},
+    });
+    return response.data.data;
+  },
+};
+
+export const analyticsService = {
+  getDashboard: async (year?: number) => {
+    const response = await api.get<ApiResponse<DashboardAnalytics>>("/analytics", {
+      params: year ? { year } : {},
+    });
     return response.data.data;
   },
 };

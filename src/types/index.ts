@@ -214,3 +214,58 @@ export interface PasswordEntry {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Expense {
+  _id: string;
+  date: string;
+  description: string;
+  amount: number;
+  currency: 'MMK' | 'USD';
+  exchangeRate: number;
+  category: string;
+  paymentMethod?: string;
+  clientId?: { _id: string; companyName: string } | string;
+  notes?: string;
+  createdBy?: { _id: string; username: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpenseCategory {
+  _id: string;
+  name: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpenseSummary {
+  year: number;
+  totalExpensesMMK: number;
+  monthlyData: { _id: { month: number }; total: number; count: number }[];
+  categoryBreakdown: { _id: string; total: number; count: number }[];
+}
+
+export interface DashboardAnalytics {
+  year: number;
+  totalRevenueMMK: number;
+  totalExpenseMMK: number;
+  revenue: {
+    byMonth: { _id: { month: number }; total: number; count: number }[];
+    byType: { _id: string; total: number; count: number }[];
+  };
+  expenses: {
+    byMonth: { _id: { month: number }; total: number; count: number }[];
+    categoryBreakdown: { _id: string; total: number; count: number }[];
+  };
+  invoices: {
+    statusCounts: { _id: string; count: number }[];
+    paymentStatusCounts: { _id: string; count: number }[];
+  };
+  clients: {
+    total: number;
+    pipeline: { _id: string; count: number }[];
+    sourceChannels: { _id: string; count: number }[];
+    topByRevenue: { _id: string; totalRevenue: number; invoiceCount: number }[];
+  };
+}

@@ -6,6 +6,9 @@ import ClientPortal from './pages/ClientPortal';
 import PublicFormPage from './pages/PublicFormPage';
 import Invoices from './pages/Invoices';
 import InvoiceDetail from './pages/InvoiceDetail';
+import Expenses from './pages/Expenses';
+import ExpenseDetail from './pages/ExpenseDetail';
+import Analytics from './pages/Analytics';
 import Passwords from './pages/Passwords';
 import FormBuilder from './pages/FormBuilder';
 import Submissions from './pages/Submissions';
@@ -42,6 +45,9 @@ function App() {
             <Route path="portal/:id" element={<ClientPortal />} />
             <Route path="invoices" element={<Invoices />} />
             <Route path="invoices/:id" element={<InvoiceDetail />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="expenses/:id" element={<ExpenseDetail />} />
+            <Route path="analytics" element={<Analytics />} />
             <Route path="vault" element={<Passwords />} />
             <Route path="admin/form-builder" element={<FormBuilder />} />
             <Route path="admin/submissions" element={<Submissions />} />

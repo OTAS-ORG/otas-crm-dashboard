@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X } from 'lucide-react';
+import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X, Receipt, BarChart3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -22,6 +22,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     { name: 'Pre-Sale', path: '/', icon: Users },
     { name: 'Post-Sale', path: '/post-sale', icon: UserCheck },
     { name: 'Invoices', path: '/invoices', icon: FileText },
+    { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { name: 'Expenses', path: '/expenses', icon: Receipt },
     { name: 'Vault', path: '/vault', icon: Lock },
     { name: 'Form Builder', path: '/admin/form-builder', icon: Settings2 },
     { name: 'Submissions', path: '/admin/submissions', icon: ClipboardList },
