@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { expenseService, clientService } from '../services/api';
-import type { Expense, ExpenseCategory, Client } from '../types';
+import type { Expense, ExpenseCategory, ExpenseDepartment, Client } from '../types';
 import { ArrowLeft, Save, Trash2, Calendar, Tag, DollarSign, FileText, MessageSquare } from 'lucide-react';
 
 const ExpenseDetail: React.FC = () => {
@@ -11,14 +11,18 @@ const ExpenseDetail: React.FC = () => {
 
   const [expense, setExpense] = useState<Expense | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [departments, setDepartments] = useState<ExpenseDepartment[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(isNew);
   const [categoryInput, setCategoryInput] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [departmentInput, setDepartmentInput] = useState('');
+  const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const departmentRef = useRef<HTMLDivElement>(null);
 
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -27,6 +31,8 @@ const ExpenseDetail: React.FC = () => {
     currency: 'MMK' as 'MMK' | 'USD',
     exchangeRate: '',
     category: '',
+    department: '',
+    status: 'Pending',
     paymentMethod: '',
     clientId: '',
     notes: '',
@@ -35,12 +41,14 @@ const ExpenseDetail: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoryData, clientData] = await Promise.all([
+        const [categoryData, clientData, departmentData] = await Promise.all([
           expenseService.getCategories(),
           clientService.getClients(),
+          expenseService.getDepartments(),
         ]);
         setCategories(categoryData);
         setClients(clientData);
+        setDepartments(departmentData);
 
         if (!isNew && id) {
           const data = await expenseService.getExpense(id);
@@ -52,11 +60,14 @@ const ExpenseDetail: React.FC = () => {
             currency: data.currency,
             exchangeRate: data.exchangeRate?.toString() || '',
             category: data.category,
+            department: data.department || '',
+            status: data.status || 'Pending',
             paymentMethod: data.paymentMethod || '',
             clientId: typeof data.clientId === 'object' ? data.clientId._id : (data.clientId || ''),
             notes: data.notes || '',
           });
           setCategoryInput(data.category);
+          setDepartmentInput(data.department || '');
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -71,6 +82,9 @@ const ExpenseDetail: React.FC = () => {
     const handleClickOutside = (e: MouseEvent) => {
       if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
         setShowCategoryDropdown(false);
+      }
+      if (departmentRef.current && !departmentRef.current.contains(e.target as Node)) {
+        setShowDepartmentDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -93,6 +107,22 @@ const ExpenseDetail: React.FC = () => {
     setShowCategoryDropdown(true);
   };
 
+  const filteredDepartments = departments.filter((d) =>
+    d.name.toLowerCase().includes(departmentInput.toLowerCase())
+  );
+
+  const handleDepartmentSelect = (name: string) => {
+    setDepartmentInput(name);
+    setForm({ ...form, department: name });
+    setShowDepartmentDropdown(false);
+  };
+
+  const handleDepartmentInputChange = (value: string) => {
+    setDepartmentInput(value);
+    setForm({ ...form, department: value });
+    setShowDepartmentDropdown(true);
+  };
+
   const handleSave = async () => {
     if (!form.description || !form.amount || !form.category) {
       alert('Description, amount, and category are required');
@@ -107,6 +137,8 @@ const ExpenseDetail: React.FC = () => {
         currency: form.currency,
         exchangeRate: form.exchangeRate ? parseFloat(form.exchangeRate) : 0,
         category: form.category,
+        department: form.department || undefined,
+        status: form.status,
         paymentMethod: form.paymentMethod || undefined,
         clientId: form.clientId || undefined,
         notes: form.notes || undefined,
@@ -328,6 +360,63 @@ const ExpenseDetail: React.FC = () => {
               )}
             </div>
           )}
+        </div>
+
+        {/* Department (Smart Dropdown) */}
+        <div ref={departmentRef} className="relative">
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
+            <Tag className="w-4 h-4 text-slate-400" />
+            Department
+          </label>
+          <input
+            type="text"
+            value={departmentInput}
+            onChange={(e) => handleDepartmentInputChange(e.target.value)}
+            onFocus={() => isEditing && setShowDepartmentDropdown(true)}
+            disabled={!isEditing}
+            placeholder="Type or select a department..."
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-slate-50 disabled:text-slate-500"
+          />
+          {showDepartmentDropdown && isEditing && (
+            <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+              {filteredDepartments.length > 0 && (
+                <div>
+                  {filteredDepartments.map((d) => (
+                    <button
+                      key={d._id}
+                      onClick={() => handleDepartmentSelect(d.name)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 transition-colors"
+                    >
+                      {d.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {departmentInput && !departments.some((d) => d.name.toLowerCase() === departmentInput.toLowerCase()) && (
+                <div className="border-t border-slate-100 px-3 py-2 text-sm text-primary font-medium">
+                  Press Enter to create "{departmentInput}"
+                </div>
+              )}
+              {filteredDepartments.length === 0 && !departmentInput && (
+                <div className="px-3 py-2 text-sm text-slate-400">No departments yet. Type to create one.</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="text-sm font-medium text-slate-700 mb-1.5 block">Status</label>
+          <select
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            disabled={!isEditing}
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-slate-50 disabled:text-slate-500"
+          >
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
         </div>
 
         {/* Payment Method */}

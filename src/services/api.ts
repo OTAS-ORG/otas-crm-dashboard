@@ -10,8 +10,14 @@ import type {
   OnboardingFormData,
   Expense,
   ExpenseCategory,
+  ExpenseDepartment,
   ExpenseSummary,
   DashboardAnalytics,
+  Department,
+  Ticket,
+  TicketComment,
+  TicketDetailData,
+  UserInfo,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -500,6 +506,10 @@ export const expenseService = {
     });
     return response.data.data;
   },
+  getDepartments: async () => {
+    const response = await api.get<ApiResponse<ExpenseDepartment[]>>("/expenses/departments");
+    return response.data.data;
+  },
 };
 
 export const analyticsService = {
@@ -507,6 +517,52 @@ export const analyticsService = {
     const response = await api.get<ApiResponse<DashboardAnalytics>>("/analytics", {
       params: year ? { year } : {},
     });
+    return response.data.data;
+  },
+};
+
+export const userManagementService = {
+  getUsers: async () => {
+    const response = await api.get<ApiResponse<UserInfo[]>>("/auth/users");
+    return response.data.data;
+  },
+  updateUserDepartments: async (id: string, department_ids: string[]) => {
+    const response = await api.put<ApiResponse<UserInfo>>(`/auth/users/${id}/departments`, { department_ids });
+    return response.data.data;
+  },
+};
+
+export const ticketService = {
+  getTickets: async (params?: { search?: string; status?: string }) => {
+    const response = await api.get<ApiResponse<Ticket[]>>("/tickets", { params });
+    return response.data.data;
+  },
+  getTicket: async (id: string) => {
+    const response = await api.get<ApiResponse<TicketDetailData>>(`/tickets/${id}`);
+    return response.data.data;
+  },
+  createTicket: async (data: { title: string; description: string; priority?: string; department_id?: string }) => {
+    const response = await api.post<ApiResponse<Ticket>>("/tickets", data);
+    return response.data.data;
+  },
+  assignTicket: async (id: string, data: { assigned_to?: string; department_id?: string }) => {
+    const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}/assign`, data);
+    return response.data.data;
+  },
+  updateStatus: async (id: string, status: string) => {
+    const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}/status`, { status });
+    return response.data.data;
+  },
+  addComment: async (id: string, message: string) => {
+    const response = await api.post<ApiResponse<TicketComment>>(`/tickets/${id}/comments`, { message });
+    return response.data.data;
+  },
+  getDepartments: async () => {
+    const response = await api.get<ApiResponse<Department[]>>("/tickets/departments");
+    return response.data.data;
+  },
+  getUsersByDepartment: async (department_id: string) => {
+    const response = await api.get<ApiResponse<{ _id: string; username: string; role: string }[]>>(`/tickets/users/${department_id}`);
     return response.data.data;
   },
 };

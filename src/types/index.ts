@@ -223,15 +223,25 @@ export interface Expense {
   currency: 'MMK' | 'USD';
   exchangeRate: number;
   category: string;
+  department?: string;
   paymentMethod?: string;
   clientId?: { _id: string; companyName: string } | string;
   notes?: string;
+  status?: 'Pending' | 'Approved' | 'Rejected';
   createdBy?: { _id: string; username: string };
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ExpenseCategory {
+  _id: string;
+  name: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpenseDepartment {
   _id: string;
   name: string;
   createdBy?: string;
@@ -268,4 +278,58 @@ export interface DashboardAnalytics {
     sourceChannels: { _id: string; count: number }[];
     topByRevenue: { _id: string; totalRevenue: number; invoiceCount: number }[];
   };
+}
+
+export interface Department {
+  _id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TicketStatus = 'Open' | 'In Progress' | 'Pending' | 'Resolved';
+export type TicketPriority = 'Low' | 'Medium' | 'High';
+
+export interface Ticket {
+  _id: string;
+  title: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  department_id?: { _id: string; name: string } | string;
+  assigned_to?: { _id: string; username: string } | string;
+  created_by: { _id: string; username: string } | string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TicketComment {
+  _id: string;
+  ticket_id: string;
+  user_id: { _id: string; username: string };
+  message: string;
+  createdAt: string;
+}
+
+export interface TicketHistory {
+  _id: string;
+  ticket_id: string;
+  user_id: { _id: string; username: string };
+  action_performed: string;
+  createdAt: string;
+}
+
+export interface TicketDetailData {
+  ticket: Ticket;
+  comments: TicketComment[];
+  history: TicketHistory[];
+}
+
+export interface UserInfo {
+  _id: string;
+  username: string;
+  role: string;
+  departments?: { _id: string; name: string }[] | string[];
+  createdAt: string;
+  updatedAt: string;
 }
