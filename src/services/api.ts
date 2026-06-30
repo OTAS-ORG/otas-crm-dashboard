@@ -18,6 +18,8 @@ import type {
   TicketComment,
   TicketDetailData,
   UserInfo,
+  Salary,
+  SalarySummary,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -563,6 +565,43 @@ export const ticketService = {
   },
   getUsersByDepartment: async (department_id: string) => {
     const response = await api.get<ApiResponse<{ _id: string; username: string; role: string }[]>>(`/tickets/users/${department_id}`);
+    return response.data.data;
+  },
+};
+
+export const salaryService = {
+  getSalaries: async (params?: {
+    search?: string;
+    status?: string;
+    department?: string;
+    month?: number;
+    year?: number;
+    page?: number;
+    limit?: number;
+  }) => {
+    const response = await api.get<ApiResponse<{ salaries: Salary[]; total: number; page: number; pages: number }>>("/salaries", { params });
+    return response.data.data;
+  },
+  getSalary: async (id: string) => {
+    const response = await api.get<ApiResponse<Salary>>(`/salaries/${id}`);
+    return response.data.data;
+  },
+  createSalary: async (data: Partial<Salary>) => {
+    const response = await api.post<ApiResponse<Salary>>("/salaries", data);
+    return response.data.data;
+  },
+  updateSalary: async (id: string, data: Partial<Salary>) => {
+    const response = await api.put<ApiResponse<Salary>>(`/salaries/${id}`, data);
+    return response.data.data;
+  },
+  deleteSalary: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/salaries/${id}`);
+    return response.data;
+  },
+  getSummary: async (year?: number) => {
+    const response = await api.get<ApiResponse<SalarySummary>>("/salaries/summary", {
+      params: year ? { year } : {},
+    });
     return response.data.data;
   },
 };

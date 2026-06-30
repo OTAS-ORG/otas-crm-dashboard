@@ -9,6 +9,8 @@ import InvoiceDetail from './pages/InvoiceDetail';
 import Expenses from './pages/Expenses';
 import ExpenseDetail from './pages/ExpenseDetail';
 import Analytics from './pages/Analytics';
+import Salaries from './pages/Salaries';
+import SalaryDetail from './pages/SalaryDetail';
 import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import Passwords from './pages/Passwords';
@@ -53,6 +55,8 @@ function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="tickets" element={<Tickets />} />
             <Route path="tickets/:id" element={<TicketDetail />} />
+            <Route path="salaries" element={<Salaries />} />
+            <Route path="salaries/:id" element={<SalaryDetail />} />
             <Route path="vault" element={<Passwords />} />
             <Route path="admin/form-builder" element={<FormBuilder />} />
             <Route path="admin/users" element={<UserManagement />} />

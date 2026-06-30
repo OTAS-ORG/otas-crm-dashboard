@@ -333,3 +333,49 @@ export interface UserInfo {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface SalaryAllowances {
+  phone: number;
+  internet: number;
+  travel: number;
+  meal: number;
+  commission: number;
+}
+
+export interface SalaryDeductions {
+  unpaidLeave: number;
+  latePenalty: number;
+  advanceSalary: number;
+}
+
+export interface Salary {
+  _id: string;
+  employeeName: string;
+  employeeId?: string;
+  position?: string;
+  dateOfJoining?: string;
+  department?: string;
+  month: number;
+  year: number;
+  baseSalary: number;
+  allowances: SalaryAllowances;
+  deductions: SalaryDeductions;
+  totalAllowances: number;
+  totalDeductions: number;
+  netPay: number;
+  currency: 'MMK' | 'USD';
+  exchangeRate: number;
+  status: 'Draft' | 'Paid';
+  paymentChannel?: string;
+  paidDate?: string;
+  notes?: string;
+  createdBy?: { _id: string; username: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SalarySummary {
+  year: number;
+  monthlyData: { _id: { month: number }; count: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; totalNetPay: number }[];
+  totals: { count: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; totalNetPay: number };
+}
