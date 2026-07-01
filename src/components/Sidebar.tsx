@@ -32,7 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     { name: 'Submissions', path: '/admin/submissions', icon: ClipboardList },
   ];
 
-  const salesOnlyPaths = ['/', '/post-sale'];
+  const salesOnlyPaths = ['/', '/post-sale', '/admin/submissions'];
   const navItems = user?.role === 'Sales'
     ? allNavItems.filter((item) => salesOnlyPaths.includes(item.path))
     : allNavItems;
