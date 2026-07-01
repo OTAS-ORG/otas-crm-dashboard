@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     navigate('/login');
   };
 
-  const navItems = [
+  const allNavItems = [
     { name: 'Pre-Sale', path: '/', icon: Users },
     { name: 'Post-Sale', path: '/post-sale', icon: UserCheck },
     { name: 'Invoices', path: '/invoices', icon: FileText },
@@ -31,6 +31,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     { name: 'Users', path: '/admin/users', icon: Users },
     { name: 'Submissions', path: '/admin/submissions', icon: ClipboardList },
   ];
+
+  const salesOnlyPaths = ['/', '/post-sale'];
+  const navItems = user?.role === 'Sales'
+    ? allNavItems.filter((item) => salesOnlyPaths.includes(item.path))
+    : allNavItems;
 
   return (
     <>

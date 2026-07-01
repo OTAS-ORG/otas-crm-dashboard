@@ -20,6 +20,21 @@ import {
 import InvoiceTypePicker from "../components/InvoiceTypePicker";
 import type { InvoiceType, ServiceFeeType } from "../types";
 
+const PaidSeal: React.FC = () => (
+  <img
+    src="/seal.jpg"
+    alt="PAID Seal"
+    style={{
+      width: "130px",
+      height: "130px",
+      objectFit: "contain",
+      pointerEvents: "none",
+      userSelect: "none",
+      flexShrink: 0,
+    }}
+  />
+);
+
 const InvoiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -808,29 +823,7 @@ const InvoiceDetail: React.FC = () => {
                                 </div>
                               )}
 
-                              {/* PAID Watermark */}
-                              {viewMode === "customer" &&
-                                invoice?.paymentStatus === "Received" && (
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      top: "50%",
-                                      left: "50%",
-                                      transform:
-                                        "translate(-50%, -50%) rotate(-30deg)",
-                                      fontSize: "120px",
-                                      fontWeight: 900,
-                                      color: "rgba(16, 185, 129, 0.12)",
-                                      textTransform: "uppercase",
-                                      letterSpacing: "15px",
-                                      pointerEvents: "none",
-                                      whiteSpace: "nowrap",
-                                      zIndex: 10,
-                                    }}
-                                  >
-                                    PAID
-                                  </div>
-                                )}
+
                             </div>
                             <button
                               onClick={() => removeItem(i)}
@@ -1912,7 +1905,7 @@ const InvoiceDetail: React.FC = () => {
                             width: "100%",
                           }}
                         >
-                          {/* Payment Methods */}
+                          {/* Payment Methods + PAID Seal */}
                           <div
                             style={{
                               marginTop: "auto",
@@ -1921,160 +1914,171 @@ const InvoiceDetail: React.FC = () => {
                               padding: "16px 40px 20px",
                               backgroundColor: "#f8fafc",
                               borderTop: "1px solid #e2e8f0",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-end",
                             }}
                           >
-                            <p
-                              style={{
-                                fontSize: "12px",
-                                color: "#6b7280",
-                                fontWeight: 600,
-                                margin: "0 0 10px",
-                              }}
-                            >
-                              Payment Method
-                            </p>
-                            {viewMode === "customer" ? (
-                              (() => {
-                                const channel =
-                                  invoice?.paymentDetails?.channel ||
-                                  "KBZPay (Kpay)";
-                                const channelMap: Record<
-                                  string,
-                                  {
-                                    label: string;
-                                    accNumber: string;
-                                    accName: string;
-                                  }
-                                > = {
-                                  "KBZPay (Kpay)": {
-                                    label: "K PAY",
-                                    accNumber: "09951207795",
-                                    accName: "Thant Sin Oo",
-                                  },
-                                  WavePay: {
-                                    label: "WAVE PAY",
-                                    accNumber: "09951207795",
-                                    accName: "Thant Sin Oo",
-                                  },
-                                  AYAPay: {
-                                    label: "AYA PAY",
-                                    accNumber: "09951207795",
-                                    accName: "Thant Sin Oo",
-                                  },
-                                  "KBZ Bank Transfer": {
-                                    label: "KBZ BANK",
-                                    accNumber: "25650126200260401",
-                                    accName: "Thant Sin Oo",
-                                  },
-                                  "AYA Bank Transfer": {
-                                    label: "AYA BANK",
-                                    accNumber: "40034035740",
-                                    accName: "Thant Sin Oo",
-                                  },
-                                };
-                                const info =
-                                  channelMap[channel] ||
-                                  channelMap["KBZPay (Kpay)"];
-                                return (
-                                  <div
-                                    style={{
-                                      fontSize: "11px",
-                                      color: "#374151",
-                                    }}
-                                  >
+                            <div style={{ flex: 1 }}>
+                              <p
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#6b7280",
+                                  fontWeight: 600,
+                                  margin: "0 0 10px",
+                                }}
+                              >
+                                Payment Method
+                              </p>
+                              {viewMode === "customer" ? (
+                                (() => {
+                                  const channel =
+                                    invoice?.paymentDetails?.channel ||
+                                    "KBZPay (Kpay)";
+                                  const channelMap: Record<
+                                    string,
+                                    {
+                                      label: string;
+                                      accNumber: string;
+                                      accName: string;
+                                    }
+                                  > = {
+                                    "KBZPay (Kpay)": {
+                                      label: "K PAY",
+                                      accNumber: "09951207795",
+                                      accName: "Thant Sin Oo",
+                                    },
+                                    WavePay: {
+                                      label: "WAVE PAY",
+                                      accNumber: "09951207795",
+                                      accName: "Thant Sin Oo",
+                                    },
+                                    AYAPay: {
+                                      label: "AYA PAY",
+                                      accNumber: "09951207795",
+                                      accName: "Thant Sin Oo",
+                                    },
+                                    "KBZ Bank Transfer": {
+                                      label: "KBZ BANK",
+                                      accNumber: "25650126200260401",
+                                      accName: "Thant Sin Oo",
+                                    },
+                                    "AYA Bank Transfer": {
+                                      label: "AYA BANK",
+                                      accNumber: "40034035740",
+                                      accName: "Thant Sin Oo",
+                                    },
+                                  };
+                                  const info =
+                                    channelMap[channel] ||
+                                    channelMap["KBZPay (Kpay)"];
+                                  return (
+                                    <div
+                                      style={{
+                                        fontSize: "11px",
+                                        color: "#374151",
+                                      }}
+                                    >
+                                      <h4
+                                        style={{
+                                          fontSize: "13px",
+                                          fontWeight: 900,
+                                          color: "#1e293b",
+                                          margin: "0 0 3px",
+                                          textTransform: "uppercase",
+                                        }}
+                                      >
+                                        {info.label}
+                                      </h4>
+                                      <p
+                                        style={{ margin: "0", fontSize: "11px" }}
+                                      >
+                                        AccNumber - {info.accNumber}
+                                      </p>
+                                      <p
+                                        style={{ margin: "0", fontSize: "11px" }}
+                                      >
+                                        AccName - {info.accName}
+                                      </p>
+                                    </div>
+                                  );
+                                })()
+                              ) : (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    gap: "40px",
+                                    fontSize: "11px",
+                                    color: "#374151",
+                                  }}
+                                >
+                                  <div>
                                     <h4
                                       style={{
-                                        fontSize: "13px",
+                                        fontSize: "15px",
                                         fontWeight: 900,
                                         color: "#1e293b",
                                         margin: "0 0 3px",
                                         textTransform: "uppercase",
                                       }}
                                     >
-                                      {info.label}
+                                      AYA BANK
                                     </h4>
-                                    <p
-                                      style={{ margin: "0", fontSize: "11px" }}
-                                    >
-                                      AccNumber - {info.accNumber}
+                                    <p style={{ margin: "0", fontSize: "13px" }}>
+                                      AccNumber - 40034035740
                                     </p>
-                                    <p
-                                      style={{ margin: "0", fontSize: "11px" }}
-                                    >
-                                      AccName - {info.accName}
+                                    <p style={{ margin: "0", fontSize: "13px" }}>
+                                      Name - Thant Sin Oo
                                     </p>
                                   </div>
-                                );
-                              })()
-                            ) : (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  gap: "40px",
-                                  fontSize: "11px",
-                                  color: "#374151",
-                                }}
-                              >
-                                <div>
-                                  <h4
-                                    style={{
-                                      fontSize: "15px",
-                                      fontWeight: 900,
-                                      color: "#1e293b",
-                                      margin: "0 0 3px",
-                                      textTransform: "uppercase",
-                                    }}
-                                  >
-                                    AYA BANK
-                                  </h4>
-                                  <p style={{ margin: "0", fontSize: "13px" }}>
-                                    AccNumber - 40034035740
-                                  </p>
-                                  <p style={{ margin: "0", fontSize: "13px" }}>
-                                    Name - Thant Sin Oo
-                                  </p>
+                                  <div>
+                                    <h4
+                                      style={{
+                                        fontSize: "15px",
+                                        fontWeight: 900,
+                                        color: "#1e293b",
+                                        margin: "0 0 3px",
+                                        textTransform: "uppercase",
+                                      }}
+                                    >
+                                      KBZ BANK
+                                    </h4>
+                                    <p style={{ margin: "0", fontSize: "13px" }}>
+                                      Acc Number - 25650126200260401
+                                    </p>
+                                    <p style={{ margin: "0", fontSize: "13px" }}>
+                                      Name - Thant Sin Oo
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <h4
+                                      style={{
+                                        fontSize: "15px",
+                                        fontWeight: 900,
+                                        color: "#1e293b",
+                                        margin: "0 0 3px",
+                                        textTransform: "uppercase",
+                                      }}
+                                    >
+                                      KPAY / AYA PAY
+                                    </h4>
+                                    <p style={{ margin: "0", fontSize: "13px" }}>
+                                      Acc Number - 09 951207795
+                                    </p>
+                                    <p style={{ margin: "0", fontSize: "13px" }}>
+                                      Name - Thant Sin Oo
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h4
-                                    style={{
-                                      fontSize: "15px",
-                                      fontWeight: 900,
-                                      color: "#1e293b",
-                                      margin: "0 0 3px",
-                                      textTransform: "uppercase",
-                                    }}
-                                  >
-                                    KBZ BANK
-                                  </h4>
-                                  <p style={{ margin: "0", fontSize: "13px" }}>
-                                    Acc Number - 25650126200260401
-                                  </p>
-                                  <p style={{ margin: "0", fontSize: "13px" }}>
-                                    Name - Thant Sin Oo
-                                  </p>
-                                </div>
-                                <div>
-                                  <h4
-                                    style={{
-                                      fontSize: "15px",
-                                      fontWeight: 900,
-                                      color: "#1e293b",
-                                      margin: "0 0 3px",
-                                      textTransform: "uppercase",
-                                    }}
-                                  >
-                                    KPAY / AYA PAY
-                                  </h4>
-                                  <p style={{ margin: "0", fontSize: "13px" }}>
-                                    Acc Number - 09 951207795
-                                  </p>
-                                  <p style={{ margin: "0", fontSize: "13px" }}>
-                                    Name - Thant Sin Oo
-                                  </p>
-                                </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
+
+                            {/* PAID Seal beside payment method */}
+                            {viewMode === "customer" &&
+                              invoice?.paymentStatus === "Received" && (
+                                <PaidSeal />
+                              )}
                           </div>
 
                           {/* Footer Banner */}

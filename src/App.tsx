@@ -36,6 +36,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
+  const { user } = useAuth();
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" />;
+  }
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -48,20 +56,20 @@ function App() {
             <Route index element={<PreSale />} />
             <Route path="post-sale" element={<PostSale />} />
             <Route path="portal/:id" element={<ClientPortal />} />
-            <Route path="invoices" element={<Invoices />} />
-            <Route path="invoices/:id" element={<InvoiceDetail />} />
-            <Route path="expenses" element={<Expenses />} />
-            <Route path="expenses/:id" element={<ExpenseDetail />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="tickets" element={<Tickets />} />
-            <Route path="tickets/:id" element={<TicketDetail />} />
-            <Route path="salaries" element={<Salaries />} />
-            <Route path="salaries/:id" element={<SalaryDetail />} />
-            <Route path="vault" element={<Passwords />} />
-            <Route path="admin/form-builder" element={<FormBuilder />} />
-            <Route path="admin/users" element={<UserManagement />} />
-            <Route path="admin/submissions" element={<Submissions />} />
-            <Route path="admin/submissions/:id" element={<SubmissionDetail />} />
+            <Route path="invoices" element={<RoleRoute><Invoices /></RoleRoute>} />
+            <Route path="invoices/:id" element={<RoleRoute><InvoiceDetail /></RoleRoute>} />
+            <Route path="expenses" element={<RoleRoute><Expenses /></RoleRoute>} />
+            <Route path="expenses/:id" element={<RoleRoute><ExpenseDetail /></RoleRoute>} />
+            <Route path="analytics" element={<RoleRoute><Analytics /></RoleRoute>} />
+            <Route path="tickets" element={<RoleRoute><Tickets /></RoleRoute>} />
+            <Route path="tickets/:id" element={<RoleRoute><TicketDetail /></RoleRoute>} />
+            <Route path="salaries" element={<RoleRoute><Salaries /></RoleRoute>} />
+            <Route path="salaries/:id" element={<RoleRoute><SalaryDetail /></RoleRoute>} />
+            <Route path="vault" element={<RoleRoute><Passwords /></RoleRoute>} />
+            <Route path="admin/form-builder" element={<RoleRoute><FormBuilder /></RoleRoute>} />
+            <Route path="admin/users" element={<RoleRoute><UserManagement /></RoleRoute>} />
+            <Route path="admin/submissions" element={<RoleRoute><Submissions /></RoleRoute>} />
+            <Route path="admin/submissions/:id" element={<RoleRoute><SubmissionDetail /></RoleRoute>} />
           </Route>
         </Routes>
       </Router>
