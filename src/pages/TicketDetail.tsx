@@ -41,7 +41,7 @@ const TicketDetail: React.FC = () => {
     } catch { return null; }
   })();
 
-  const isAdmin = storedUser?.user?.role === 'Admin';
+  const isAdmin = storedUser?.role === 'Admin';
 
   const fetchTicket = async () => {
     if (!id) return;

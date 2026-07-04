@@ -330,6 +330,7 @@ export interface UserInfo {
   username: string;
   role: string;
   departments?: { _id: string; name: string }[] | string[];
+  telegramChatId?: string;
   createdAt: string;
   updatedAt: string;
 }

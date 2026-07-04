@@ -532,6 +532,18 @@ export const userManagementService = {
     const response = await api.put<ApiResponse<UserInfo>>(`/auth/users/${id}/departments`, { department_ids });
     return response.data.data;
   },
+  updateUserTelegramChatId: async (id: string, telegramChatId: string) => {
+    const response = await api.put<ApiResponse<UserInfo>>(`/auth/users/${id}/telegram`, { telegramChatId });
+    return response.data.data;
+  },
+  updateUserRole: async (id: string, role: string) => {
+    const response = await api.put<ApiResponse<UserInfo>>(`/auth/users/${id}/role`, { role });
+    return response.data.data;
+  },
+  createUser: async (data: { username: string; password: string; role: string }) => {
+    const response = await api.post<ApiResponse<UserInfo>>('/auth/users', data);
+    return response.data.data;
+  },
 };
 
 export const ticketService = {
