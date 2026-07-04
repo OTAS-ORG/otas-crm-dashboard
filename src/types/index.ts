@@ -380,3 +380,39 @@ export interface SalarySummary {
   monthlyData: { _id: { month: number }; count: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; totalNetPay: number }[];
   totals: { count: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; totalNetPay: number };
 }
+
+export type SDLCStatus = 'backlog' | 'todo' | 'in-progress' | 'code-review' | 'qa-testing' | 'done';
+export type TaskPriority = 'urgent' | 'high' | 'normal' | 'low';
+
+export interface Project {
+  _id: string;
+  name: string;
+  description?: string;
+  projectKey: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Task {
+  _id: string;
+  title: string;
+  description?: string;
+  status: SDLCStatus;
+  priority: TaskPriority;
+  due_date?: string;
+  estimatedHours?: number;
+  actualHours?: number;
+  assignedTo?: { _id: string; username: string } | string;
+  qaAssignedTo?: { _id: string; username: string } | string;
+  projectId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskComment {
+  _id: string;
+  task_id: string;
+  user_id: { _id: string; username: string };
+  message: string;
+  createdAt: string;
+}

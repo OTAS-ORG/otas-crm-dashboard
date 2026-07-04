@@ -20,6 +20,10 @@ import type {
   UserInfo,
   Salary,
   SalarySummary,
+  Project,
+  Task,
+  SDLCStatus,
+  TaskComment,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -614,6 +618,53 @@ export const salaryService = {
     const response = await api.get<ApiResponse<SalarySummary>>("/salaries/summary", {
       params: year ? { year } : {},
     });
+    return response.data.data;
+  },
+};
+
+export const projectService = {
+  getProjects: async () => {
+    const response = await api.get<ApiResponse<Project[]>>("/projects");
+    return response.data.data;
+  },
+  createProject: async (data: { name: string; description?: string }) => {
+    const response = await api.post<ApiResponse<Project>>("/projects", data);
+    return response.data.data;
+  },
+  getProject: async (id: string) => {
+    const response = await api.get<ApiResponse<Project>>(`/projects/${id}`);
+    return response.data.data;
+  },
+  getTasks: async (projectId: string) => {
+    const response = await api.get<ApiResponse<Task[]>>(`/projects/${projectId}/tasks`);
+    return response.data.data;
+  },
+  createTask: async (projectId: string, data: Partial<Task>) => {
+    const response = await api.post<ApiResponse<Task>>(`/projects/${projectId}/tasks`, data);
+    return response.data.data;
+  },
+  updateTaskStatus: async (taskId: string, status: SDLCStatus) => {
+    const response = await api.patch<ApiResponse<Task>>(`/tasks/${taskId}/status`, { status });
+    return response.data.data;
+  },
+  updateTask: async (taskId: string, data: Partial<Task>) => {
+    const response = await api.put<ApiResponse<Task>>(`/tasks/${taskId}`, data);
+    return response.data.data;
+  },
+  deleteTask: async (taskId: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/tasks/${taskId}`);
+    return response.data;
+  },
+  getTask: async (taskId: string) => {
+    const response = await api.get<ApiResponse<Task>>(`/tasks/${taskId}`);
+    return response.data.data;
+  },
+  getTaskComments: async (taskId: string) => {
+    const response = await api.get<ApiResponse<TaskComment[]>>(`/tasks/${taskId}/comments`);
+    return response.data.data;
+  },
+  addTaskComment: async (taskId: string, message: string) => {
+    const response = await api.post<ApiResponse<TaskComment>>(`/tasks/${taskId}/comments`, { message });
     return response.data.data;
   },
 };

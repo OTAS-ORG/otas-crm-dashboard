@@ -19,6 +19,9 @@ import UserManagement from './pages/UserManagement';
 import Submissions from './pages/Submissions';
 import SubmissionDetail from './pages/SubmissionDetail';
 import OnboardingFormPage from './pages/OnboardingFormPage';
+import Projects from './pages/Projects';
+import ProjectDetail from './pages/ProjectDetail';
+import TaskDetail from './pages/TaskDetail';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -63,6 +66,9 @@ function App() {
             <Route path="analytics" element={<RoleRoute><Analytics /></RoleRoute>} />
             <Route path="tickets" element={<RoleRoute><Tickets /></RoleRoute>} />
             <Route path="tickets/:id" element={<RoleRoute><TicketDetail /></RoleRoute>} />
+            <Route path="projects" element={<RoleRoute><Projects /></RoleRoute>} />
+            <Route path="projects/:id" element={<RoleRoute><ProjectDetail /></RoleRoute>} />
+            <Route path="projects/:id/tasks/:taskId" element={<RoleRoute><TaskDetail /></RoleRoute>} />
             <Route path="salaries" element={<RoleRoute><Salaries /></RoleRoute>} />
             <Route path="salaries/:id" element={<RoleRoute><SalaryDetail /></RoleRoute>} />
             <Route path="vault" element={<RoleRoute><Passwords /></RoleRoute>} />

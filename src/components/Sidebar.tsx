@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X, Receipt, BarChart3, LifeBuoy, Wallet } from 'lucide-react';
+import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X, Receipt, BarChart3, LifeBuoy, Wallet, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -24,6 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     { name: 'Invoices', path: '/invoices', icon: FileText },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Expenses', path: '/expenses', icon: Receipt },
+    { name: 'Projects', path: '/projects', icon: Layers },
     { name: 'Tickets', path: '/tickets', icon: LifeBuoy },
     { name: 'Payroll', path: '/salaries', icon: Wallet },
     { name: 'Vault', path: '/vault', icon: Lock },
