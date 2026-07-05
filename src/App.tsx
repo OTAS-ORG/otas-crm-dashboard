@@ -22,6 +22,8 @@ import OnboardingFormPage from './pages/OnboardingFormPage';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import TaskDetail from './pages/TaskDetail';
+import AIContentGenerator from './pages/AIContentGenerator';
+import AIInsights from './pages/AIInsights';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -76,6 +78,8 @@ function App() {
             <Route path="admin/users" element={<RoleRoute><UserManagement /></RoleRoute>} />
             <Route path="admin/submissions" element={<RoleRoute><Submissions /></RoleRoute>} />
             <Route path="admin/submissions/:id" element={<RoleRoute><SubmissionDetail /></RoleRoute>} />
+            <Route path="ai" element={<RoleRoute><AIContentGenerator /></RoleRoute>} />
+            <Route path="ai/insights" element={<RoleRoute><AIInsights /></RoleRoute>} />
           </Route>
         </Routes>
       </Router>

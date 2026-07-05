@@ -24,6 +24,12 @@ import type {
   Task,
   SDLCStatus,
   TaskComment,
+  AIMessage,
+  AIChatResponse,
+  AIGenerateResponse,
+  AIInsights,
+  AISuggestion,
+  AIModel,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -665,6 +671,42 @@ export const projectService = {
   },
   addTaskComment: async (taskId: string, message: string) => {
     const response = await api.post<ApiResponse<TaskComment>>(`/tasks/${taskId}/comments`, { message });
+    return response.data.data;
+  },
+};
+
+export const aiService = {
+  chat: async (messages: AIMessage[], model?: string) => {
+    const response = await api.post<ApiResponse<AIChatResponse>>("/ai/chat", { messages, model });
+    return response.data.data;
+  },
+  chatStream: async (messages: AIMessage[], model?: string): Promise<ReadableStream> => {
+    const storedUser = localStorage.getItem("otas_user");
+    const token = storedUser ? JSON.parse(storedUser).token : "";
+    const response = await fetch(`${API_URL}/ai/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ messages, model }),
+    });
+    return response.body!;
+  },
+  generateContent: async (type: string, clientId?: string, context?: Record<string, string>) => {
+    const response = await api.post<ApiResponse<AIGenerateResponse>>("/ai/generate", { type, clientId, context });
+    return response.data.data;
+  },
+  analyzeClient: async (clientId: string) => {
+    const response = await api.post<ApiResponse<AIInsights>>("/ai/analyze-client", { clientId });
+    return response.data.data;
+  },
+  suggestTicket: async (title: string, description: string, priority?: string) => {
+    const response = await api.post<ApiResponse<AISuggestion>>("/ai/suggest-ticket", { title, description, priority });
+    return response.data.data;
+  },
+  getModels: async () => {
+    const response = await api.get<ApiResponse<{ primary: string; fallback: string; available: AIModel[] }>>("/ai/models");
     return response.data.data;
   },
 };

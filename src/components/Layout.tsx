@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import AIAssistant from './AIAssistant';
+import { useAuth } from '../context/AuthContext';
 
 const Layout: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="flex min-h-screen bg-transparent">
@@ -19,6 +22,7 @@ const Layout: React.FC = () => {
           <Outlet context={{ searchQuery }} />
         </main>
       </div>
+      {user?.role === 'Admin' && <AIAssistant />}
     </div>
   );
 };

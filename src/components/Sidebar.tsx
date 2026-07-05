@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X, Receipt, BarChart3, LifeBuoy, Wallet, Layers } from 'lucide-react';
+import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X, Receipt, BarChart3, LifeBuoy, Wallet, Layers, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -31,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     { name: 'Form Builder', path: '/admin/form-builder', icon: Settings2 },
     { name: 'Users', path: '/admin/users', icon: Users },
     { name: 'Submissions', path: '/admin/submissions', icon: ClipboardList },
+    { name: 'AI', path: '/ai', icon: Sparkles },
   ];
 
   const userOnlyPaths = ['/', '/post-sale', '/admin/submissions'];

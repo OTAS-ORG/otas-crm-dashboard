@@ -428,3 +428,48 @@ export interface TaskComment {
   message: string;
   createdAt: string;
 }
+
+export interface AIMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface AIChatResponse {
+  content: string;
+  model: string;
+  usage: { promptTokens: number; completionTokens: number };
+}
+
+export interface AIGenerateResponse {
+  content: string;
+  type: string;
+  model: string;
+  usage: { promptTokens: number; completionTokens: number };
+}
+
+export interface AIInsights {
+  summary: string;
+  strengths: string[];
+  risks: string[];
+  nextSteps: string[];
+  recommendations: { action: string; priority: 'high' | 'medium' | 'low' }[];
+  model?: string;
+}
+
+export interface AISuggestion {
+  departmentId: string;
+  departmentName: string;
+  assignedTo: string;
+  assignedToName: string;
+  priority: string;
+  estimatedTime: string;
+  reasoning: string;
+  model?: string;
+}
+
+export interface AIModel {
+  id: string;
+  name: string;
+  contextLength: number;
+  isFree: boolean;
+}
