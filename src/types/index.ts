@@ -260,6 +260,8 @@ export interface DashboardAnalytics {
   year: number;
   totalRevenueMMK: number;
   totalExpenseMMK: number;
+  prevYearRevenueMMK: number;
+  prevYearExpenseMMK: number;
   revenue: {
     byMonth: { _id: { month: number }; total: number; count: number }[];
     byType: { _id: string; total: number; count: number }[];
@@ -267,6 +269,7 @@ export interface DashboardAnalytics {
   expenses: {
     byMonth: { _id: { month: number }; total: number; count: number }[];
     categoryBreakdown: { _id: string; total: number; count: number }[];
+    byDepartment: { _id: string; total: number; count: number }[];
   };
   invoices: {
     statusCounts: { _id: string; count: number }[];
@@ -277,6 +280,15 @@ export interface DashboardAnalytics {
     pipeline: { _id: string; count: number }[];
     sourceChannels: { _id: string; count: number }[];
     topByRevenue: { _id: string; totalRevenue: number; invoiceCount: number }[];
+  };
+  payroll: {
+    summary: { totalNetPay: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; count: number };
+    byMonth: { _id: { month: number }; totalNetPay: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; count: number }[];
+  };
+  tickets: {
+    total: number;
+    byStatus: { _id: string; count: number }[];
+    byDepartment: { _id: string; count: number }[];
   };
 }
 

@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           </button>
         </div>
 
-        <nav className="flex-1 mt-6 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 mt-6 px-3 space-y-1 overflow-y-auto sidebar-scroll">
           <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Main Menu</p>
           {navItems.map((item) => (
             <NavLink

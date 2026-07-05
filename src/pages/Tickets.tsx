@@ -1,22 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ticketService } from '../services/api';
-import type { Ticket, Department } from '../types';
-import { Plus, Search, LifeBuoy, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ticketService } from "../services/api";
+import type { Ticket, Department } from "../types";
+import {
+  Plus,
+  Search,
+  LifeBuoy,
+  AlertCircle,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 
 const priorityIcon = (p: string) => {
-  if (p === 'High') return <ArrowUp className="w-3.5 h-3.5 text-red-500" />;
-  if (p === 'Low') return <ArrowDown className="w-3.5 h-3.5 text-slate-400" />;
+  if (p === "High") return <ArrowUp className="w-3.5 h-3.5 text-red-500" />;
+  if (p === "Low") return <ArrowDown className="w-3.5 h-3.5 text-slate-400" />;
   return <AlertCircle className="w-3.5 h-3.5 text-amber-500" />;
 };
 
 const statusColor = (s: string) => {
   switch (s) {
-    case 'Open': return 'bg-blue-100 text-blue-700 border-blue-200';
-    case 'In Progress': return 'bg-amber-100 text-amber-700 border-amber-200';
-    case 'Pending': return 'bg-purple-100 text-purple-700 border-purple-200';
-    case 'Resolved': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-    default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    case "Open":
+      return "bg-blue-100 text-blue-700 border-blue-200";
+    case "In Progress":
+      return "bg-amber-100 text-amber-700 border-amber-200";
+    case "Pending":
+      return "bg-purple-100 text-purple-700 border-purple-200";
+    case "Resolved":
+      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    default:
+      return "bg-slate-100 text-slate-700 border-slate-200";
   }
 };
 
@@ -25,10 +37,15 @@ const Tickets: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', priority: 'Medium', department_id: '' });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    priority: "Medium",
+    department_id: "",
+  });
   const [creating, setCreating] = useState(false);
 
   const fetchData = async () => {
@@ -44,7 +61,7 @@ const Tickets: React.FC = () => {
       setTickets(ticketData);
       setDepartments(deptData);
     } catch (error) {
-      console.error('Error fetching tickets:', error);
+      console.error("Error fetching tickets:", error);
     } finally {
       setLoading(false);
     }
@@ -65,10 +82,15 @@ const Tickets: React.FC = () => {
         department_id: form.department_id || undefined,
       });
       setShowCreateModal(false);
-      setForm({ title: '', description: '', priority: 'Medium', department_id: '' });
+      setForm({
+        title: "",
+        description: "",
+        priority: "Medium",
+        department_id: "",
+      });
       fetchData();
     } catch (error) {
-      console.error('Error creating ticket:', error);
+      console.error("Error creating ticket:", error);
     } finally {
       setCreating(false);
     }
@@ -84,7 +106,9 @@ const Tickets: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Tickets</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Manage support tickets across departments</p>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Manage support tickets across departments
+            </p>
           </div>
         </div>
         <button
@@ -92,7 +116,7 @@ const Tickets: React.FC = () => {
           className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
-          New Ticket
+          <span className="hidden md:block">New Ticket</span>
         </button>
       </div>
 
@@ -137,12 +161,24 @@ const Tickets: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Ticket</th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Department</th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Status</th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Priority</th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Assigned To</th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Created</th>
+                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                    Ticket
+                  </th>
+                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                    Department
+                  </th>
+                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                    Priority
+                  </th>
+                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                    Assigned To
+                  </th>
+                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                    Created
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -154,15 +190,23 @@ const Tickets: React.FC = () => {
                   >
                     <td className="px-5 py-3.5">
                       <div>
-                        <p className="font-medium text-slate-800">{ticket.title}</p>
-                        <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[250px]">{ticket.description}</p>
+                        <p className="font-medium text-slate-800">
+                          {ticket.title}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[250px]">
+                          {ticket.description}
+                        </p>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap">
-                      {typeof ticket.department_id === 'object' ? ticket.department_id.name : '-'}
+                      {typeof ticket.department_id === "object"
+                        ? ticket.department_id.name
+                        : "-"}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor(ticket.status)}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor(ticket.status)}`}
+                      >
                         {ticket.status}
                       </span>
                     </td>
@@ -173,7 +217,9 @@ const Tickets: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap">
-                      {typeof ticket.assigned_to === 'object' ? ticket.assigned_to.username : '-'}
+                      {typeof ticket.assigned_to === "object"
+                        ? ticket.assigned_to.username
+                        : "-"}
                     </td>
                     <td className="px-5 py-3.5 text-slate-400 text-sm whitespace-nowrap">
                       {new Date(ticket.createdAt).toLocaleDateString()}
@@ -188,14 +234,22 @@ const Tickets: React.FC = () => {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center" onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-slate-100">
               <h2 className="text-lg font-bold text-slate-800">New Ticket</h2>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Title *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Title *
+                </label>
                 <input
                   type="text"
                   value={form.title}
@@ -205,10 +259,14 @@ const Tickets: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Description *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Description *
+                </label>
                 <textarea
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
                   rows={4}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                   placeholder="Detailed description of the issue"
@@ -216,10 +274,14 @@ const Tickets: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Priority</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Priority
+                  </label>
                   <select
                     value={form.priority}
-                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, priority: e.target.value })
+                    }
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   >
                     <option value="Low">Low</option>
@@ -228,15 +290,21 @@ const Tickets: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Department</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Department
+                  </label>
                   <select
                     value={form.department_id}
-                    onChange={(e) => setForm({ ...form, department_id: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, department_id: e.target.value })
+                    }
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   >
                     <option value="">Select department</option>
                     {departments.map((d) => (
-                      <option key={d._id} value={d._id}>{d.name}</option>
+                      <option key={d._id} value={d._id}>
+                        {d.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -251,10 +319,12 @@ const Tickets: React.FC = () => {
               </button>
               <button
                 onClick={handleCreate}
-                disabled={creating || !form.title.trim() || !form.description.trim()}
+                disabled={
+                  creating || !form.title.trim() || !form.description.trim()
+                }
                 className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
-                {creating ? 'Creating...' : 'Create Ticket'}
+                {creating ? "Creating..." : "Create Ticket"}
               </button>
             </div>
           </div>
