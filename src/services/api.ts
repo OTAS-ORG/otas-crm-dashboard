@@ -30,6 +30,8 @@ import type {
   AIInsights,
   AISuggestion,
   AIModel,
+  Contact,
+  ContactStatus,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -708,5 +710,28 @@ export const aiService = {
   getModels: async () => {
     const response = await api.get<ApiResponse<{ primary: string; fallback: string; available: AIModel[] }>>("/ai/models");
     return response.data.data;
+  },
+};
+
+export const contactService = {
+  submit: async (data: { name: string; officeName?: string; serviceType: string; details: string }) => {
+    const response = await api.post<ApiResponse<Contact>>("/contacts", data);
+    return response.data.data;
+  },
+  getContacts: async (params?: { status?: string; serviceType?: string; search?: string; page?: number; limit?: number }) => {
+    const response = await api.get<ApiResponse<{ contacts: Contact[]; total: number; page: number; pages: number }>>("/contacts", { params });
+    return response.data.data;
+  },
+  getContact: async (id: string) => {
+    const response = await api.get<ApiResponse<Contact>>(`/contacts/${id}`);
+    return response.data.data;
+  },
+  updateContact: async (id: string, data: { status?: ContactStatus; notes?: string }) => {
+    const response = await api.put<ApiResponse<Contact>>(`/contacts/${id}`, data);
+    return response.data.data;
+  },
+  deleteContact: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/contacts/${id}`);
+    return response.data;
   },
 };

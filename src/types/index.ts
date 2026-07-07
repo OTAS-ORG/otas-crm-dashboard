@@ -473,3 +473,17 @@ export interface AIModel {
   contextLength: number;
   isFree: boolean;
 }
+
+export type ContactStatus = 'New' | 'Read' | 'Replied' | 'Archived';
+
+export interface Contact {
+  _id: string;
+  name: string;
+  officeName?: string;
+  serviceType: string;
+  details: string;
+  status: ContactStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
