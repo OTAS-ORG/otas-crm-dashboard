@@ -714,7 +714,7 @@ export const aiService = {
 };
 
 export const contactService = {
-  submit: async (data: { name: string; officeName?: string; serviceType: string; details: string }) => {
+  submit: async (data: { name: string; phone?: string; serviceType: string; details: string }) => {
     const response = await api.post<ApiResponse<Contact>>("/contacts", data);
     return response.data.data;
   },

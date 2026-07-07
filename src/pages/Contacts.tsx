@@ -127,7 +127,7 @@ const Contacts: React.FC = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, office, details..."
+            placeholder="Search name, phone, details..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
@@ -166,7 +166,7 @@ const Contacts: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Office</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</th>
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Service</th>
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
@@ -180,7 +180,7 @@ const Contacts: React.FC = () => {
                       <p className="text-sm font-medium text-slate-800">{c.name}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-sm text-slate-600">{c.officeName || '-'}</p>
+                      <p className="text-sm text-slate-600">{c.phone || '-'}</p>
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">{c.serviceType}</span>
@@ -241,7 +241,7 @@ const Contacts: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-slate-800">{selected.name}</h3>
-                  <p className="text-xs text-slate-400">{selected.officeName}</p>
+                  <p className="text-xs text-slate-400">{selected.phone}</p>
                 </div>
               </div>
               <button onClick={() => setSelected(null)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">

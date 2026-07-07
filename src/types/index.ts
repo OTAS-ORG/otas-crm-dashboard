@@ -479,7 +479,7 @@ export type ContactStatus = 'New' | 'Read' | 'Replied' | 'Archived';
 export interface Contact {
   _id: string;
   name: string;
-  officeName?: string;
+  phone?: string;
   serviceType: string;
   details: string;
   status: ContactStatus;

@@ -40,7 +40,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"officeName\": \"Yangon Office\",\n  \"serviceType\": \"POS System\",\n  \"details\": \"We need a POS system for our retail store with inventory management and sales tracking.\"\n}",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"phone\": \"09-123456789\",\n  \"serviceType\": \"POS System\",\n  \"details\": \"We need a POS system for our retail store with inventory management and sales tracking.\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
