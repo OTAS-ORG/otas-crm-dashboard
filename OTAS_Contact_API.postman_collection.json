@@ -1,0 +1,239 @@
+{
+  "info": {
+    "name": "OTAS CRM - Contact API",
+    "description": "Contact Form CRUD API for OTAS CRM\n\n## Authentication\n- **Public**: POST /api/contacts (no auth needed)\n- **Protected**: All other endpoints require JWT Bearer token\n\n## Base URL\n- Local: http://localhost:5000/api\n- Production: https://otas-api.vercel.app/api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Submit Contact Form",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"officeName\": \"Yangon Office\",\n  \"serviceType\": \"POS System\",\n  \"details\": \"We need a POS system for our retail store with inventory management and sales tracking.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/contacts",
+              "host": ["{{baseUrl}}"],
+              "path": ["contacts"]
+            },
+            "description": "Submit a contact form from portfolio website. No authentication required."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Contacts",
+      "item": [
+        {
+          "name": "Get All Contacts",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const token = pm.environment.get('token');",
+                  "if (!token) {",
+                  "    console.log('⚠️ No token set. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contacts?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["contacts"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number" },
+                { "key": "limit", "value": "20", "description": "Items per page" },
+                { "key": "status", "value": "", "description": "Filter by status: New, Read, Replied, Archived", "disabled": true },
+                { "key": "serviceType", "value": "", "description": "Filter by service type", "disabled": true },
+                { "key": "search", "value": "", "description": "Search by name, office, or details", "disabled": true }
+              ]
+            },
+            "description": "Get all contacts with pagination, filtering, and search. Requires admin auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Contact by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contacts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["contacts", ":id"],
+              "variable": [
+                { "key": "id", "value": "contact_id_here", "description": "Contact MongoDB ID" }
+              ]
+            },
+            "description": "Get a single contact by ID. Requires admin auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Contact Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Read\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/contacts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["contacts", ":id"],
+              "variable": [
+                { "key": "id", "value": "contact_id_here", "description": "Contact MongoDB ID" }
+              ]
+            },
+            "description": "Update contact status. Options: New, Read, Replied, Archived. Requires admin auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Contact Notes",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Client is interested in POS system. Follow up next week.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/contacts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["contacts", ":id"],
+              "variable": [
+                { "key": "id", "value": "contact_id_here", "description": "Contact MongoDB ID" }
+              ]
+            },
+            "description": "Update admin notes for a contact. Requires admin auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contacts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["contacts", ":id"],
+              "variable": [
+                { "key": "id", "value": "contact_id_here", "description": "Contact MongoDB ID" }
+              ]
+            },
+            "description": "Delete a contact permanently. Requires admin auth."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "Login (Get Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data?.token) {",
+                  "    pm.environment.set('token', response.data.token);",
+                  "    console.log('✅ Token saved to environment');",
+                  "} else {",
+                  "    console.log('❌ Login failed:', response.message);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login to get JWT token. Token is auto-saved to environment variable."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
