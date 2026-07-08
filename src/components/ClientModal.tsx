@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Client, AuditLog, ClientStatus, OnboardingFormConfig } from "../types";
-import { clientService, onboardingService } from "../services/api";
+import type { Client, AuditLog, ClientStatus } from "../types";
+import { clientService } from "../services/api";
 import {
   X,
   Save,
@@ -56,18 +56,6 @@ const ClientModal: React.FC<ClientModalProps> = ({
   );
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showDesiredOutcomeModal, setShowDesiredOutcomeModal] = useState(false);
-  const [serviceOptions, setServiceOptions] = useState<{ value: string; label: string }[]>([]);
-
-  useEffect(() => {
-    onboardingService.getConfigs()
-      .then((configs: OnboardingFormConfig[]) => {
-        const options = configs
-          .map((c) => ({ value: c.serviceType, label: c.serviceName }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-        setServiceOptions(options);
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (clientId && isOpen) {
