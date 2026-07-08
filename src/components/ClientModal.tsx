@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Client, AuditLog, ClientStatus } from "../types";
-import { clientService } from "../services/api";
+import type { Client, AuditLog, ClientStatus, OnboardingFormConfig } from "../types";
+import { clientService, onboardingService } from "../services/api";
 import {
   X,
   Save,
@@ -56,6 +56,19 @@ const ClientModal: React.FC<ClientModalProps> = ({
   );
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
   const [showDesiredOutcomeModal, setShowDesiredOutcomeModal] = useState(false);
+  const [serviceOptions, setServiceOptions] = useState<{ value: string; label: string }[]>([]);
+
+  useEffect(() => {
+    onboardingService.getConfigs()
+      .then((configs: OnboardingFormConfig[]) => {
+        const options = configs
+          .filter((c) => c.serviceType !== "general")
+          .map((c) => ({ value: c.serviceType, label: c.serviceName }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+        setServiceOptions(options);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (clientId && isOpen) {
@@ -617,18 +630,11 @@ const ClientModal: React.FC<ClientModalProps> = ({
                             Purchased Services
                           </label>
                           <div className="flex flex-wrap gap-2">
-                            {(['pos', 'ai_agent', 'erp', 'ecommerce', 'software'] as const).map((svc) => {
-                              const checked = (client.purchasedServices || []).some(s => s.type === svc);
-                              const svcLabels: Record<string, string> = {
-                                pos: 'POS Software',
-                                ai_agent: 'AI Agent',
-                                erp: 'ERP Development',
-                                ecommerce: 'E-commerce',
-                                software: 'Custom Software',
-                              };
+                            {serviceOptions.map((opt) => {
+                              const checked = (client.purchasedServices || []).some(s => s.type === opt.value);
                               return (
                                 <label
-                                  key={svc}
+                                  key={opt.value}
                                   className={`inline-flex items-center gap-2 px-3 py-2 border rounded-xl cursor-pointer transition-all text-xs font-semibold ${
                                     checked
                                       ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
@@ -644,12 +650,12 @@ const ClientModal: React.FC<ClientModalProps> = ({
                                       if (checked) {
                                         setClient({
                                           ...client,
-                                          purchasedServices: current.filter(s => s.type !== svc),
+                                          purchasedServices: current.filter(s => s.type !== opt.value),
                                         });
                                       } else {
                                         setClient({
                                           ...client,
-                                          purchasedServices: [...current, { type: svc, name: svcLabels[svc], status: 'pending' }],
+                                          purchasedServices: [...current, { type: opt.value, name: opt.label, status: 'pending' }],
                                         });
                                       }
                                     }}
@@ -662,7 +668,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
                                       <CheckCircle className="w-3 h-3 text-white" />
                                     )}
                                   </div>
-                                  {svcLabels[svc]}
+                                  {opt.label}
                                 </label>
                               );
                             })}

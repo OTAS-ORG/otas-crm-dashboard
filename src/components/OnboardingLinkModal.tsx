@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { X, Link2, Check, Clock, Copy } from "lucide-react";
+import { X, Link2, Check, Clock, Copy, Loader2 } from "lucide-react";
 import { onboardingService } from "../services/api";
-import type { ServiceType } from "../types";
+import type { OnboardingFormConfig } from "../types";
 
 interface OnboardingLinkModalProps {
   isOpen: boolean;
@@ -11,14 +11,6 @@ interface OnboardingLinkModalProps {
   initialServices?: string[];
 }
 
-const SERVICE_OPTIONS: { value: ServiceType; label: string }[] = [
-  { value: "pos", label: "Customize POS Software" },
-  { value: "ai_agent", label: "AI Sales & CS Agent" },
-  { value: "erp", label: "ERP Development" },
-  { value: "ecommerce", label: "E-commerce Application" },
-  { value: "software", label: "Customize Software" },
-];
-
 const OnboardingLinkModal: React.FC<OnboardingLinkModalProps> = ({
   isOpen,
   onClose,
@@ -26,11 +18,30 @@ const OnboardingLinkModal: React.FC<OnboardingLinkModalProps> = ({
   clientName,
   initialServices = [],
 }) => {
-  const [selectedServices, setSelectedServices] = useState<ServiceType[]>([]);
+  const [serviceOptions, setServiceOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loadingConfigs, setLoadingConfigs] = useState(true);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [generatedLink, setGeneratedLink] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingConfigs(true);
+      onboardingService.getConfigs()
+        .then((configs: OnboardingFormConfig[]) => {
+          const options = configs
+            .map((c) => ({ value: c.serviceType, label: c.serviceName }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+          setServiceOptions(options);
+        })
+        .catch(() => {
+          setServiceOptions([]);
+        })
+        .finally(() => setLoadingConfigs(false));
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,11 +50,11 @@ const OnboardingLinkModal: React.FC<OnboardingLinkModalProps> = ({
       setExpiresAt("");
       setCopied(false);
     }
-  }, [isOpen, initialServices]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const toggleService = (value: ServiceType) => {
+  const toggleService = (value: string) => {
     setSelectedServices((prev) =>
       prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value],
     );
@@ -114,40 +125,51 @@ const OnboardingLinkModal: React.FC<OnboardingLinkModalProps> = ({
 
           {!generatedLink ? (
             <>
-              <div className="space-y-2">
-                {SERVICE_OPTIONS.map((opt) => {
-                  const checked = selectedServices.includes(opt.value);
-                  return (
-                    <label
-                      key={opt.value}
-                      className={`flex items-center gap-3 px-4 py-3 border rounded-xl cursor-pointer transition-all text-sm ${
-                        checked
-                          ? "bg-indigo-50 border-indigo-300 text-indigo-700"
-                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleService(opt.value)}
-                        className="sr-only"
-                      />
-                      <div
-                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
+              {loadingConfigs ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  <span className="ml-2 text-sm text-slate-500">Loading form types...</span>
+                </div>
+              ) : serviceOptions.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-slate-500">No form types available. Create one in Form Builder first.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {serviceOptions.map((opt) => {
+                    const checked = selectedServices.includes(opt.value);
+                    return (
+                      <label
+                        key={opt.value}
+                        className={`flex items-center gap-3 px-4 py-3 border rounded-xl cursor-pointer transition-all text-sm ${
                           checked
-                            ? "bg-indigo-600 border-indigo-600"
-                            : "border-slate-300"
+                            ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                         }`}
                       >
-                        {checked && (
-                          <Check className="w-3.5 h-3.5 text-white" />
-                        )}
-                      </div>
-                      {opt.label}
-                    </label>
-                  );
-                })}
-              </div>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleService(opt.value)}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
+                            checked
+                              ? "bg-indigo-600 border-indigo-600"
+                              : "border-slate-300"
+                          }`}
+                        >
+                          {checked && (
+                            <Check className="w-3.5 h-3.5 text-white" />
+                          )}
+                        </div>
+                        {opt.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
 
               <button
                 onClick={handleGenerate}
