@@ -557,7 +557,6 @@ const ClientPortal: React.FC = () => {
         }}
         clientId={id || ''}
         clientName={dashboardData?.profile?.companyName || 'Client'}
-        initialServices={(dashboardData?.profile?.purchasedServices || []).map((s: { type: string; name?: string; status?: string }) => s.type)}
       />
 
       <SuccessModal

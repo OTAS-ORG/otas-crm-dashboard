@@ -62,7 +62,6 @@ const ClientModal: React.FC<ClientModalProps> = ({
     onboardingService.getConfigs()
       .then((configs: OnboardingFormConfig[]) => {
         const options = configs
-          .filter((c) => c.serviceType !== "general")
           .map((c) => ({ value: c.serviceType, label: c.serviceName }))
           .sort((a, b) => a.label.localeCompare(b.label));
         setServiceOptions(options);
