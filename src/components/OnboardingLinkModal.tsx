@@ -8,7 +8,6 @@ interface OnboardingLinkModalProps {
   onClose: () => void;
   clientId: string;
   clientName: string;
-  initialServices?: string[];
 }
 
 const OnboardingLinkModal: React.FC<OnboardingLinkModalProps> = ({
@@ -16,7 +15,6 @@ const OnboardingLinkModal: React.FC<OnboardingLinkModalProps> = ({
   onClose,
   clientId,
   clientName,
-  initialServices = [],
 }) => {
   const [serviceOptions, setServiceOptions] = useState<{ value: string; label: string }[]>([]);
   const [loadingConfigs, setLoadingConfigs] = useState(true);

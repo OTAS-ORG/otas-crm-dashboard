@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { analyticsService } from "../services/api";
 import type { DashboardAnalytics } from "../types";
 import {
@@ -11,7 +11,6 @@ import {
   DollarSign,
   FileText,
   Receipt,
-  Download,
   Building2,
   Briefcase,
   LifeBuoy,
@@ -144,8 +143,6 @@ const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState<TabId>("overview");
-  const [exporting, setExporting] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -168,98 +165,6 @@ const Analytics: React.FC = () => {
       byMonth[m._id.month] = m.total;
     });
     return MONTHS.map((name, i) => ({ name, total: byMonth[i + 1] || 0 }));
-  };
-
-  const handleExportPDF = async () => {
-    if (!contentRef.current || exporting) return;
-    try {
-      setExporting(true);
-      const html2canvas = (await import("html2canvas")).default;
-      const jsPDF = (await import("jspdf")).default;
-
-      const clone = contentRef.current.cloneNode(true) as HTMLElement;
-      clone.style.position = "fixed";
-      clone.style.left = "-9999px";
-      clone.style.top = "0";
-      clone.style.width = "1200px";
-      clone.style.background = "#f8fafc";
-      clone.style.padding = "24px";
-      document.body.appendChild(clone);
-
-      const oklchToHex = (match: string): string => {
-        try {
-          const m = match.match(
-            /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+%?))?\s*\)/,
-          );
-          if (!m) return "#000";
-          const L = parseFloat(m[1]),
-            C = parseFloat(m[2]),
-            H = parseFloat(m[3]);
-          const a_ = C * Math.cos((H * Math.PI) / 180);
-          const b_ = C * Math.sin((H * Math.PI) / 180);
-          const f = (x: number) => {
-            const x3 = x * x * x;
-            return x3 > 0.008856 ? x3 : (x - 16 / 116) / 7.787;
-          };
-          const X = f(L + 0.3963 * a_ + 0.2158 * b_) * 0.95047;
-          const Y = f(L - 0.1056 * a_ - 0.0639 * b_);
-          const Z = f(L - 0.0895 * a_ + 1.292 * b_) * 1.0888;
-          const r = Math.round(
-            Math.min(
-              255,
-              Math.max(0, (3.2406 * X - 1.5372 * Y - 0.4986 * Z) * 255),
-            ),
-          );
-          const g = Math.round(
-            Math.min(
-              255,
-              Math.max(0, (-0.9689 * X + 1.8758 * Y + 0.0415 * Z) * 255),
-            ),
-          );
-          const b = Math.round(
-            Math.min(
-              255,
-              Math.max(0, (0.0557 * X - 0.204 * Y + 1.057 * Z) * 255),
-            ),
-          );
-          return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-        } catch {
-          return "#000";
-        }
-      };
-
-      clone.querySelectorAll<HTMLElement>("*").forEach((el) => {
-        const cs = window.getComputedStyle(el);
-        for (let i = 0; i < cs.length; i++) {
-          const prop = cs[i];
-          const val = cs.getPropertyValue(prop);
-          if (val && val.includes("oklch")) {
-            el.style.setProperty(
-              prop,
-              val.replace(/oklch\([^)]+\)/g, oklchToHex),
-            );
-          }
-        }
-      });
-
-      const canvas = await html2canvas(clone, {
-        backgroundColor: "#f8fafc",
-        scale: 2,
-        useCORS: true,
-      });
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`analytics-report-${selectedYear}.pdf`);
-    } catch (error) {
-      console.error("Export failed:", error);
-    } finally {
-      setExporting(false);
-    }
   };
 
   const revenueMonthly = getMonthly(data?.revenue.byMonth || []);
@@ -310,10 +215,6 @@ const Analytics: React.FC = () => {
           </p>
         </div>
         <div className="relative z-10 flex items-center gap-2">
-          {/* <button onClick={handleExportPDF} disabled={exporting} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50">
-            <Download className="w-4 h-4" />
-            {exporting ? 'Exporting...' : 'Export PDF'}
-          </button> */}
           <button
             onClick={() => setSelectedYear(selectedYear - 1)}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
@@ -351,7 +252,7 @@ const Analytics: React.FC = () => {
       </div>
 
       {/* Tab Content */}
-      <div ref={contentRef}>
+      <div>
         {/* ===== OVERVIEW ===== */}
         {activeTab === "overview" && (
           <>
