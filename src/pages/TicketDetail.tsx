@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ticketService } from '../services/api';
 import type { Ticket, TicketComment, TicketHistory as TicketHistoryType, Department } from '../types';
-import { ArrowLeft, Send, Clock, User, AlertCircle, ArrowUp, ArrowDown, MessageSquare, History } from 'lucide-react';
+import { ArrowLeft, Send, Clock, User, AlertCircle, ArrowUp, ArrowDown, MessageSquare, History, Trash2 } from 'lucide-react';
 
 const priorityIcon = (p: string) => {
   if (p === 'High') return <ArrowUp className="w-4 h-4 text-red-500" />;
@@ -30,6 +30,8 @@ const TicketDetail: React.FC = () => {
   const [sendingComment, setSendingComment] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [assignDept, setAssignDept] = useState('');
   const [assignUser, setAssignUser] = useState('');
@@ -119,6 +121,19 @@ const TicketDetail: React.FC = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      setDeleting(true);
+      await ticketService.deleteTicket(id);
+      navigate('/tickets');
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -139,6 +154,9 @@ const TicketDetail: React.FC = () => {
   const deptName = typeof ticket.department_id === 'object' ? ticket.department_id?.name : '-';
   const assignedName = typeof ticket.assigned_to === 'object' ? ticket.assigned_to?.username : '-';
   const createdByName = typeof ticket.created_by === 'object' ? ticket.created_by?.username : '-';
+
+  const createdById = typeof ticket.created_by === 'object' ? ticket.created_by?._id : ticket.created_by;
+  const canDelete = isAdmin || storedUser?._id === createdById;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -256,6 +274,20 @@ const TicketDetail: React.FC = () => {
             </div>
           </div>
 
+          {/* Delete (Admin or Creator only) */}
+          {canDelete && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h3 className="font-semibold text-slate-800 mb-3">Danger Zone</h3>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-xl hover:bg-red-100 transition-colors border border-red-200"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Ticket
+              </button>
+            </div>
+          )}
+
           {/* Assignment (Admin only) */}
           {isAdmin && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -334,6 +366,42 @@ const TicketDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-800 mb-2">Delete Ticket?</h2>
+              <p className="text-sm text-slate-500 mb-6">This action cannot be undone. All comments and history will also be deleted.</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-5 py-2 bg-red-500 text-white text-sm font-medium rounded-xl hover:bg-red-600 disabled:opacity-50 transition-colors"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

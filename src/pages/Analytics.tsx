@@ -181,6 +181,7 @@ const Analytics: React.FC = () => {
 
   const totalRevenue = data?.totalRevenueMMK || 0;
   const totalExpense = data?.totalExpenseMMK || 0;
+  const totalPayroll = data?.payroll.summary?.totalNetPay || 0;
   const prevRevenue = data?.prevYearRevenueMMK || 0;
   const prevExpense = data?.prevYearExpenseMMK || 0;
   const revenueChange =
@@ -256,7 +257,7 @@ const Analytics: React.FC = () => {
         {/* ===== OVERVIEW ===== */}
         {activeTab === "overview" && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -303,13 +304,26 @@ const Analytics: React.FC = () => {
               </div>
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
                 <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-teal-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Total Payroll</p>
+                    <p className="text-lg font-bold text-slate-800">
+                      {totalPayroll.toLocaleString()} MMK
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <DollarSign className="w-5 h-5 text-primary" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Net Profit</p>
                     <p className="text-lg font-bold text-slate-800">
-                      {(totalRevenue - totalExpense).toLocaleString()} MMK
+                      {(totalRevenue - totalExpense - totalPayroll).toLocaleString()} MMK
                     </p>
                   </div>
                 </div>

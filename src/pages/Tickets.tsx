@@ -121,8 +121,8 @@ const Tickets: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="relative">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="relative col-span-2">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
@@ -205,7 +205,7 @@ const Tickets: React.FC = () => {
                     </td>
                     <td className="px-5 py-3.5">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor(ticket.status)}`}
+                        className={`inline-flex w-[100px] items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusColor(ticket.status)}`}
                       >
                         {ticket.status}
                       </span>

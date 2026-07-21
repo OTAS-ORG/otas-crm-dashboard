@@ -591,6 +591,10 @@ export const ticketService = {
     const response = await api.get<ApiResponse<{ _id: string; username: string; role: string }[]>>(`/tickets/users/${department_id}`);
     return response.data.data;
   },
+  deleteTicket: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/tickets/${id}`);
+    return response.data;
+  },
 };
 
 export const salaryService = {
