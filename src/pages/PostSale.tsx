@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { clientService } from '../services/api';
 import type { Client } from '../types';
 import ClientCard from '../components/ClientCard';
 import ClientModal from '../components/ClientModal';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Search } from 'lucide-react';
 
 const PostSale: React.FC = () => {
-  const { searchQuery } = useOutletContext<{ searchQuery: string }>();
+  const [search, setSearch] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,9 +16,9 @@ const PostSale: React.FC = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const data = await clientService.getClients({ 
+      const data = await clientService.getClients({
         isPostSale: true,
-        search: searchQuery 
+        search: search || undefined
       });
       setClients(data);
     } catch (error) {
@@ -30,8 +29,11 @@ const PostSale: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchClients();
-  }, [searchQuery]);
+    const t = setTimeout(() => {
+      fetchClients();
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const handleOpenModal = (id?: string) => {
     setSelectedClientId(id);
@@ -40,12 +42,25 @@ const PostSale: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
         <div className="relative z-10">
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Active Projects</h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Manage ongoing projects and execution for active clients.</p>
         </div>
+      </div>
+
+      {/* Local Search Bar */}
+      <div className="mb-6 max-w-md relative group">
+        <Search className="w-4 h-4 md:w-5 md:h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search clients..."
+          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all text-sm text-slate-900 shadow-inner"
+        />
       </div>
 
       {loading ? (
@@ -68,7 +83,7 @@ const PostSale: React.FC = () => {
         </div>
       )}
 
-      <ClientModal 
+      <ClientModal
         clientId={selectedClientId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -32,6 +32,7 @@ import type {
   AIModel,
   Contact,
   ContactStatus,
+  Document,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -736,6 +737,28 @@ export const contactService = {
   },
   deleteContact: async (id: string) => {
     const response = await api.delete<ApiResponse<null>>(`/contacts/${id}`);
+    return response.data;
+  },
+};
+
+export const documentService = {
+  getDocuments: async (params?: { search?: string; clientId?: string; projectId?: string; page?: number; limit?: number }) => {
+    const response = await api.get<ApiResponse<{ documents: Document[]; total: number; page: number; pages: number }>>("/documents", { params });
+    return response.data.data;
+  },
+  uploadDocument: async (files: File[], clientId?: string, projectId?: string) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    if (clientId) formData.append("clientId", clientId);
+    if (projectId) formData.append("projectId", projectId);
+
+    const response = await api.post<ApiResponse<Document[]>>("/documents/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data.data;
+  },
+  deleteDocument: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/documents/${id}`);
     return response.data;
   },
 };

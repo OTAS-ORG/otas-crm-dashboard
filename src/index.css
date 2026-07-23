@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0052FF;
-  --color-primary-50: #ebf0ff;
-  --color-primary-100: #d6e0ff;
-  --color-primary-200: #adc2ff;
-  --color-primary-300: #85a3ff;
-  --color-primary-400: #5c85ff;
-  --color-primary-500: #0052FF;
-  --color-primary-600: #0042cc;
-  --color-primary-700: #003199;
-  --color-primary-800: #002166;
-  --color-primary-900: #001033;
+  --color-primary: #3b82f6;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
 }
 
 :root {
@@ -20,8 +20,97 @@
 
 body {
   @apply bg-[#f4f7fb] text-slate-800 antialiased;
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Scoped SaaS Dark Mode Overrides */
+body.dark {
+  background-color: #030712 !important;
+  color: #f1f5f9 !important;
+}
+
+body.dark .bg-white {
+  background-color: #0b0f19 !important;
+}
+
+body.dark .bg-slate-50 {
+  background-color: #0e1320 !important;
+}
+
+body.dark .bg-slate-100 {
+  background-color: #1f293d !important;
+}
+
+body.dark .hover\:bg-slate-50:hover {
+  background-color: #161e2e !important;
+}
+
+body.dark .hover\:bg-slate-50\/50:hover {
+  background-color: rgba(22, 30, 46, 0.5) !important;
+}
+
+body.dark .text-slate-800 {
+  color: #f8fafc !important;
+}
+
+body.dark .text-slate-700 {
+  color: #f1f5f9 !important;
+}
+
+body.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+body.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+body.dark .text-slate-400 {
+  color: #64748b !important;
+}
+
+body.dark .border-slate-200 {
+  border-color: #1f293d !important;
+}
+
+body.dark .border-slate-200\/60 {
+  border-color: rgba(31, 41, 61, 0.6) !important;
+}
+
+body.dark .border-slate-100 {
+  border-color: #161e2d !important;
+}
+
+body.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Custom Topbar and Input scopes for dark mode */
+body.dark .topbar-bg {
+  background-color: rgba(3, 7, 18, 0.8) !important;
+  border-color: #1f293d !important;
+}
+
+body.dark input, 
+body.dark textarea, 
+body.dark select {
+  background-color: #030712 !important;
+  color: #f8fafc !important;
+  border-color: #1f293d !important;
+}
+
+body.dark input:focus, 
+body.dark textarea:focus, 
+body.dark select:focus {
+  border-color: #3b82f6 !important;
+}
+
+/* Sidebar Scrollbar */
 .sidebar-scroll::-webkit-scrollbar {
   width: 4px;
 }
@@ -29,9 +118,9 @@ body {
   background: transparent;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.1);
   border-radius: 9999px;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.35);
+  background: rgba(148, 163, 184, 0.25);
 }

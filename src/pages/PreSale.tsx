@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { clientService } from '../services/api';
 import type { Client } from '../types';
 import ClientCard from '../components/ClientCard';
 import ClientModal from '../components/ClientModal';
-import { Plus, Inbox } from 'lucide-react';
+import { Plus, Inbox, Search } from 'lucide-react';
 
 const PreSale: React.FC = () => {
-  const { searchQuery } = useOutletContext<{ searchQuery: string }>();
+  const [search, setSearch] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,9 +16,9 @@ const PreSale: React.FC = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const data = await clientService.getClients({ 
+      const data = await clientService.getClients({
         isPostSale: false,
-        search: searchQuery 
+        search: search || undefined
       });
       setClients(data);
     } catch (error) {
@@ -30,8 +29,11 @@ const PreSale: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchClients();
-  }, [searchQuery]);
+    const t = setTimeout(() => {
+      fetchClients();
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const handleOpenModal = (id?: string) => {
     setSelectedClientId(id);
@@ -40,19 +42,32 @@ const PreSale: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
         <div className="relative z-10 mb-4 sm:mb-0">
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Pre-Sale Pipeline</h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Track and manage potential client inquiries.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
           className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-primary text-white text-sm rounded-xl hover:bg-primary-600 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
         >
           <Plus className="w-5 h-5 mr-2" />
           New Inquiry
         </button>
+      </div>
+
+      {/* Local Search Bar */}
+      <div className="mb-6 max-w-md relative group">
+        <Search className="w-4 h-4 md:w-5 md:h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search clients..."
+          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all text-sm text-slate-900 shadow-inner"
+        />
       </div>
 
       {loading ? (
@@ -72,7 +87,7 @@ const PreSale: React.FC = () => {
           </div>
           <h3 className="text-xl font-bold text-slate-700 mb-2">No inquiries yet</h3>
           <p className="text-slate-500 max-w-sm mb-6">You don't have any potential clients in the pipeline. Start by adding a new inquiry.</p>
-          <button 
+          <button
             onClick={() => handleOpenModal()}
             className="flex items-center px-5 py-2.5 bg-white text-primary border border-primary/20 rounded-xl hover:bg-primary/5 transition-colors font-medium shadow-sm"
           >
@@ -82,7 +97,7 @@ const PreSale: React.FC = () => {
         </div>
       )}
 
-      <ClientModal 
+      <ClientModal
         clientId={selectedClientId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

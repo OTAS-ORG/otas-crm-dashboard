@@ -25,6 +25,7 @@ import TaskDetail from './pages/TaskDetail';
 import AIContentGenerator from './pages/AIContentGenerator';
 import AIInsights from './pages/AIInsights';
 import Contacts from './pages/Contacts';
+import Documents from './pages/Documents';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -84,6 +85,7 @@ function App() {
             <Route path="projects/:id" element={<RoleRoute><ProjectDetail /></RoleRoute>} />
             <Route path="projects/:id/tasks/:taskId" element={<RoleRoute><TaskDetail /></RoleRoute>} />
             <Route path="salaries" element={<FinanceRoute><Salaries /></FinanceRoute>} />
+            <Route path="documents" element={<RoleRoute allowedRoles={['Admin']}><Documents /></RoleRoute>} />
             <Route path="salaries/:id" element={<FinanceRoute><SalaryDetail /></FinanceRoute>} />
             <Route path="vault" element={<RoleRoute><Passwords /></RoleRoute>} />
             <Route path="admin/form-builder" element={<RoleRoute><FormBuilder /></RoleRoute>} />

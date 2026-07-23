@@ -487,3 +487,25 @@ export interface Contact {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Document {
+  _id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+  uploadedBy: {
+    _id: string;
+    username: string;
+  };
+  client?: {
+    _id: string;
+    companyName: string;
+  };
+  project?: {
+    _id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}

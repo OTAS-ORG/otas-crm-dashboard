@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X, Receipt, BarChart3, LifeBuoy, Wallet, Layers, Sparkles, Mail } from 'lucide-react';
+import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, LogOut, X, Receipt, BarChart3, LifeBuoy, Wallet, Layers, Sparkles, Mail, FolderOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -32,6 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
     { name: 'Users', path: '/admin/users', icon: Users },
     { name: 'Submissions', path: '/admin/submissions', icon: ClipboardList },
     { name: 'Contacts', path: '/contacts', icon: Mail },
+    { name: 'Documents', path: '/documents', icon: FolderOpen },
     { name: 'AI', path: '/ai', icon: Sparkles },
   ];
 
@@ -110,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
           ))}
         </nav>
 
-        <div className="p-4 mx-3 mb-4 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-sm shrink-0">
+        <div className="p-4 mx-3 mb-4 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-800/50 backdrop-blur-sm shrink-0">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
               <span className="font-bold">{user?.username.charAt(0).toUpperCase()}</span>
