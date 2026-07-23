@@ -50,6 +50,17 @@ const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allo
   return <>{children}</>;
 };
 
+const FinanceRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
+  const isFinance = user?.departments && user.departments.includes('Finance');
+  
+  if (!(isMasterAdmin || isFinance)) {
+    return <Navigate to="/" />;
+  }
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -62,18 +73,18 @@ function App() {
             <Route index element={<PreSale />} />
             <Route path="post-sale" element={<PostSale />} />
             <Route path="portal/:id" element={<ClientPortal />} />
-            <Route path="invoices" element={<RoleRoute><Invoices /></RoleRoute>} />
-            <Route path="invoices/:id" element={<RoleRoute><InvoiceDetail /></RoleRoute>} />
+            <Route path="invoices" element={<FinanceRoute><Invoices /></FinanceRoute>} />
+            <Route path="invoices/:id" element={<FinanceRoute><InvoiceDetail /></FinanceRoute>} />
             <Route path="expenses" element={<RoleRoute><Expenses /></RoleRoute>} />
             <Route path="expenses/:id" element={<RoleRoute><ExpenseDetail /></RoleRoute>} />
-            <Route path="analytics" element={<RoleRoute><Analytics /></RoleRoute>} />
+            <Route path="analytics" element={<FinanceRoute><Analytics /></FinanceRoute>} />
             <Route path="tickets" element={<RoleRoute><Tickets /></RoleRoute>} />
             <Route path="tickets/:id" element={<RoleRoute><TicketDetail /></RoleRoute>} />
             <Route path="projects" element={<RoleRoute><Projects /></RoleRoute>} />
             <Route path="projects/:id" element={<RoleRoute><ProjectDetail /></RoleRoute>} />
             <Route path="projects/:id/tasks/:taskId" element={<RoleRoute><TaskDetail /></RoleRoute>} />
-            <Route path="salaries" element={<RoleRoute><Salaries /></RoleRoute>} />
-            <Route path="salaries/:id" element={<RoleRoute><SalaryDetail /></RoleRoute>} />
+            <Route path="salaries" element={<FinanceRoute><Salaries /></FinanceRoute>} />
+            <Route path="salaries/:id" element={<FinanceRoute><SalaryDetail /></FinanceRoute>} />
             <Route path="vault" element={<RoleRoute><Passwords /></RoleRoute>} />
             <Route path="admin/form-builder" element={<RoleRoute><FormBuilder /></RoleRoute>} />
             <Route path="admin/users" element={<RoleRoute><UserManagement /></RoleRoute>} />

@@ -36,9 +36,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
   ];
 
   const userOnlyPaths = ['/', '/post-sale', '/admin/submissions'];
-  const navItems = user?.role === 'User'
-    ? allNavItems.filter((item) => userOnlyPaths.includes(item.path))
-    : allNavItems;
+  const financePaths = ['/invoices', '/analytics', '/salaries'];
+
+  const navItems = allNavItems.filter((item) => {
+    // 1. Standard user path restrictions
+    if (user?.role === 'User') {
+      if (!userOnlyPaths.includes(item.path)) return false;
+    }
+
+    // 2. Finance path restrictions
+    if (financePaths.includes(item.path)) {
+      const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
+      const isFinance = user?.departments && user.departments.includes('Finance');
+      return !!(isMasterAdmin || isFinance);
+    }
+
+    return true;
+  });
 
   return (
     <>
