@@ -22,7 +22,7 @@ import type { InvoiceType, ServiceFeeType } from "../types";
 
 const PaidSeal: React.FC = () => (
   <img
-    src="/seal.jpg"
+    src="/seal.png"
     alt="PAID Seal"
     style={{
       width: "130px",
@@ -430,12 +430,12 @@ const InvoiceDetail: React.FC = () => {
                 type === "service_fee"
                   ? [{ description: "", amount: 0, startDate: "", endDate: "" }]
                   : [
-                      {
-                        description: "",
-                        paymentTerm: "",
-                        amount: 0,
-                      },
-                    ],
+                    {
+                      description: "",
+                      paymentTerm: "",
+                      amount: 0,
+                    },
+                  ],
               amount: 0,
               currency: "MMK",
               exchangeRate: 0,
@@ -730,8 +730,8 @@ const InvoiceDetail: React.FC = () => {
                                       value={
                                         item.startDate
                                           ? new Date(item.startDate)
-                                              .toISOString()
-                                              .split("T")[0]
+                                            .toISOString()
+                                            .split("T")[0]
                                           : ""
                                       }
                                       onChange={(e) =>
@@ -753,8 +753,8 @@ const InvoiceDetail: React.FC = () => {
                                       value={
                                         item.endDate
                                           ? new Date(item.endDate)
-                                              .toISOString()
-                                              .split("T")[0]
+                                            .toISOString()
+                                            .split("T")[0]
                                           : ""
                                       }
                                       onChange={(e) =>
@@ -1132,10 +1132,10 @@ const InvoiceDetail: React.FC = () => {
                         displayData.items.filter(
                           (i: InvoiceItem) => i.description,
                         ).length === 0) && (
-                        <p className="text-xs text-slate-400 italic">
-                          No items
-                        </p>
-                      )}
+                          <p className="text-xs text-slate-400 italic">
+                            No items
+                          </p>
+                        )}
                     </div>
 
                     <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
@@ -1476,7 +1476,7 @@ const InvoiceDetail: React.FC = () => {
                               </span>
                               <span style={{ fontWeight: 600 }}>
                                 {" "}
-                                - {formatDate(displayData.date)}
+                                - {formatDate(invoice?.paymentDetails?.dateTime || displayData.date)}
                               </span>
                             </div>
                             {viewMode !== "customer" && displayData.dueDate && (
@@ -1595,20 +1595,20 @@ const InvoiceDetail: React.FC = () => {
                             <tr>
                               {(invoiceType === "service_fee"
                                 ? [
-                                    "DESCRIPTION",
-                                    "START",
-                                    "END",
-                                    displayData.currency === "USD"
-                                      ? "USD"
-                                      : "MMK",
-                                  ]
+                                  "DESCRIPTION",
+                                  "START",
+                                  "END",
+                                  displayData.currency === "USD"
+                                    ? "USD"
+                                    : "MMK",
+                                ]
                                 : [
-                                    "DESCRIPTION",
-                                    "PAYMENT TERM",
-                                    displayData.currency === "USD"
-                                      ? "USD"
-                                      : "MMK",
-                                  ]
+                                  "DESCRIPTION",
+                                  "PAYMENT TERM",
+                                  displayData.currency === "USD"
+                                    ? "USD"
+                                    : "MMK",
+                                ]
                               ).map((h, i) => {
                                 const isLast =
                                   invoiceType === "service_fee"
@@ -1673,8 +1673,8 @@ const InvoiceDetail: React.FC = () => {
                                       >
                                         {item.startDate
                                           ? new Date(
-                                              item.startDate,
-                                            ).toLocaleDateString("en-GB")
+                                            item.startDate,
+                                          ).toLocaleDateString("en-GB")
                                           : "-"}
                                       </td>
                                       <td
@@ -1690,8 +1690,8 @@ const InvoiceDetail: React.FC = () => {
                                       >
                                         {item.endDate
                                           ? new Date(
-                                              item.endDate,
-                                            ).toLocaleDateString("en-GB")
+                                            item.endDate,
+                                          ).toLocaleDateString("en-GB")
                                           : "-"}
                                       </td>
                                     </>
@@ -1733,27 +1733,27 @@ const InvoiceDetail: React.FC = () => {
                               displayData.items.filter(
                                 (i: InvoiceItem) => i.description,
                               ).length === 0) && (
-                              <tr>
-                                <td
-                                  colSpan={
-                                    invoiceType === "service_fee" ? 4 : 3
-                                  }
-                                  style={{
-                                    padding: "20px 12px",
-                                    fontSize: "12px",
-                                    color: "#9ca3af",
-                                    fontStyle: "italic",
-                                    textAlign: "center",
-                                    borderBottom: "1px solid #e5e7eb",
-                                    borderLeft: "none",
-                                    borderRight: "none",
-                                    borderTop: "none",
-                                  }}
-                                >
-                                  No items added
-                                </td>
-                              </tr>
-                            )}
+                                <tr>
+                                  <td
+                                    colSpan={
+                                      invoiceType === "service_fee" ? 4 : 3
+                                    }
+                                    style={{
+                                      padding: "20px 12px",
+                                      fontSize: "12px",
+                                      color: "#9ca3af",
+                                      fontStyle: "italic",
+                                      textAlign: "center",
+                                      borderBottom: "1px solid #e5e7eb",
+                                      borderLeft: "none",
+                                      borderRight: "none",
+                                      borderTop: "none",
+                                    }}
+                                  >
+                                    No items added
+                                  </td>
+                                </tr>
+                              )}
                           </tbody>
                         </table>
 
