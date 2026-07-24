@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, Menu, Sun, Moon } from 'lucide-react';
+import { Bell, User, Menu, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface TopbarProps {
@@ -7,7 +7,7 @@ interface TopbarProps {
   onMenuToggle?: () => void;
 }
 
-const Topbar: React.FC<TopbarProps> = ({ onSearch, onMenuToggle }) => {
+const Topbar: React.FC<TopbarProps> = ({ onMenuToggle }) => {
   const { user } = useAuth();
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('otas_theme') as 'light' | 'dark') || 'light';
