@@ -56,10 +56,10 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onClick }) => {
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+      className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
       onClick={() => onClick(client)}
     >
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-3">
         <span
           className={`text-[8px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider ${getStatusColor(client.status)}`}
         >
@@ -82,42 +82,36 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onClick }) => {
         </div>
       </div>
 
-      <h3 className="text-lg h-10 font-bold text-slate-800 mb-2 flex items-center group-hover:text-primary transition-colors">
-        <Building2 className="w-5 h-5 mr-2 text-slate-400 group-hover:text-primary/70 transition-colors" />
-        <span className="text-sm font-bold text-slate-800 mb-2 flex items-center group-hover:text-primary transition-colors">
-          {client.companyName}
-        </span>
+      <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2 group-hover:text-primary transition-colors">
+        <Building2 className="w-5 h-5 text-slate-400 group-hover:text-primary/70 transition-colors shrink-0" />
+        <span className="truncate">{client.companyName}</span>
       </h3>
 
-      <div className="space-y-3 mt-5 text-sm text-slate-600">
-        <div className="flex items-center">
-          <Phone className="w-4 h-4 mr-3 text-slate-400" />
-          {client.contactInfo}
+      <div className="space-y-2 text-xs text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-slate-300">📞</span>
+          <span>{client.contactInfo}</span>
         </div>
-        <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-3 text-slate-400" />
-          {new Date(client.inquiryDate).toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
+        <div className="flex items-center gap-2">
+          <span className="text-slate-300">📅</span>
+          <span>{new Date(client.inquiryDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}</span>
         </div>
       </div>
 
       {client.isPostSale && client.projectId && (
-        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
-          <span className="text-slate-500">Project ID</span>
-          <span className="text-primary bg-primary/5 px-2 py-1 rounded-md">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
+          <span className="text-slate-400">Project</span>
+          <span className="text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
             {client.projectId}
           </span>
         </div>
       )}
 
       {/* Quick Public Links */}
-      <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2">
+      <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
         <button
           onClick={(e) => copyLink(e, "email")}
-          className="flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-50 text-slate-500 hover:bg-primary/10 hover:text-primary transition-all text-[10px] font-bold uppercase tracking-tight border border-slate-100"
+          className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-50 text-slate-500 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all text-[9px] font-bold uppercase tracking-tight border border-slate-100"
           title="Copy Email Form Link"
         >
           <Mail className="w-3.5 h-3.5" />
@@ -125,7 +119,7 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onClick }) => {
         </button>
         <button
           onClick={(e) => copyLink(e, "website")}
-          className="flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 text-indigo-600 transition-all text-[10px] font-bold uppercase tracking-tight border border-slate-100"
+          className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-all text-[9px] font-bold uppercase tracking-tight border border-slate-100"
           title="Copy Website Brief Link"
         >
           <Globe className="w-3.5 h-3.5" />

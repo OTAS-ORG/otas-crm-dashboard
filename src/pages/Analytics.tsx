@@ -98,16 +98,16 @@ const Bar: React.FC<{
   amount?: string;
   sub?: string;
 }> = ({ value, max, color, label, amount, sub }) => (
-  <div>
+  <div className="group">
     <div className="flex items-center justify-between text-sm mb-1">
-      <span className="text-slate-600">{label}</span>
-      <span className="font-medium text-slate-800 whitespace-nowrap ml-2">
+      <span className="text-slate-600 font-medium">{label}</span>
+      <span className="font-semibold text-slate-800 whitespace-nowrap ml-2 text-xs">
         {amount}
       </span>
     </div>
-    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+    <div className="w-full h-2.5 bg-gradient-to-r from-slate-100 to-slate-200 rounded-full overflow-hidden">
       <div
-        className={`h-full rounded-full ${color}`}
+        className={`h-full rounded-full transition-all duration-700 ease-out ${color}`}
         style={{ width: `${max > 0 ? (value / max) * 100 : 0}%` }}
       />
     </div>
@@ -122,17 +122,31 @@ const MonthlyChart: React.FC<{
 }> = ({ data, max, color }) => (
   <div className="flex items-end gap-2 h-44">
     {data.map((m) => (
-      <div key={m.name} className="flex-1 flex flex-col items-center gap-1">
-        <div className="w-full flex items-end" style={{ height: "120px" }}>
+      <div key={m.name} className="flex-1 flex flex-col items-center gap-1 group">
+        <div className="w-full flex items-end relative" style={{ height: "120px" }}>
           {m.total > 0 && (
             <div
-              className={`w-full ${color} rounded-t-sm min-h-[2px]`}
-              style={{ height: `${(m.total / max) * 100}%` }}
+              className={`w-full rounded-t-sm min-h-[2px] transition-all duration-500 ease-out ${color} group-hover:opacity-80`}
+              style={{
+                height: `${(m.total / max) * 100}%`,
+                background: color.includes('emerald')
+                  ? 'linear-gradient(to top, #059669, #34d399)'
+                  : color.includes('red')
+                    ? 'linear-gradient(to top, #dc2626, #f87171)'
+                    : color.includes('teal')
+                      ? 'linear-gradient(to top, #0d9488, #2dd4bf)'
+                      : undefined,
+              }}
               title={`${m.total.toLocaleString()} MMK`}
             />
           )}
+          {/* Tooltip on hover */}
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-10">
+            {m.total.toLocaleString()} MMK
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+          </div>
         </div>
-        <span className="text-[10px] text-slate-500">{m.name}</span>
+        <span className="text-[10px] text-slate-400 group-hover:text-slate-600 transition-colors">{m.name}</span>
       </div>
     ))}
   </div>
@@ -206,28 +220,29 @@ const Analytics: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-row justify-between items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/10 via-primary/10 to-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-violet-500/5 to-blue-500/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
         <div className="relative z-10 mb-4 sm:mb-0">
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-primary to-indigo-600 bg-clip-text text-transparent tracking-tight">
             Analytics
           </h2>
           <p className="text-sm text-slate-500 mt-1">
             Financial overview and client pipeline
           </p>
         </div>
-        <div className="relative z-10 flex items-center gap-2">
+        <div className="relative z-10 flex items-center gap-2 bg-slate-50/80 backdrop-blur-sm rounded-xl p-1 border border-slate-200/40">
           <button
             onClick={() => setSelectedYear(selectedYear - 1)}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-semibold text-slate-700 min-w-[60px] text-center">
+          <span className="text-sm font-semibold text-slate-700 min-w-[60px] text-center select-none">
             {selectedYear}
           </span>
           <button
             onClick={() => setSelectedYear(selectedYear + 1)}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -242,11 +257,13 @@ const Analytics: React.FC = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? "bg-primary text-white shadow-sm"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                ? "bg-gradient-to-r from-primary to-indigo-500 text-white shadow-sm shadow-primary/20"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
             }`}
           >
-            {tab.icon}
+            <span className={activeTab === tab.id ? "text-white" : "text-slate-400"}>
+              {tab.icon}
+            </span>
             {tab.label}
           </button>
         ))}
@@ -258,82 +275,90 @@ const Analytics: React.FC = () => {
         {activeTab === "overview" && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-emerald-500" />
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-sm shadow-emerald-200">
+                    <TrendingUp className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-slate-500">Total Revenue</p>
-                    <p className="text-lg font-bold text-slate-800">
+                    <p className="text-lg font-bold text-slate-800 truncate">
                       {totalRevenue.toLocaleString()} MMK
                     </p>
                     {prevRevenue > 0 && (
-                      <p
-                        className={`text-xs font-medium ${revenueChange >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                      <span
+                        className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-md mt-1 ${
+                          revenueChange >= 0
+                            ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
+                            : "text-red-600 bg-red-50 border border-red-200"
+                        }`}
                       >
                         {revenueChange >= 0 ? "↑" : "↓"}{" "}
-                        {Math.abs(revenueChange).toFixed(1)}% vs{" "}
-                        {selectedYear - 1}
-                      </p>
+                        {Math.abs(revenueChange).toFixed(1)}%
+                        <span className="opacity-60 font-normal ml-0.5">vs {selectedYear - 1}</span>
+                      </span>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-                    <TrendingDown className="w-5 h-5 text-red-500" />
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center shadow-sm shadow-red-200">
+                    <TrendingDown className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-slate-500">Total Expenses</p>
-                    <p className="text-lg font-bold text-slate-800">
+                    <p className="text-lg font-bold text-slate-800 truncate">
                       {totalExpense.toLocaleString()} MMK
                     </p>
                     {prevExpense > 0 && (
-                      <p
-                        className={`text-xs font-medium ${expenseChange <= 0 ? "text-emerald-600" : "text-red-500"}`}
+                      <span
+                        className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-md mt-1 ${
+                          expenseChange <= 0
+                            ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
+                            : "text-red-600 bg-red-50 border border-red-200"
+                        }`}
                       >
                         {expenseChange >= 0 ? "↑" : "↓"}{" "}
-                        {Math.abs(expenseChange).toFixed(1)}% vs{" "}
-                        {selectedYear - 1}
-                      </p>
+                        {Math.abs(expenseChange).toFixed(1)}%
+                        <span className="opacity-60 font-normal ml-0.5">vs {selectedYear - 1}</span>
+                      </span>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-teal-500" />
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm shadow-teal-200">
+                    <Briefcase className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-slate-500">Total Payroll</p>
-                    <p className="text-lg font-bold text-slate-800">
+                    <p className="text-lg font-bold text-slate-800 truncate">
                       {totalPayroll.toLocaleString()} MMK
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-primary" />
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shadow-sm shadow-blue-200">
+                    <DollarSign className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-slate-500">Net Profit</p>
-                    <p className="text-lg font-bold text-slate-800">
+                    <p className="text-lg font-bold text-slate-800 truncate">
                       {(totalRevenue - totalExpense - totalPayroll).toLocaleString()} MMK
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-violet-500" />
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center shadow-sm shadow-violet-200">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-slate-500">Total Clients</p>
                     <p className="text-lg font-bold text-slate-800">
                       {data?.clients.total || 0}
@@ -343,7 +368,8 @@ const Analytics: React.FC = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-emerald-500" /> Monthly
                   Revenue
@@ -354,7 +380,8 @@ const Analytics: React.FC = () => {
                   color="bg-emerald-500"
                 />
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-400 to-red-600"></div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <TrendingDown className="w-4 h-4 text-red-500" /> Monthly
                   Expenses
@@ -372,7 +399,8 @@ const Analytics: React.FC = () => {
         {/* ===== REVENUE ===== */}
         {activeTab === "revenue" && (
           <>
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 mb-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 mb-4 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
               <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-500" /> Monthly
                 Revenue ({selectedYear})
@@ -384,7 +412,8 @@ const Analytics: React.FC = () => {
               />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-400 to-indigo-600"></div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-indigo-500" /> Revenue by
                   Type
@@ -402,11 +431,14 @@ const Analytics: React.FC = () => {
                     />
                   ))}
                   {data?.revenue.byType.length === 0 && (
-                    <p className="text-sm text-slate-400">No revenue data</p>
+                    <div className="text-sm text-slate-400 text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                      <p>No revenue data</p>
+                    </div>
                   )}
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-blue-600"></div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-primary" /> Invoice Status
                 </h3>
@@ -461,7 +493,8 @@ const Analytics: React.FC = () => {
         {/* ===== EXPENSES ===== */}
         {activeTab === "expenses" && (
           <>
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 mb-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 mb-4 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-400 to-red-600"></div>
               <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                 <TrendingDown className="w-4 h-4 text-red-500" /> Monthly
                 Expenses ({selectedYear})
@@ -473,7 +506,8 @@ const Analytics: React.FC = () => {
               />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-amber-600"></div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <Receipt className="w-4 h-4 text-amber-500" /> Top Expense
                   Categories
@@ -495,11 +529,14 @@ const Analytics: React.FC = () => {
                     );
                   })}
                   {data?.expenses.categoryBreakdown.length === 0 && (
-                    <p className="text-sm text-slate-400">No expenses yet</p>
+                    <div className="text-sm text-slate-400 text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                      <p>No expenses yet</p>
+                    </div>
                   )}
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-cyan-600"></div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-cyan-500" /> Expenses by
                   Department
@@ -520,9 +557,9 @@ const Analytics: React.FC = () => {
                     );
                   })}
                   {data?.expenses.byDepartment.length === 0 && (
-                    <p className="text-sm text-slate-400">
-                      No department expenses yet
-                    </p>
+                    <div className="text-sm text-slate-400 text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                      <p>No department expenses yet</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -535,7 +572,8 @@ const Analytics: React.FC = () => {
           <>
             {data?.payroll.summary && data.payroll.summary.count > 0 ? (
               <>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 mb-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 mb-4 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-teal-400 to-teal-600"></div>
                   <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                     <Briefcase className="w-4 h-4 text-teal-500" /> Monthly
                     Payroll ({selectedYear})
@@ -597,11 +635,14 @@ const Analytics: React.FC = () => {
                 </div>
               </>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-10 text-center">
-                <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500">
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/40 p-10 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                  <Briefcase className="w-8 h-8 text-slate-300" />
+                </div>
+                <p className="text-slate-500 font-medium">
                   No payroll data for {selectedYear}
                 </p>
+                <p className="text-xs text-slate-400 mt-1">Payroll records will appear here once added</p>
               </div>
             )}
           </>
@@ -612,7 +653,8 @@ const Analytics: React.FC = () => {
           <>
             {data?.tickets && data.tickets.total > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600"></div>
                   <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                     <LifeBuoy className="w-4 h-4 text-orange-500" /> Tickets by
                     Status
@@ -630,7 +672,8 @@ const Analytics: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600"></div>
                   <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-orange-500" /> Tickets by
                     Department
@@ -651,9 +694,9 @@ const Analytics: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 flex flex-col items-center justify-center">
-                  <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-3">
-                    <LifeBuoy className="w-7 h-7 text-orange-500" />
+                <div className="bg-gradient-to-br from-orange-500/5 to-orange-600/10 rounded-2xl shadow-sm border border-orange-200/40 p-5 flex flex-col items-center justify-center">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mb-3 shadow-sm shadow-orange-200">
+                    <LifeBuoy className="w-7 h-7 text-white" />
                   </div>
                   <p className="text-3xl font-bold text-slate-800">
                     {data.tickets.total}
@@ -662,9 +705,12 @@ const Analytics: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-10 text-center">
-                <LifeBuoy className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500">No tickets yet</p>
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/40 p-10 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                  <LifeBuoy className="w-8 h-8 text-slate-300" />
+                </div>
+                <p className="text-slate-500 font-medium">No tickets yet</p>
+                <p className="text-xs text-slate-400 mt-1">Tickets will appear here once created</p>
               </div>
             )}
           </>
@@ -673,9 +719,10 @@ const Analytics: React.FC = () => {
         {/* ===== CLIENTS ===== */}
         {activeTab === "clients" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
-              <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4 text-violet-500" /> Client Pipeline
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-400 to-purple-600"></div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-violet-500" /> Client Pipeline
               </h3>
               <div className="space-y-3">
                 {PIPELINE_ORDER.map((status) => {
@@ -719,7 +766,8 @@ const Analytics: React.FC = () => {
                 </div>
               ) : null}
             </div>
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600"></div>
               <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-blue-500" /> Lead Sources
               </h3>
@@ -738,7 +786,9 @@ const Analytics: React.FC = () => {
                   );
                 })}
                 {data?.clients.sourceChannels.length === 0 && (
-                  <p className="text-sm text-slate-400">No clients yet</p>
+                  <div className="text-sm text-slate-400 text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                    <p>No clients yet</p>
+                  </div>
                 )}
               </div>
               <div className="mt-5 pt-4 border-t border-slate-100">
@@ -768,7 +818,9 @@ const Analytics: React.FC = () => {
                     </div>
                   ))}
                   {data?.clients.topByRevenue.length === 0 && (
-                    <p className="text-sm text-slate-400">No revenue data</p>
+                    <div className="text-sm text-slate-400 text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                      <p>No revenue data</p>
+                    </div>
                   )}
                 </div>
               </div>

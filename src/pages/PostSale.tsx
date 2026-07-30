@@ -44,9 +44,10 @@ const PostSale: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-emerald-500/5 to-teal-500/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Active Projects</h2>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-emerald-500 to-teal-600 bg-clip-text text-transparent tracking-tight">Active Projects</h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Manage ongoing projects and execution for active clients.</p>
         </div>
       </div>
@@ -59,7 +60,7 @@ const PostSale: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search clients..."
-          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all text-sm text-slate-900 shadow-inner"
+          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all text-sm text-slate-900"
         />
       </div>
 

@@ -44,14 +44,15 @@ const PreSale: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/10 via-primary/10 to-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-violet-500/5 to-blue-500/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
         <div className="relative z-10 mb-4 sm:mb-0">
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Pre-Sale Pipeline</h2>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-primary to-indigo-600 bg-clip-text text-transparent tracking-tight">Pre-Sale Pipeline</h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Track and manage potential client inquiries.</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-primary text-white text-sm rounded-xl hover:bg-primary-600 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
+          className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary to-indigo-500 text-white text-sm rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
         >
           <Plus className="w-5 h-5 mr-2" />
           New Inquiry
@@ -66,7 +67,7 @@ const PreSale: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search clients..."
-          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all text-sm text-slate-900 shadow-inner"
+          className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all text-sm text-slate-900"
         />
       </div>
 

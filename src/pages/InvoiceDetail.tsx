@@ -1344,8 +1344,8 @@ const InvoiceDetail: React.FC = () => {
                               src="/invoice.png"
                               alt="OTAS"
                               style={{
-                                width: "200px",
-                                height: "100px",
+                                width: "250px",
+                                height: "80px",
                                 objectFit: "contain",
                               }}
                             />

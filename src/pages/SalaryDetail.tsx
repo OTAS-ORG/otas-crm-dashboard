@@ -44,6 +44,8 @@ const SalaryDetail: React.FC = () => {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(isNew);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const [exportingImage, setExportingImage] = useState(false);
 
   const [form, setForm] = useState({
     employeeName: '',
@@ -123,33 +125,70 @@ const SalaryDetail: React.FC = () => {
   };
 
   const handleDownloadPDF = async () => {
-    if (!previewRef.current) return;
+    if (!previewRef.current || exportingPDF) return;
     try {
+      setExportingPDF(true);
+      // Brief timeout to let React update DOM and browser paint the loading state
+      await new Promise((r) => setTimeout(r, 100));
+
       const html2canvas = (await import('html2canvas-pro')).default;
       const jsPDF = (await import('jspdf')).default;
-      const canvas = await html2canvas(previewRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      
+      const element = previewRef.current;
+      const originalWidth = element.style.width;
+      const originalMaxWidth = element.style.maxWidth;
+      element.style.width = '520px';
+      element.style.maxWidth = 'none';
+      
+      const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+      
+      element.style.width = originalWidth;
+      element.style.maxWidth = originalMaxWidth;
+      
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = 210;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a5'
+      });
+      // A5 size is 148mm x 210mm
+      pdf.addImage(imgData, 'PNG', 0, 0, 148, 210);
       pdf.save(`Payslip_${form.employeeName}_${MONTHS[form.month - 1]}_${form.year}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
+    } finally {
+      setExportingPDF(false);
     }
   };
 
   const handleDownloadImage = async () => {
-    if (!previewRef.current) return;
+    if (!previewRef.current || exportingImage) return;
     try {
+      setExportingImage(true);
+      // Brief timeout to let React update DOM and browser paint the loading state
+      await new Promise((r) => setTimeout(r, 100));
+
       const html2canvas = (await import('html2canvas-pro')).default;
-      const canvas = await html2canvas(previewRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      
+      const element = previewRef.current;
+      const originalWidth = element.style.width;
+      const originalMaxWidth = element.style.maxWidth;
+      element.style.width = '520px';
+      element.style.maxWidth = 'none';
+      
+      const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+      
+      element.style.width = originalWidth;
+      element.style.maxWidth = originalMaxWidth;
+      
       const link = document.createElement('a');
       link.download = `Payslip_${form.employeeName}_${MONTHS[form.month - 1]}_${form.year}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (error) {
       console.error('Error generating image:', error);
+    } finally {
+      setExportingImage(false);
     }
   };
 
@@ -286,101 +325,139 @@ const SalaryDetail: React.FC = () => {
             <div className="flex items-center gap-2">
               {!isNew && (
                 <>
-                  <button onClick={handleDownloadPDF} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                    <Download className="w-3.5 h-3.5 cursor-pointer" /> PDF
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={exportingPDF || exportingImage}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    {exportingPDF ? 'Exporting...' : 'PDF'}
                   </button>
-                  <button onClick={handleDownloadImage} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                    <Printer className="w-3.5 h-3.5 cursor-pointer" /> Image
+                  <button
+                    onClick={handleDownloadImage}
+                    disabled={exportingPDF || exportingImage}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    {exportingImage ? 'Exporting...' : 'Image'}
                   </button>
                 </>
               )}
             </div>
           </div>
 
-          <div ref={previewRef} id="payslip-preview" style={{ fontFamily: "'Poppins', sans-serif", width: '100%', minHeight: '500px', background: '#ffffff', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div ref={previewRef} id="payslip-preview" style={{ fontFamily: "'Inter', 'Poppins', sans-serif", width: '100%', maxWidth: '520px', minHeight: '735px', margin: '0 auto', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
             {/* Header */}
-            <div style={{ textAlign: 'center', paddingTop: '2rem', paddingBottom: '1.5rem', paddingLeft: '2rem', paddingRight: '2rem', background: 'linear-gradient(135deg, #0A0F1C 0%, #1a1f2e 100%)' }}>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em', margin: 0 }}>OTAS <span style={{ color: '#0052FF' }}>Tech Solution</span></h1>
-              <p style={{ fontSize: '1.125rem', fontWeight: 600, color: '#ffffff', marginTop: '0.5rem', marginBottom: 0 }}>PAYSLIP</p>
-              <p style={{ fontSize: '0.875rem', color: '#94a3b8', marginTop: '0.25rem' }}>{MONTHS[form.month - 1]} {form.year}</p>
+            <div style={{ textAlign: 'center', padding: '28px 32px 20px', borderBottom: '3px solid #3b82f6' }}>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', letterSpacing: '-0.025em', margin: 0 }}>
+                OTAS <span style={{ color: '#3b82f6' }}>Tech Solution</span>
+              </h1>
+              <p style={{ fontSize: '1rem', fontWeight: 600, color: '#3b82f6', marginTop: '8px', marginBottom: '4px', letterSpacing: '2px', textTransform: 'uppercase' }}>Payslip</p>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>{MONTHS[form.month - 1]} {form.year}</p>
             </div>
 
             {/* Employee Info */}
-            <div style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.875rem' }}>
-                <div><span style={{ color: '#64748b' }}>Employee: </span><span style={{ fontWeight: 500, color: '#1e293b' }}>{form.employeeName || '-'}</span></div>
-                <div><span style={{ color: '#64748b' }}>ID: </span><span style={{ fontWeight: 500, color: '#1e293b' }}>{form.employeeId || '-'}</span></div>
-                <div><span style={{ color: '#64748b' }}>Position: </span><span style={{ fontWeight: 500, color: '#1e293b' }}>{form.position || '-'}</span></div>
-                <div><span style={{ color: '#64748b' }}>Department: </span><span style={{ fontWeight: 500, color: '#1e293b' }}>{form.department || '-'}</span></div>
-                <div><span style={{ color: '#64748b' }}>Date of Joining: </span><span style={{ fontWeight: 500, color: '#1e293b' }}>{form.dateOfJoining || '-'}</span></div>
+            <div style={{ padding: '20px 32px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '1px', marginTop: 0, marginBottom: '12px' }}>Employee Details</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 24px', fontSize: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <span style={{ color: '#64748b' }}>Employee Name</span>
+                  <span style={{ fontWeight: 600, color: '#1e293b' }}>{form.employeeName || '-'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <span style={{ color: '#64748b' }}>Employee ID</span>
+                  <span style={{ fontWeight: 600, color: '#1e293b' }}>{form.employeeId || '-'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <span style={{ color: '#64748b' }}>Position</span>
+                  <span style={{ fontWeight: 500, color: '#334155' }}>{form.position || '-'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <span style={{ color: '#64748b' }}>Department</span>
+                  <span style={{ fontWeight: 500, color: '#334155' }}>{form.department || '-'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span style={{ color: '#64748b' }}>Date of Joining</span>
+                  <span style={{ fontWeight: 500, color: '#334155' }}>{form.dateOfJoining || '-'}</span>
+                </div>
               </div>
             </div>
 
-            {/* Earnings Table */}
-            <div style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Earnings</h3>
-              <table style={{ width: '100%', fontSize: '0.875rem' }}>
+            {/* Earnings Section */}
+            <div style={{ padding: '20px 32px 16px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#059669', textTransform: 'uppercase', letterSpacing: '1px', marginTop: 0, marginBottom: '12px' }}>Earnings</h3>
+              <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 0', color: '#64748b', fontWeight: 500 }}>Description</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem 0', color: '#64748b', fontWeight: 500 }}>Amount</th>
+                  <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ textAlign: 'left', padding: '8px 0', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</th>
+                    <th style={{ textAlign: 'right', padding: '8px 0', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Amount (MMK)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td style={{ padding: '0.5rem 0', color: '#334155' }}>Base Salary</td><td style={{ padding: '0.5rem 0', textAlign: 'right', fontWeight: 500, color: '#1e293b' }}>{toMMK(form.baseSalary, form.currency, form.exchangeRate).toLocaleString()}</td></tr>
+                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '10px 0', color: '#334155' }}>Base Salary</td>
+                    <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 500, color: '#1e293b' }}>{toMMK(form.baseSalary, form.currency, form.exchangeRate).toLocaleString()}</td>
+                  </tr>
                   {Object.entries(form.allowances).map(([key, val]) => val > 0 && (
-                    <tr key={key}><td style={{ padding: '0.5rem 0', color: '#334155' }}>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}</td>
-                      <td style={{ padding: '0.5rem 0', textAlign: 'right', color: '#1e293b' }}>{toMMK(val, form.currency, form.exchangeRate).toLocaleString()}</td></tr>
+                    <tr key={key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px 0', color: '#475569', paddingLeft: '16px' }}>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}</td>
+                      <td style={{ padding: '10px 0', textAlign: 'right', color: '#334155' }}>{toMMK(val, form.currency, form.exchangeRate).toLocaleString()}</td>
+                    </tr>
                   ))}
                 </tbody>
-                <tfoot>
-                  <tr style={{ borderTop: '1px solid #e2e8f0', fontWeight: 700, color: '#1e293b' }}>
-                    <td style={{ padding: '0.5rem 0' }}>Total Earnings</td>
-                    <td style={{ padding: '0.5rem 0', textAlign: 'right' }}>{toMMK(form.baseSalary + totalAllowances, form.currency, form.exchangeRate).toLocaleString()}</td>
-                  </tr>
-                </tfoot>
               </table>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 0', marginTop: '4px', borderTop: '2px solid #059669', fontWeight: 700, color: '#059669', fontSize: '0.9rem' }}>
+                <span>Total Earnings</span>
+                <span>{toMMK(form.baseSalary + totalAllowances, form.currency, form.exchangeRate).toLocaleString()} MMK</span>
+              </div>
             </div>
 
-            {/* Deductions Table */}
-            <div style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Deductions</h3>
-              <table style={{ width: '100%', fontSize: '0.875rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <th style={{ textAlign: 'left', padding: '0.5rem 0', color: '#64748b', fontWeight: 500 }}>Description</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem 0', color: '#64748b', fontWeight: 500 }}>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(form.deductions).map(([key, val]) => val > 0 && (
-                    <tr key={key}><td style={{ padding: '0.5rem 0', color: '#334155' }}>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}</td>
-                      <td style={{ padding: '0.5rem 0', textAlign: 'right', color: '#1e293b' }}>{toMMK(val, form.currency, form.exchangeRate).toLocaleString()}</td></tr>
-                  ))}
-                  {totalDeductions === 0 && <tr><td style={{ padding: '0.5rem 0', color: '#94a3b8', fontStyle: 'italic' }} colSpan={2}>No deductions</td></tr>}
-                </tbody>
-                <tfoot>
-                  <tr style={{ borderTop: '1px solid #e2e8f0', fontWeight: 700, color: '#ef4444' }}>
-                    <td style={{ padding: '0.5rem 0' }}>Total Deductions</td>
-                    <td style={{ padding: '0.5rem 0', textAlign: 'right' }}>{toMMK(totalDeductions, form.currency, form.exchangeRate).toLocaleString()}</td>
-                  </tr>
-                </tfoot>
-              </table>
+            {/* Deductions Section */}
+            <div style={{ padding: '16px 32px 16px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '1px', marginTop: 0, marginBottom: '12px' }}>Deductions</h3>
+              {totalDeductions > 0 ? (
+                <>
+                  <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                        <th style={{ textAlign: 'left', padding: '8px 0', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Description</th>
+                        <th style={{ textAlign: 'right', padding: '8px 0', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Amount (MMK)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(form.deductions).map(([key, val]) => val > 0 && (
+                        <tr key={key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '10px 0', color: '#475569' }}>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}</td>
+                          <td style={{ padding: '10px 0', textAlign: 'right', color: '#334155' }}>{toMMK(val, form.currency, form.exchangeRate).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 0', marginTop: '4px', borderTop: '2px solid #dc2626', fontWeight: 700, color: '#dc2626', fontSize: '0.9rem' }}>
+                    <span>Total Deductions</span>
+                    <span>{toMMK(totalDeductions, form.currency, form.exchangeRate).toLocaleString()} MMK</span>
+                  </div>
+                </>
+              ) : (
+                <p style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>No deductions</p>
+              )}
             </div>
 
             {/* Net Pay */}
-            <div style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1.5rem', paddingBottom: '1.5rem', background: 'linear-gradient(135deg, #0052FF 0%, #003db8 100%)' }}>
+            <div style={{ padding: '20px 32px', background: '#eff6ff', borderBottom: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>NET PAY</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff' }}>{toMMK(netPay, form.currency, form.exchangeRate).toLocaleString()} MMK</span>
+                <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b' }}>Net Pay</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#3b82f6' }}>{toMMK(netPay, form.currency, form.exchangeRate).toLocaleString()} MMK</span>
               </div>
             </div>
 
             {/* Footer */}
-            <div style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingTop: '1rem', paddingBottom: '1rem', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', borderTop: '1px solid #f1f5f9' }}>
-              {form.paymentChannel && <p style={{ marginBottom: '0.25rem' }}>Payment: {form.paymentChannel}</p>}
-              {form.status === 'Paid' && form.paidDate && <p>Paid on: {new Date(form.paidDate).toLocaleDateString()}</p>}
-              <p style={{ marginTop: '0.25rem' }}>OTAS Tech Solution — Payslip for {MONTHS[form.month - 1]} {form.year}</p>
+            <div style={{ padding: '16px 32px', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', background: '#f8fafc' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '4px' }}>
+                {form.paymentChannel && <span>Payment: <span style={{ fontWeight: 500, color: '#64748b' }}>{form.paymentChannel}</span></span>}
+                {form.status === 'Paid' && form.paidDate && <span>Paid on: <span style={{ fontWeight: 500, color: '#64748b' }}>{new Date(form.paidDate).toLocaleDateString()}</span></span>}
+              </div>
+              <p style={{ margin: '4px 0 0' }}>OTAS Tech Solution — Payslip for {MONTHS[form.month - 1]} {form.year}</p>
             </div>
           </div>
         </div>
