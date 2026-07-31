@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import SuccessModal from "./SuccessModal";
 import type { Client } from "../types";
 import {
-  Calendar,
-  Phone,
   Building2,
   ChevronRight,
   LayoutDashboard,
