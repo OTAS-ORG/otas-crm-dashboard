@@ -1968,6 +1968,11 @@ const InvoiceDetail: React.FC = () => {
                                       accNumber: "40034035740",
                                       accName: "Thant Sin Oo",
                                     },
+                                    Cash: {
+                                      label: "CASH",
+                                      accNumber: "Hand-to-Hand / Cash Payment",
+                                      accName: "Received by Cashier",
+                                    },
                                   };
                                   const info =
                                     channelMap[channel] ||
@@ -1990,16 +1995,20 @@ const InvoiceDetail: React.FC = () => {
                                       >
                                         {info.label}
                                       </h4>
-                                      <p
-                                        style={{ margin: "0", fontSize: "11px" }}
-                                      >
-                                        AccNumber - {info.accNumber}
-                                      </p>
-                                      <p
-                                        style={{ margin: "0", fontSize: "11px" }}
-                                      >
-                                        AccName - {info.accName}
-                                      </p>
+                                      {channel !== "Cash" && (
+                                        <>
+                                          <p
+                                            style={{ margin: "0", fontSize: "11px" }}
+                                          >
+                                            AccNumber - {info.accNumber}
+                                          </p>
+                                          <p
+                                            style={{ margin: "0", fontSize: "11px" }}
+                                          >
+                                            AccName - {info.accName}
+                                          </p>
+                                        </>
+                                      )}
                                     </div>
                                   );
                                 })()
@@ -2182,6 +2191,7 @@ const InvoiceDetail: React.FC = () => {
                   <option value="AYAPay">AYAPay</option>
                   <option value="KBZ Bank Transfer">KBZ Bank Transfer</option>
                   <option value="AYA Bank Transfer">AYA Bank Transfer</option>
+                  <option value="Cash">Cash</option>
                 </select>
               </div>
               <div>
