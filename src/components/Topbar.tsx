@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Bell,
   User as UserIcon,
   Menu,
-  Sun,
-  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   ChevronRight,
@@ -52,19 +49,6 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, collapsed, onToggleCollap
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('otas_theme') as 'light' | 'dark') || 'light';
-  });
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
-    localStorage.setItem('otas_theme', theme);
-  }, [theme]);
-
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -77,10 +61,6 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, collapsed, onToggleCollap
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [profileOpen]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
 
   const handleLogout = () => {
     setProfileOpen(false);
@@ -136,24 +116,9 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, collapsed, onToggleCollap
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-3 md:space-x-4">
-        {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 md:p-2.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all cursor-pointer"
-          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-        >
-          {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-        </button>
-
-        {/* Notification Bell */}
-        <button className="p-2 md:p-2.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all relative cursor-pointer">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2 md:top-2.5 md:right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-950 shadow-sm"></span>
-        </button>
-
+      <div className="flex items-center">
         {/* Shadcn-style Profile Dropdown with Avatar */}
-        <div className="relative pl-3 md:pl-5 border-l border-slate-200/60" ref={dropdownRef}>
+        <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setProfileOpen((prev) => !prev)}
@@ -172,8 +137,8 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, collapsed, onToggleCollap
             {/* Avatar Pill / Circle */}
             <div
               className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-primary font-bold text-xs bg-primary/10 border transition-all shadow-xs ${profileOpen
-                  ? 'ring-2 ring-primary border-primary bg-primary/20 text-primary'
-                  : 'border-primary/20 group-hover:border-primary/50'
+                ? 'ring-2 ring-primary border-primary bg-primary/20 text-primary'
+                : 'border-primary/20 group-hover:border-primary/50'
                 }`}
             >
               <UserIcon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
@@ -225,19 +190,6 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, collapsed, onToggleCollap
                   <span>AI Assistant</span>
                 </button>
 
-                {user?.role === 'Admin' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate('/admin');
-                    }}
-                    className="w-full px-3 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
-                  >
-                    <Shield className="w-4 h-4 text-indigo-500" />
-                    <span>Admin Panel</span>
-                  </button>
-                )}
               </div>
 
               <div className="border-t border-slate-100 my-1"></div>

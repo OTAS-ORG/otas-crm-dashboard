@@ -18,8 +18,6 @@ import {
   MessageSquare,
   Trash2,
   Calendar as CalendarIcon,
-  Edit3,
-  Share2,
   Paperclip,
   Lock,
 } from "lucide-react";

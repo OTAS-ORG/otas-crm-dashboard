@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import type { Client, AuditLog, ClientStatus } from "../types";
 import { clientService } from "../services/api";
@@ -152,8 +153,8 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({
 
   const contactParts = getContactInfoParts(client?.contactInfo);
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-3 sm:p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[86vh] min-h-[600px] max-h-[880px] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 bg-white">
@@ -739,7 +740,8 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 

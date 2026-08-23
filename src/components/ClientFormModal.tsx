@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { Client, ClientStatus, AuditLog } from "../types";
 import { clientService } from "../services/api";
 import CalendarModal from "./CalendarModal";
@@ -193,8 +194,8 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({
     "Other",
   ];
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-3 sm:p-4">
       <div className="bg-[#F8FAFC] rounded-3xl shadow-2xl w-full max-w-5xl h-[86vh] min-h-[600px] max-h-[880px] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 bg-white">
@@ -750,7 +751,8 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({
         }}
         title={activeCalendar === "inquiryDate" ? "Select Inquiry Date" : "Select Next Action Date"}
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 
