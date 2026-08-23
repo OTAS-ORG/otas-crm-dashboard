@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
-  FolderOpen, Search, Trash2, Eye, X, Loader2, Upload, FileText, Image, Video, Music, Archive, File, Plus
+  FolderOpen, Search, Trash2, Eye, X, Loader2, Upload, FileText, Image, Video, Music, Archive, File, Plus, FileUp
 } from 'lucide-react';
 import { documentService, clientService, projectService } from '../services/api';
 import type { Document, Client, Project } from '../types';
@@ -224,11 +225,11 @@ const Documents: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">File Name</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Size</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Associated To</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Uploaded By</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Upload Date</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Size</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Associated To</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Uploaded By</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Upload Date</th>
+                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -239,21 +240,21 @@ const Documents: React.FC = () => {
                         <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
                           {getFileIcon(doc.type, doc.name)}
                         </div>
-                        <span className="text-sm font-medium text-slate-800 break-all">{doc.name}</span>
+                        <span className="text-sm font-medium text-slate-800 break-words line-clamp-2 max-w-sm">{doc.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4.5">
-                      <span className="text-sm text-slate-600">{formatBytes(doc.size)}</span>
+                    <td className="px-6 py-4.5 whitespace-nowrap">
+                      <span className="text-sm text-slate-700 font-medium">{formatBytes(doc.size)}</span>
                     </td>
-                    <td className="px-6 py-4.5">
+                    <td className="px-6 py-4.5 whitespace-nowrap">
                       <div className="flex flex-col gap-0.5">
                         {doc.client && (
-                          <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md w-max">
+                          <span className="text-xs px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/80 rounded-md w-max font-medium">
                             Client: {doc.client.companyName}
                           </span>
                         )}
                         {doc.project && (
-                          <span className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md w-max">
+                          <span className="text-xs px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-md w-max font-medium">
                             Project: {doc.project.name}
                           </span>
                         )}
@@ -262,26 +263,26 @@ const Documents: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4.5">
-                      <span className="text-sm text-slate-600">{doc.uploadedBy?.username || 'Unknown'}</span>
+                    <td className="px-6 py-4.5 whitespace-nowrap">
+                      <span className="text-sm text-slate-600 font-medium">{doc.uploadedBy?.username || 'Unknown'}</span>
                     </td>
-                    <td className="px-6 py-4.5">
-                      <span className="text-xs text-slate-500">{new Date(doc.createdAt).toLocaleDateString()}</span>
+                    <td className="px-6 py-4.5 whitespace-nowrap">
+                      <span className="text-xs text-slate-500 font-medium">{new Date(doc.createdAt).toLocaleDateString()}</span>
                     </td>
-                    <td className="px-6 py-4.5 text-right">
+                    <td className="px-6 py-4.5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
                         <a
                           href={doc.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                          className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer"
                           title="Open/Download"
                         >
                           <Eye className="w-4 h-4" />
                         </a>
                         <button
                           onClick={() => setDeleteId(doc._id)}
-                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -320,39 +321,87 @@ const Documents: React.FC = () => {
       </div>
 
       {/* Upload Modal */}
-      {isUploadOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setIsUploadOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Upload className="w-5 h-5 text-primary" />
-                <h3 className="text-sm font-semibold text-slate-800">Upload New File</h3>
+      {isUploadOpen && createPortal(
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setIsUploadOpen(false)}
+        >
+          <div
+            className="no-glass bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150 flex flex-col"
+            style={{ backgroundColor: '#ffffff', opacity: 1, backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-primary shadow-xs">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Upload New File</h3>
+                  <p className="text-xs text-slate-500 font-medium">Upload documents, assets, or contracts</p>
+                </div>
               </div>
-              <button onClick={() => setIsUploadOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+              <button
+                type="button"
+                onClick={() => setIsUploadOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleUpload} className="p-5 space-y-4">
-              {/* File Selector */}
+            <form onSubmit={handleUpload} className="p-6 space-y-4 bg-white">
+              {/* File Selector Dropzone */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-2">Select File(s)</label>
-                <input
-                  type="file"
-                  multiple
-                  required
-                  onChange={(e) => setUploadFiles(e.target.files)}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer"
-                />
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                  Select File(s)
+                </label>
+                <div className="relative border-2 border-dashed border-slate-200 hover:border-primary/60 rounded-2xl p-5 text-center transition-all bg-slate-50/60 hover:bg-blue-50/30 group">
+                  <input
+                    type="file"
+                    multiple
+                    required
+                    id="doc-file-input"
+                    onChange={(e) => setUploadFiles(e.target.files)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center justify-center pointer-events-none">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-primary mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                      <FileUp className="w-5 h-5 text-primary" />
+                    </div>
+                    {uploadFiles && uploadFiles.length > 0 ? (
+                      <div>
+                        <p className="text-xs font-bold text-primary">
+                          {uploadFiles.length} file(s) selected
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate max-w-xs mt-0.5">
+                          {Array.from(uploadFiles).map(f => f.name).join(', ')}
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs font-bold text-slate-700">
+                          Click to browse or drag & drop files
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Supports PDF, DOCX, XLSX, Images, Videos, Archives
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Client Association */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5">Link to Client (Optional)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Link to Client <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
                 <select
                   value={uploadClientId}
                   onChange={(e) => setUploadClientId(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white cursor-pointer"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white cursor-pointer"
                 >
                   <option value="">Do not link client</option>
                   {clients.map((c) => <option key={c._id} value={c._id}>{c.companyName}</option>)}
@@ -361,63 +410,90 @@ const Documents: React.FC = () => {
 
               {/* Project Association */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5">Link to Project (Optional)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Link to Project <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
                 <select
                   value={uploadProjectId}
                   onChange={(e) => setUploadProjectId(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white cursor-pointer"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white cursor-pointer"
                 >
                   <option value="">Do not link project</option>
                   {projects.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}
                 </select>
               </div>
 
-              <div className="pt-2 flex gap-3">
+              <div className="pt-3 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setIsUploadOpen(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                  className="flex-1 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={uploading || !uploadFiles}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-600 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md shadow-primary/20"
+                  className="flex-1 px-4 py-2.5 text-xs font-bold text-white bg-primary hover:bg-primary-600 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-lg shadow-primary/20 cursor-pointer"
                 >
                   {uploading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Uploading...
+                      <span>Uploading...</span>
                     </>
-                  ) : 'Upload'}
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      <span>Upload Files</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="w-6 h-6 text-red-500" />
+      {deleteId && createPortal(
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setDeleteId(null)}
+        >
+          <div
+            className="no-glass bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 border border-slate-200 animate-in fade-in zoom-in-95 duration-150"
+            style={{ backgroundColor: '#ffffff', opacity: 1, backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-500 shadow-xs">
+              <Trash2 className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-800 text-center mb-2">Delete Document</h3>
-            <p className="text-sm text-slate-500 text-center mb-5">Are you sure you want to delete this document? This action cannot be undone.</p>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+            <h3 className="text-base font-bold text-slate-900 text-center mb-1.5">Delete Document</h3>
+            <p className="text-xs text-slate-500 text-center mb-6 leading-relaxed">
+              Are you sure you want to delete this document? This action cannot be undone.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteId(null)}
+                className="flex-1 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              >
                 Cancel
               </button>
-              <button onClick={handleDelete} disabled={deleting} className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-1">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-lg shadow-rose-600/20 cursor-pointer"
+              >
                 {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                Delete
+                <span>Delete</span>
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

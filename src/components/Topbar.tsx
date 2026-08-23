@@ -7,7 +7,6 @@ import {
   PanelLeftOpen,
   ChevronRight,
   LogOut,
-  Shield,
   Ticket as TicketIcon,
   Sparkles,
 } from 'lucide-react';
