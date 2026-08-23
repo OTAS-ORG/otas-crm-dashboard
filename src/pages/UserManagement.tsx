@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { userManagementService, ticketService } from "../services/api";
 import type { UserInfo, Department } from "../types";
 import {
-  Users,
   Check,
   X,
   Loader2,
@@ -180,28 +179,19 @@ const UserManagement: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-primary/10">
-            <Users className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              User Management
-            </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Assign departments and link Telegram for ticketing
-            </p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+        <div className="relative z-10 mb-4 sm:mb-0">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-indigo-500 to-blue-600 bg-clip-text text-transparent tracking-tight">User Management</h2>
+          <p className="text-sm text-slate-500 mt-1 font-medium">Assign departments and link Telegram for ticketing</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+          className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary to-indigo-500 text-white text-sm rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Create User</span>
+          <Plus className="w-5 h-5 mr-2" />
+          Create User
         </button>
       </div>
 

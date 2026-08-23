@@ -58,38 +58,35 @@ const Submissions: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-lg font-black text-slate-900">Onboarding Submissions</h1>
-              <p className="text-xs text-slate-500">{total} total submission{total !== 1 ? 's' : ''}</p>
-            </div>
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div className="flex items-center gap-3 mb-4 sm:mb-0">
+          <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+            <FileText className="w-5 h-5" />
           </div>
-
-          <div className="flex gap-2">
-            {['', 'Pending', 'Verified', 'Rejected'].map(s => (
-              <button
-                key={s}
-                onClick={() => { setStatusFilter(s); setPage(1); }}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                  statusFilter === s
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                {s || 'All'}
-              </button>
-            ))}
+          <div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-indigo-500 to-blue-600 bg-clip-text text-transparent tracking-tight">Onboarding Submissions</h2>
+            <p className="text-sm text-slate-500 mt-1 font-medium">{total} total submission{total !== 1 ? 's' : ''}</p>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex gap-2">
+          {['', 'Pending', 'Verified', 'Rejected'].map(s => (
+            <button
+              key={s}
+              onClick={() => { setStatusFilter(s); setPage(1); }}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                statusFilter === s
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {s || 'All'}
+            </button>
+          ))}
+        </div>
+      </div>
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -233,7 +230,6 @@ const Submissions: React.FC = () => {
             )}
           </div>
         )}
-      </div>
     </div>
   );
 };

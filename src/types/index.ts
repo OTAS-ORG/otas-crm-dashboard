@@ -311,6 +311,8 @@ export interface Ticket {
   department_id?: { _id: string; name: string } | string;
   assigned_to?: { _id: string; username: string } | string;
   created_by: { _id: string; username: string } | string;
+  dueDate?: string;
+  dueReminderSent?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -320,6 +322,7 @@ export interface TicketComment {
   ticket_id: string;
   user_id: { _id: string; username: string };
   message: string;
+  is_internal?: boolean;
   createdAt: string;
 }
 
@@ -509,3 +512,46 @@ export interface Document {
   createdAt: string;
   updatedAt: string;
 }
+
+export type EventType = 'meeting' | 'call' | 'task' | 'reminder' | 'event';
+export type EventStatus = 'scheduled' | 'completed' | 'cancelled';
+
+export interface CalendarEvent {
+  _id: string;
+  title: string;
+  description?: string;
+  type: EventType;
+  startDate: string;
+  endDate: string;
+  allDay: boolean;
+  location?: string;
+  meetingUrl?: string;
+  color: string;
+  clientId?: {
+    _id: string;
+    companyName: string;
+    contactPerson?: string;
+    contactInfo?: string;
+    status?: string;
+  } | string;
+  organizer: {
+    _id: string;
+    username: string;
+    email?: string;
+    role?: string;
+  } | string;
+  attendees: Array<{
+    _id: string;
+    username: string;
+    email?: string;
+    role?: string;
+  } | string>;
+  status: EventStatus;
+  createdBy?: {
+    _id: string;
+    username: string;
+  } | string;
+  createdAt: string;
+  updatedAt: string;
+}
+

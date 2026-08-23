@@ -43,11 +43,9 @@ const PreSale: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/10 via-primary/10 to-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-violet-500/5 to-blue-500/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
         <div className="relative z-10 mb-4 sm:mb-0">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-primary to-indigo-600 bg-clip-text text-transparent tracking-tight">Pre-Sale Pipeline</h2>
+          <h2 className="text-2xl font-bold tracking-tight"><span className="text-slate-800">Pre-Sale </span><span className="bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">Pipeline</span></h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Track and manage potential client inquiries.</p>
         </div>
         <button
@@ -76,7 +74,7 @@ const PreSale: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       ) : clients.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {clients.map((client) => (
             <ClientCard key={client._id} client={client} onClick={(c) => handleOpenModal(c._id)} />
           ))}

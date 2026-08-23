@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { analyticsService } from "../services/api";
 import type { DashboardAnalytics } from "../types";
+import CalendarModal from "../components/CalendarModal";
 import {
   BarChart3,
   TrendingUp,
@@ -14,6 +15,10 @@ import {
   Building2,
   Briefcase,
   LifeBuoy,
+  Calendar as CalendarIcon,
+  CalendarRange,
+  Filter,
+  RotateCcw,
 } from "lucide-react";
 
 const MONTHS = [
@@ -155,23 +160,74 @@ const MonthlyChart: React.FC<{
 const Analytics: React.FC = () => {
   const [data, setData] = useState<DashboardAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filterMode, setFilterMode] = useState<"year" | "custom">("year");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [customStartDate, setCustomStartDate] = useState<string>("");
+  const [customEndDate, setCustomEndDate] = useState<string>("");
+  const [activeCalendarField, setActiveCalendarField] = useState<"start" | "end" | null>(null);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("overview");
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        const result = await analyticsService.getDashboard(selectedYear);
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching analytics:", error);
-      } finally {
-        setLoading(false);
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+      let params: { year?: number; startDate?: string; endDate?: string } = {};
+      if (filterMode === "custom" && customStartDate && customEndDate) {
+        params = { startDate: customStartDate, endDate: customEndDate };
+      } else {
+        params = { year: selectedYear };
       }
-    };
-    fetchDashboard();
-  }, [selectedYear]);
+      const result = await analyticsService.getDashboard(params);
+      setData(result);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (filterMode === "year") {
+      fetchDashboard();
+    } else if (filterMode === "custom" && customStartDate && customEndDate) {
+      fetchDashboard();
+    }
+  }, [selectedYear, filterMode, customStartDate, customEndDate]);
+
+  const applyPreset = (preset: "this_month" | "last_30" | "this_quarter" | "this_year") => {
+    const now = new Date();
+    let start = new Date();
+    let end = new Date();
+
+    if (preset === "this_month") {
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    } else if (preset === "last_30") {
+      start = new Date();
+      start.setDate(start.getDate() - 30);
+      end = new Date();
+    } else if (preset === "this_quarter") {
+      const qMonth = Math.floor(now.getMonth() / 3) * 3;
+      start = new Date(now.getFullYear(), qMonth, 1);
+      end = new Date(now.getFullYear(), qMonth + 3, 0);
+    } else if (preset === "this_year") {
+      start = new Date(now.getFullYear(), 0, 1);
+      end = new Date(now.getFullYear(), 11, 31);
+    }
+
+    const formatDate = (d: Date) => d.toISOString().split("T")[0];
+    setCustomStartDate(formatDate(start));
+    setCustomEndDate(formatDate(end));
+    setFilterMode("custom");
+    setShowFilterDropdown(false);
+  };
+
+  const handleResetToYear = () => {
+    setFilterMode("year");
+    setCustomStartDate("");
+    setCustomEndDate("");
+    setShowFilterDropdown(false);
+  };
 
   const getMonthly = (items: { _id: { month: number }; total: number }[]) => {
     const byMonth: Record<number, number> = {};
@@ -208,21 +264,11 @@ const Analytics: React.FC = () => {
   const totalType =
     data?.revenue.byType.reduce((sum, t) => sum + t.total, 0) || 1;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-row justify-between items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/10 via-primary/10 to-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-violet-500/5 to-blue-500/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
-        <div className="relative z-10 mb-4 sm:mb-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div className="relative z-10">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-primary to-indigo-600 bg-clip-text text-transparent tracking-tight">
             Analytics
           </h2>
@@ -230,22 +276,145 @@ const Analytics: React.FC = () => {
             Financial overview and client pipeline
           </p>
         </div>
-        <div className="relative z-10 flex items-center gap-2 bg-slate-50/80 backdrop-blur-sm rounded-xl p-1 border border-slate-200/40">
-          <button
-            onClick={() => setSelectedYear(selectedYear - 1)}
-            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-semibold text-slate-700 min-w-[60px] text-center select-none">
-            {selectedYear}
-          </span>
-          <button
-            onClick={() => setSelectedYear(selectedYear + 1)}
-            className="p-2 text-slate-400 hover:text-primary hover:bg-white rounded-lg transition-all"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+
+        {/* Date Filter Bar */}
+        <div className="relative z-20 flex items-center gap-2.5 flex-wrap">
+          {/* Mode Switcher */}
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/60 shadow-2xs">
+            <button
+              type="button"
+              onClick={handleResetToYear}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                filterMode === "year"
+                  ? "bg-white text-slate-800 shadow-2xs"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Yearly
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!customStartDate || !customEndDate) {
+                  applyPreset("this_month");
+                } else {
+                  setFilterMode("custom");
+                }
+              }}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                filterMode === "custom"
+                  ? "bg-white text-primary shadow-2xs"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <CalendarRange className="w-3.5 h-3.5" />
+              Custom Range
+            </button>
+          </div>
+
+          {filterMode === "year" ? (
+            /* Year Switcher */
+            <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-slate-200 shadow-2xs">
+              <button
+                onClick={() => setSelectedYear(selectedYear - 1)}
+                className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
+                title="Previous Year"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-xs font-bold text-slate-800 min-w-[50px] text-center select-none">
+                {selectedYear}
+              </span>
+              <button
+                onClick={() => setSelectedYear(selectedYear + 1)}
+                className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
+                title="Next Year"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            /* Custom Range Inputs & Presets */
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Start Date Button */}
+              <button
+                type="button"
+                onClick={() => setActiveCalendarField("start")}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-primary transition-all shadow-2xs cursor-pointer"
+              >
+                <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+                <span>{customStartDate || "Start Date"}</span>
+              </button>
+
+              <span className="text-slate-400 text-xs font-bold">to</span>
+
+              {/* End Date Button */}
+              <button
+                type="button"
+                onClick={() => setActiveCalendarField("end")}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-primary transition-all shadow-2xs cursor-pointer"
+              >
+                <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+                <span>{customEndDate || "End Date"}</span>
+              </button>
+
+              {/* Presets dropdown toggle */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="p-1.5 px-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-primary hover:border-primary transition-all shadow-2xs flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                  title="Quick Presets"
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Presets</span>
+                </button>
+
+                {showFilterDropdown && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("this_month")}
+                      className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors cursor-pointer"
+                    >
+                      This Month
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("last_30")}
+                      className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors cursor-pointer"
+                    >
+                      Last 30 Days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("this_quarter")}
+                      className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors cursor-pointer"
+                    >
+                      This Quarter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("this_year")}
+                      className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors cursor-pointer"
+                    >
+                      This Year
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Reset Button */}
+              <button
+                type="button"
+                onClick={handleResetToYear}
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                title="Reset to Yearly View"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -271,7 +440,14 @@ const Analytics: React.FC = () => {
 
       {/* Tab Content */}
       <div>
-        {/* ===== OVERVIEW ===== */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-28 bg-white/60 rounded-3xl border border-slate-200/50 shadow-2xs backdrop-blur-xs">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+            <p className="text-xs font-semibold text-slate-500 mt-3">Loading analytics data...</p>
+          </div>
+        ) : (
+          <>
+            {/* ===== OVERVIEW ===== */}
         {activeTab === "overview" && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
@@ -827,7 +1003,36 @@ const Analytics: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </>
+    )}
+  </div>
+
+      {/* Center Calendar Picker Modal */}
+      <CalendarModal
+        isOpen={activeCalendarField !== null}
+        onClose={() => setActiveCalendarField(null)}
+        title={activeCalendarField === "start" ? "Select Start Date" : "Select End Date"}
+        value={
+          activeCalendarField === "start"
+            ? customStartDate || new Date().toISOString().split("T")[0]
+            : customEndDate || new Date().toISOString().split("T")[0]
+        }
+        onChange={(dateStr: string) => {
+          if (activeCalendarField === "start") {
+            setCustomStartDate(dateStr);
+            if (!customEndDate) {
+              setCustomEndDate(dateStr);
+            }
+          } else if (activeCalendarField === "end") {
+            setCustomEndDate(dateStr);
+            if (!customStartDate) {
+              setCustomStartDate(dateStr);
+            }
+          }
+          setFilterMode("custom");
+          setActiveCalendarField(null);
+        }}
+      />
     </div>
   );
 };

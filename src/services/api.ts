@@ -33,6 +33,7 @@ import type {
   Contact,
   ContactStatus,
   Document,
+  CalendarEvent,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -528,9 +529,9 @@ export const expenseService = {
 };
 
 export const analyticsService = {
-  getDashboard: async (year?: number) => {
+  getDashboard: async (params?: { year?: number; startDate?: string; endDate?: string }) => {
     const response = await api.get<ApiResponse<DashboardAnalytics>>("/analytics", {
-      params: year ? { year } : {},
+      params,
     });
     return response.data.data;
   },
@@ -568,11 +569,11 @@ export const ticketService = {
     const response = await api.get<ApiResponse<TicketDetailData>>(`/tickets/${id}`);
     return response.data.data;
   },
-  createTicket: async (data: { title: string; description: string; priority?: string; department_id?: string }) => {
+  createTicket: async (data: { title: string; description: string; priority?: string; department_id?: string; dueDate?: string }) => {
     const response = await api.post<ApiResponse<Ticket>>("/tickets", data);
     return response.data.data;
   },
-  assignTicket: async (id: string, data: { assigned_to?: string; department_id?: string }) => {
+  assignTicket: async (id: string, data: { assigned_to?: string; department_id?: string; dueDate?: string }) => {
     const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}/assign`, data);
     return response.data.data;
   },
@@ -580,8 +581,8 @@ export const ticketService = {
     const response = await api.put<ApiResponse<Ticket>>(`/tickets/${id}/status`, { status });
     return response.data.data;
   },
-  addComment: async (id: string, message: string) => {
-    const response = await api.post<ApiResponse<TicketComment>>(`/tickets/${id}/comments`, { message });
+  addComment: async (id: string, message: string, is_internal: boolean = false) => {
+    const response = await api.post<ApiResponse<TicketComment>>(`/tickets/${id}/comments`, { message, is_internal });
     return response.data.data;
   },
   getDepartments: async () => {
@@ -590,6 +591,10 @@ export const ticketService = {
   },
   getUsersByDepartment: async (department_id: string) => {
     const response = await api.get<ApiResponse<{ _id: string; username: string; role: string }[]>>(`/tickets/users/${department_id}`);
+    return response.data.data;
+  },
+  triggerDueReminders: async () => {
+    const response = await api.post<ApiResponse<{ count: number }>>("/tickets/check-reminders");
     return response.data.data;
   },
   deleteTicket: async (id: string) => {
@@ -762,3 +767,34 @@ export const documentService = {
     return response.data;
   },
 };
+
+export const eventService = {
+  getEvents: async (params?: {
+    startDate?: string;
+    endDate?: string;
+    userId?: string;
+    clientId?: string;
+    type?: string;
+    status?: string;
+  }) => {
+    const response = await api.get<ApiResponse<CalendarEvent[]>>("/events", { params });
+    return response.data.data;
+  },
+  getEvent: async (id: string) => {
+    const response = await api.get<ApiResponse<CalendarEvent>>(`/events/${id}`);
+    return response.data.data;
+  },
+  createEvent: async (data: Partial<CalendarEvent>) => {
+    const response = await api.post<ApiResponse<CalendarEvent>>("/events", data);
+    return response.data.data;
+  },
+  updateEvent: async (id: string, data: Partial<CalendarEvent>) => {
+    const response = await api.put<ApiResponse<CalendarEvent>>(`/events/${id}`, data);
+    return response.data.data;
+  },
+  deleteEvent: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/events/${id}`);
+    return response.data;
+  },
+};
+

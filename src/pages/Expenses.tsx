@@ -91,8 +91,7 @@ const Expenses: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 bg-white p-5 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
         <div className="relative z-10 mb-4 sm:mb-0">
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Expenses</h2>
           <p className="text-sm text-slate-500 mt-1">Track and manage business expenses</p>

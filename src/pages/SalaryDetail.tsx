@@ -347,7 +347,7 @@ const SalaryDetail: React.FC = () => {
             </div>
           </div>
 
-          <div ref={previewRef} id="payslip-preview" style={{ fontFamily: "'Inter', 'Poppins', sans-serif", width: '100%', maxWidth: '520px', minHeight: '735px', margin: '0 auto', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+          <div ref={previewRef} id="payslip-preview" className="print-surface" style={{ fontFamily: "'Inter', 'Poppins', sans-serif", width: '100%', maxWidth: '520px', minHeight: '735px', margin: '0 auto', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
             {/* Header */}
             <div style={{ padding: '14px 32px 20px', borderBottom: '3px solid #3b82f6', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>

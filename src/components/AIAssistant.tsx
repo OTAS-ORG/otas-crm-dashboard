@@ -79,13 +79,13 @@ const AIAssistant: React.FC = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button — glowing blue glass */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 border border-white/20 ${
           isOpen
-            ? 'bg-slate-600 hover:bg-slate-700 rotate-0'
-            : 'bg-primary hover:bg-primary-600 hover:scale-110'
+            ? 'bg-slate-700/80 backdrop-blur-md hover:bg-slate-700 rotate-0'
+            : 'bg-gradient-to-br from-primary to-indigo-600 hover:scale-110 shadow-[0_0_22px_rgba(37,99,235,0.55)] hover:shadow-[0_0_32px_rgba(37,99,235,0.8)]'
         }`}
       >
         {isOpen ? (

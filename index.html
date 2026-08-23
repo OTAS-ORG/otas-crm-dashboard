@@ -12,6 +12,15 @@
 </head>
 
 <body>
+  <script>
+    // Pre-paint theme: apply the stored preference before React mounts so the
+    // mesh background doesn't flash light-then-dark on a hard refresh.
+    try {
+      if (localStorage.getItem('otas_theme') === 'dark') {
+        document.body.classList.add('dark');
+      }
+    } catch (e) { /* localStorage unavailable — fall back to light */ }
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

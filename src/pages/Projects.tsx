@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { projectService } from "../services/api";
 import type { Project } from "../types";
-import { Layers, Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
@@ -49,24 +49,17 @@ const Projects: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-primary/10">
-            <Layers className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">Projects</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Manage SDLC projects and tasks
-            </p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+        <div className="relative z-10 mb-4 sm:mb-0">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-violet-500 to-indigo-600 bg-clip-text text-transparent tracking-tight">Projects</h2>
+          <p className="text-sm text-slate-500 mt-1 font-medium">Manage SDLC projects and tasks</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+          className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary to-indigo-500 text-white text-sm rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
         >
-          <Plus className="w-4 h-4" />
-          <span className="hidden md:block">New Project</span>
+          <Plus className="w-5 h-5 mr-2" />
+          New Project
         </button>
       </div>
 

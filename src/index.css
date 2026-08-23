@@ -16,20 +16,109 @@
 
 :root {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* ===== Glassmorphism design tokens (light) ===== */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.60);
+  --glass-blur: 18px;
+  --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --glass-radius: 1.75rem;
+  --topbar-bg: rgba(255, 255, 255, 0.62);
 }
 
+/* Light mesh-gradient canvas */
 body {
-  @apply bg-[#f4f7fb] text-slate-800 antialiased;
+  @apply text-slate-800 antialiased;
   font-family: var(--font-sans);
+  background-color: #eef2fb;
+  background-image:
+    radial-gradient(at 12% 18%, rgba(37, 99, 235, 0.12) 0px, transparent 55%),
+    radial-gradient(at 86% 10%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+    radial-gradient(at 78% 84%, rgba(96, 165, 250, 0.12) 0px, transparent 50%),
+    radial-gradient(at 20% 90%, rgba(167, 139, 250, 0.10) 0px, transparent 55%);
+  background-attachment: fixed;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Scoped SaaS Dark Mode Overrides */
-body.dark {
-  background-color: #030712 !important;
-  color: #f1f5f9 !important;
+/* ===== Frosted-glass surfaces (light) =====
+   Gated to the elevated card idiom (bg-white + rounded-2xl / rounded-3xl) so that
+   small white chips, toggles and inputs stay crisp. */
+.bg-white.rounded-2xl:not(input):not(select):not(textarea):not(button):not(.no-glass):not(.form-pill),
+.bg-white.rounded-3xl:not(input):not(select):not(textarea):not(button):not(.no-glass):not(.form-pill) {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
+/* Form inputs & interactive pills */
+.form-input-pill {
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.form-input-pill:hover {
+  border-color: var(--color-primary, #3b82f6) !important;
+}
+.form-input-pill:focus,
+.form-input-pill:focus-within {
+  border-color: var(--color-primary, #3b82f6) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18) !important;
+}
+
+/* Solid Opaque Containers (No Glass) */
+.no-glass,
+.calendar-card {
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Translucent topbar hook */
+.topbar-bg {
+  background-color: var(--topbar-bg) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+/* ===== Unified app panel (topbar + page body inside one frosted box) =====
+   The tint/blur intentionally lives on this child layer instead of the panel
+   wrapper itself: an element with backdrop-filter becomes the containing block
+   for fixed-position descendants, which would clip inline `fixed inset-0`
+   modals to the panel. A plain wrapper + filtered child avoids that. */
+.page-panel-glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: var(--glass-bg-strong);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+/* ===== Scoped SaaS Dark Mode Overrides (glass) ===== */
+body.dark {
+  /* dark glass token overrides */
+  --glass-bg: rgba(15, 23, 42, 0.55);
+  --glass-bg-strong: rgba(15, 23, 42, 0.72);
+  --glass-border: rgba(148, 163, 184, 0.14);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --topbar-bg: rgba(3, 7, 18, 0.62);
+
+  color: #f1f5f9 !important;
+  background-color: #030712 !important;
+  background-image:
+    radial-gradient(at 12% 18%, rgba(37, 99, 235, 0.20) 0px, transparent 55%),
+    radial-gradient(at 86% 10%, rgba(139, 92, 246, 0.18) 0px, transparent 50%),
+    radial-gradient(at 78% 84%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+    radial-gradient(at 20% 90%, rgba(129, 140, 248, 0.15) 0px, transparent 55%);
+  background-attachment: fixed;
+}
+
+/* Plain/opaque white surfaces (chips, small controls) stay solid in dark */
 body.dark .bg-white {
   background-color: #0b0f19 !important;
 }
@@ -48,6 +137,23 @@ body.dark .hover\:bg-slate-50:hover {
 
 body.dark .hover\:bg-slate-50\/50:hover {
   background-color: rgba(22, 30, 46, 0.5) !important;
+}
+
+/* Dark glass cards — more specific than the plain .bg-white rule above, so it wins */
+body.dark .bg-white.rounded-2xl,
+body.dark .bg-white.rounded-3xl {
+  background-color: var(--glass-bg) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* Translucent card faces used by the flip ClientCard (no backdrop-filter) */
+body.dark .bg-white\/70 {
+  background-color: rgba(15, 23, 42, 0.72) !important;
+}
+
+body.dark .bg-white\/60 {
+  background-color: rgba(15, 23, 42, 0.60) !important;
 }
 
 body.dark .text-slate-800 {
@@ -75,7 +181,7 @@ body.dark .border-slate-200 {
 }
 
 body.dark .border-slate-200\/60 {
-  border-color: rgba(31, 41, 61, 0.6) !important;
+  border-color: rgba(148, 163, 184, 0.10) !important;
 }
 
 body.dark .border-slate-100 {
@@ -90,24 +196,70 @@ body.dark .shadow-xl {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.7) !important;
 }
 
-/* Custom Topbar and Input scopes for dark mode */
+/* Topbar dark border (background handled via --topbar-bg) */
 body.dark .topbar-bg {
-  background-color: rgba(3, 7, 18, 0.8) !important;
-  border-color: #1f293d !important;
+  border-color: rgba(148, 163, 184, 0.12) !important;
 }
 
-body.dark input, 
-body.dark textarea, 
+body.dark input,
+body.dark textarea,
 body.dark select {
   background-color: #030712 !important;
   color: #f8fafc !important;
   border-color: #1f293d !important;
 }
 
-body.dark input:focus, 
-body.dark textarea:focus, 
+body.dark input:focus,
+body.dark textarea:focus,
 body.dark select:focus {
   border-color: #3b82f6 !important;
+}
+
+/* ===== PDF / image export opt-out =====
+   html2canvas ignores backdrop-filter and renders translucent surfaces as
+   transparent/black. Any capture root tagged .print-surface (and its glassy
+   descendants) is forced back to solid, blur-free white — in light AND dark —
+   so exported invoices / payslips look correct. Selectors mirror the glass
+   rules above with an extra ancestor so they out-rank them (incl. body.dark). */
+.print-surface,
+.print-surface .bg-white,
+.print-surface .bg-white.rounded-2xl,
+.print-surface .bg-white.rounded-3xl,
+body.dark .print-surface,
+body.dark .print-surface .bg-white,
+body.dark .print-surface .bg-white.rounded-2xl,
+body.dark .print-surface .bg-white.rounded-3xl {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ===== Reduced-transparency accessibility fallback ===== */
+@media (prefers-reduced-transparency: reduce) {
+  .bg-white.rounded-2xl,
+  .bg-white.rounded-3xl,
+  .topbar-bg {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  body.dark .bg-white.rounded-2xl,
+  body.dark .bg-white.rounded-3xl,
+  body.dark .topbar-bg {
+    background-color: #0b0f19 !important;
+  }
+
+  .page-panel-glass {
+    background-color: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  body.dark .page-panel-glass {
+    background-color: #0b0f19;
+  }
 }
 
 /* Sidebar Scrollbar */

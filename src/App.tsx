@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import PreSale from './pages/PreSale';
 import PostSale from './pages/PostSale';
@@ -26,8 +26,10 @@ import AIContentGenerator from './pages/AIContentGenerator';
 import AIInsights from './pages/AIInsights';
 import Contacts from './pages/Contacts';
 import Documents from './pages/Documents';
+import CalendarPage from './pages/CalendarPage';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AnimatedRoutes, FadeTransition } from './components/RouteTransition';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -66,13 +68,14 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/public/form/:type/:clientId" element={<PublicFormPage />} />
-          <Route path="/onboarding/:token" element={<OnboardingFormPage />} />
-          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <AnimatedRoutes>
+          <Route path="/login" element={<FadeTransition><Login /></FadeTransition>} />
+          <Route path="/public/form/:type/:clientId" element={<FadeTransition><PublicFormPage /></FadeTransition>} />
+          <Route path="/onboarding/:token" element={<FadeTransition><OnboardingFormPage /></FadeTransition>} />
+          <Route path="/" element={<ProtectedRoute><FadeTransition><Layout /></FadeTransition></ProtectedRoute>}>
             <Route index element={<PreSale />} />
             <Route path="post-sale" element={<PostSale />} />
+            <Route path="calendar" element={<RoleRoute><CalendarPage /></RoleRoute>} />
             <Route path="portal/:id" element={<ClientPortal />} />
             <Route path="invoices" element={<FinanceRoute><Invoices /></FinanceRoute>} />
             <Route path="invoices/:id" element={<FinanceRoute><InvoiceDetail /></FinanceRoute>} />
@@ -96,7 +99,7 @@ function App() {
             <Route path="ai/insights" element={<RoleRoute><AIInsights /></RoleRoute>} />
             <Route path="contacts" element={<RoleRoute><Contacts /></RoleRoute>} />
           </Route>
-        </Routes>
+        </AnimatedRoutes>
       </Router>
     </AuthProvider>
   );

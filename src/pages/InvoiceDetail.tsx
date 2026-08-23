@@ -1290,7 +1290,7 @@ const InvoiceDetail: React.FC = () => {
                     <div className="shadow-2xl rounded-sm overflow-hidden">
                       <div
                         id="document-preview"
-                        className="relative bg-white"
+                        className="relative bg-white print-surface"
                         style={{
                           padding: "40px",
                           fontFamily: "'Poppins', sans-serif",
