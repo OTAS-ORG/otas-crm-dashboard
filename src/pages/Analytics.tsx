@@ -19,6 +19,7 @@ import {
   CalendarRange,
   Filter,
   RotateCcw,
+  Clock,
 } from "lucide-react";
 
 const MONTHS = [
@@ -252,6 +253,8 @@ const Analytics: React.FC = () => {
   const totalRevenue = data?.totalRevenueMMK || 0;
   const totalExpense = data?.totalExpenseMMK || 0;
   const totalPayroll = data?.payroll.summary?.totalNetPay || 0;
+  const totalPendingInvoice = data?.totalPendingInvoiceMMK || 0;
+  const pendingInvoiceCount = data?.pendingInvoiceCount || 0;
   const prevRevenue = data?.prevYearRevenueMMK || 0;
   const prevExpense = data?.prevYearExpenseMMK || 0;
   const revenueChange =
@@ -450,7 +453,7 @@ const Analytics: React.FC = () => {
             {/* ===== OVERVIEW ===== */}
         {activeTab === "overview" && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-sm shadow-emerald-200">
@@ -526,6 +529,22 @@ const Analytics: React.FC = () => {
                     <p className="text-lg font-bold text-slate-800 truncate">
                       {(totalRevenue - totalExpense - totalPayroll).toLocaleString()} MMK
                     </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-200">
+                    <Clock className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-500">Pending Invoices</p>
+                    <p className="text-lg font-bold text-amber-600 truncate">
+                      {totalPendingInvoice.toLocaleString()} MMK
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md mt-1">
+                      {pendingInvoiceCount} pending
+                    </span>
                   </div>
                 </div>
               </div>
@@ -645,8 +664,19 @@ const Analytics: React.FC = () => {
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-100">
                   <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                    Payment Status
+                    Payment Status & Receivables
                   </h4>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 text-center">
+                      <p className="text-xs text-emerald-700 font-semibold mb-0.5">Received (Paid)</p>
+                      <p className="text-sm sm:text-base font-bold text-emerald-800">{totalRevenue.toLocaleString()} MMK</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-100 text-center">
+                      <p className="text-xs text-amber-700 font-semibold mb-0.5">Pending Receivable</p>
+                      <p className="text-sm sm:text-base font-bold text-amber-800">{totalPendingInvoice.toLocaleString()} MMK</p>
+                      <p className="text-[10px] text-amber-600 font-medium mt-0.5">{pendingInvoiceCount} invoices pending</p>
+                    </div>
+                  </div>
                   <div className="flex gap-3">
                     {data?.invoices.paymentStatusCounts.map((ps) => (
                       <div

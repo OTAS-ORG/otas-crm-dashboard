@@ -260,6 +260,8 @@ export interface DashboardAnalytics {
   year: number;
   totalRevenueMMK: number;
   totalExpenseMMK: number;
+  totalPendingInvoiceMMK?: number;
+  pendingInvoiceCount?: number;
   prevYearRevenueMMK: number;
   prevYearExpenseMMK: number;
   revenue: {
@@ -274,6 +276,8 @@ export interface DashboardAnalytics {
   invoices: {
     statusCounts: { _id: string; count: number }[];
     paymentStatusCounts: { _id: string; count: number }[];
+    totalPendingAmountMMK?: number;
+    pendingCount?: number;
   };
   clients: {
     total: number;
