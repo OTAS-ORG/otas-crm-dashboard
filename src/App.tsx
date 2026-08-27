@@ -27,6 +27,8 @@ import AIInsights from './pages/AIInsights';
 import Contacts from './pages/Contacts';
 import Documents from './pages/Documents';
 import CalendarPage from './pages/CalendarPage';
+import Blogs from './pages/Blogs';
+import BlogEditor from './pages/BlogEditor';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AnimatedRoutes, FadeTransition } from './components/RouteTransition';
@@ -91,6 +93,9 @@ function App() {
             <Route path="documents" element={<RoleRoute allowedRoles={['Admin']}><Documents /></RoleRoute>} />
             <Route path="salaries/:id" element={<FinanceRoute><SalaryDetail /></FinanceRoute>} />
             <Route path="vault" element={<RoleRoute><Passwords /></RoleRoute>} />
+            <Route path="blogs" element={<RoleRoute><Blogs /></RoleRoute>} />
+            <Route path="blogs/new" element={<RoleRoute><BlogEditor /></RoleRoute>} />
+            <Route path="blogs/edit/:id" element={<RoleRoute><BlogEditor /></RoleRoute>} />
             <Route path="admin/form-builder" element={<RoleRoute><FormBuilder /></RoleRoute>} />
             <Route path="admin/users" element={<RoleRoute><UserManagement /></RoleRoute>} />
             <Route path="admin/submissions" element={<RoleRoute><Submissions /></RoleRoute>} />

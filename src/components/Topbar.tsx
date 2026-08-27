@@ -23,6 +23,7 @@ const PAGE_TITLES: Record<string, string> = {
   'tickets': 'Tickets',
   'salaries': 'Payroll',
   'vault': 'Vault',
+  'blogs': 'Blog Management',
   'documents': 'Documents',
   'contacts': 'Contacts',
   'portal': 'Client Portal',

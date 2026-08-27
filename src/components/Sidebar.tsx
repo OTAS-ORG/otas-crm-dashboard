@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, X, Receipt, BarChart3, LifeBuoy, Wallet, FolderOpen, Calendar } from 'lucide-react';
+import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, X, Receipt, BarChart3, LifeBuoy, Wallet, FolderOpen, Calendar, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -24,6 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
     { name: 'Tickets', path: '/tickets', icon: LifeBuoy },
     { name: 'Payroll', path: '/salaries', icon: Wallet },
     { name: 'Vault', path: '/vault', icon: Lock },
+    { name: 'Blogs', path: '/blogs', icon: BookOpen },
     { name: 'Form Builder', path: '/admin/form-builder', icon: Settings2 },
     { name: 'Users', path: '/admin/users', icon: Users },
     { name: 'Submissions', path: '/admin/submissions', icon: ClipboardList },
@@ -32,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
     // { name: 'AI', path: '/ai', icon: Sparkles },
   ];
 
-  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/admin/submissions'];
+  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/admin/submissions', '/blogs'];
   const financePaths = ['/invoices', '/analytics', '/salaries'];
 
   const navItems = allNavItems.filter((item) => {

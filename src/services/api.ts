@@ -34,6 +34,9 @@ import type {
   ContactStatus,
   Document,
   CalendarEvent,
+  Blog,
+  BlogFormData,
+  BlogStats,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -795,6 +798,95 @@ export const eventService = {
   deleteEvent: async (id: string) => {
     const response = await api.delete<ApiResponse<null>>(`/events/${id}`);
     return response.data;
+  },
+};
+
+export const blogService = {
+  getBlogs: async (params?: {
+    search?: string;
+    category?: string;
+    status?: string;
+    tag?: string;
+    sort?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const response = await api.get<
+      ApiResponse<{
+        blogs: Blog[];
+        pagination: { total: number; page: number; pages: number; limit: number };
+      }>
+    >("/blogs", { params });
+    return response.data.data;
+  },
+
+  getBlogStats: async () => {
+    const response = await api.get<ApiResponse<BlogStats>>("/blogs/stats");
+    return response.data.data;
+  },
+
+  getBlogById: async (id: string) => {
+    const response = await api.get<ApiResponse<Blog>>(`/blogs/${id}`);
+    return response.data.data;
+  },
+
+  createBlog: async (data: BlogFormData) => {
+    const response = await api.post<ApiResponse<Blog>>("/blogs", data);
+    return response.data.data;
+  },
+
+  updateBlog: async (id: string, data: Partial<BlogFormData>) => {
+    const response = await api.put<ApiResponse<Blog>>(`/blogs/${id}`, data);
+    return response.data.data;
+  },
+
+  uploadImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await api.post<ApiResponse<{ url: string }>>('/blogs/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.data.url;
+  },
+
+  deleteBlog: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/blogs/${id}`);
+    return response.data;
+  },
+
+  // Public portfolio methods (direct unintercepted axios calls)
+  getPublicBlogs: async (params?: {
+    category?: string;
+    tag?: string;
+    search?: string;
+    sort?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const response = await axios.get<{
+      success: boolean;
+      data: {
+        blogs: Blog[];
+        pagination: { total: number; page: number; pages: number; limit: number };
+      };
+    }>(`${API_URL}/public/blogs`, { params });
+    return response.data.data;
+  },
+
+  getPublicBlog: async (slugOrId: string) => {
+    const response = await axios.get<{
+      success: boolean;
+      data: Blog;
+    }>(`${API_URL}/public/blogs/${slugOrId}`);
+    return response.data.data;
+  },
+
+  getPublicCategories: async () => {
+    const response = await axios.get<{
+      success: boolean;
+      data: Array<{ name: string; count: number }>;
+    }>(`${API_URL}/public/blogs/categories`);
+    return response.data.data;
   },
 };
 

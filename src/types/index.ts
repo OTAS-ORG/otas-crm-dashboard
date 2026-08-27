@@ -555,3 +555,47 @@ export interface CalendarEvent {
   updatedAt: string;
 }
 
+export type BlogStatus = 'Draft' | 'Published' | 'Archived';
+
+export interface Blog {
+  _id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  coverImage?: string;
+  category: string;
+  tags: string[];
+  status: BlogStatus;
+  author: {
+    _id: string;
+    username: string;
+    role?: string;
+  } | string;
+  authorName?: string;
+  readTime: number;
+  views: number;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BlogFormData {
+  title: string;
+  customSlug?: string;
+  content: string;
+  excerpt?: string;
+  coverImage?: string;
+  category: string;
+  tags: string[] | string;
+  status: BlogStatus;
+}
+
+export interface BlogStats {
+  total: number;
+  published: number;
+  draft: number;
+  archived: number;
+  totalViews: number;
+}
+
