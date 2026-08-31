@@ -680,12 +680,25 @@ export const projectService = {
     const response = await api.get<ApiResponse<Task>>(`/tasks/${taskId}`);
     return response.data.data;
   },
+  uploadTaskAttachment: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await api.post<ApiResponse<{ name: string; url: string; size: number }>>("/tasks/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data.data;
+  },
   getTaskComments: async (taskId: string) => {
     const response = await api.get<ApiResponse<TaskComment[]>>(`/tasks/${taskId}/comments`);
     return response.data.data;
   },
-  addTaskComment: async (taskId: string, message: string) => {
-    const response = await api.post<ApiResponse<TaskComment>>(`/tasks/${taskId}/comments`, { message });
+  addTaskComment: async (taskId: string, payload: { message?: string; images?: string[] } | string) => {
+    const body = typeof payload === "string" ? { message: payload } : payload;
+    const response = await api.post<ApiResponse<TaskComment>>(`/tasks/${taskId}/comments`, body);
+    return response.data.data;
+  },
+  toggleTaskCommentReaction: async (taskId: string, commentId: string, emoji: string) => {
+    const response = await api.post<ApiResponse<TaskComment>>(`/tasks/${taskId}/comments/${commentId}/reactions`, { emoji });
     return response.data.data;
   },
 };

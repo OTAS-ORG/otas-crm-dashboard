@@ -321,11 +321,18 @@ export interface Ticket {
   updatedAt: string;
 }
 
+export interface CommentReaction {
+  emoji: string;
+  users: { _id: string; username: string }[] | string[];
+}
+
 export interface TicketComment {
   _id: string;
   ticket_id: string;
   user_id: { _id: string; username: string };
   message: string;
+  images?: string[];
+  reactions?: CommentReaction[];
   is_internal?: boolean;
   createdAt: string;
 }
@@ -395,8 +402,8 @@ export interface Salary {
 }
 
 export interface SalarySummary {
-  year: number;
-  monthlyData: { _id: { month: number }; count: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; totalNetPay: number }[];
+  _id: { month: number; year: number };
+  salaries: Salary[];
   totals: { count: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; totalNetPay: number };
 }
 
@@ -412,6 +419,21 @@ export interface Project {
   updatedAt: string;
 }
 
+export interface TaskChecklistItem {
+  _id?: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface TaskAttachment {
+  _id?: string;
+  name: string;
+  url: string;
+  size?: number;
+  uploadedBy?: { _id: string; username: string };
+  createdAt?: string;
+}
+
 export interface Task {
   _id: string;
   title: string;
@@ -419,11 +441,14 @@ export interface Task {
   status: SDLCStatus;
   priority: TaskPriority;
   due_date?: string;
+  startDate?: string;
   estimatedHours?: number;
   actualHours?: number;
   assignedTo?: { _id: string; username: string } | string;
   qaAssignedTo?: { _id: string; username: string } | string;
-  projectId: string;
+  projectId: string | { _id: string; name: string; projectKey: string };
+  checklist?: TaskChecklistItem[];
+  attachments?: TaskAttachment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -433,6 +458,8 @@ export interface TaskComment {
   task_id: string;
   user_id: { _id: string; username: string };
   message: string;
+  images?: string[];
+  reactions?: CommentReaction[];
   createdAt: string;
 }
 

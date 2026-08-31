@@ -70,6 +70,9 @@ body {
 
 /* Solid Opaque Containers (No Glass) */
 .no-glass,
+[role="dialog"],
+.modal-card,
+.modal-box,
 .calendar-card {
   background-color: #ffffff !important;
   backdrop-filter: none !important;
