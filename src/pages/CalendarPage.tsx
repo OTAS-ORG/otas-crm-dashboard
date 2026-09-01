@@ -52,6 +52,14 @@ const COLOR_MAP: Record<string, { bg: string; text: string; border: string; badg
   purple: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", badge: "bg-purple-500" },
 };
 
+// Helper: Format a Date object into YYYY-MM-DD using local timezone (NOT UTC toISOString)
+const getLocalDateString = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 const CalendarPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -178,7 +186,7 @@ const CalendarPage: React.FC = () => {
 
   const openCreateModal = (dateStr?: string, timeStr?: string) => {
     setEventToEdit(null);
-    setInitialModalDate(dateStr || new Date().toISOString().split("T")[0]);
+    setInitialModalDate(dateStr || getLocalDateString(new Date()));
     setInitialModalTime(timeStr || "09:00");
     setShowEventModal(true);
   };
@@ -202,7 +210,7 @@ const CalendarPage: React.FC = () => {
       days.push({
         date: d,
         isCurrentMonth: false,
-        dateStr: d.toISOString().split("T")[0],
+        dateStr: getLocalDateString(d),
       });
     }
 
@@ -212,7 +220,7 @@ const CalendarPage: React.FC = () => {
       days.push({
         date: d,
         isCurrentMonth: true,
-        dateStr: d.toISOString().split("T")[0],
+        dateStr: getLocalDateString(d),
       });
     }
 
@@ -223,7 +231,7 @@ const CalendarPage: React.FC = () => {
       days.push({
         date: d,
         isCurrentMonth: false,
-        dateStr: d.toISOString().split("T")[0],
+        dateStr: getLocalDateString(d),
       });
     }
 
@@ -241,7 +249,7 @@ const CalendarPage: React.FC = () => {
       d.setDate(d.getDate() + i);
       return {
         date: d,
-        dateStr: d.toISOString().split("T")[0],
+        dateStr: getLocalDateString(d),
         dayName: DAYS_SHORT[d.getDay()],
         dayNum: d.getDate(),
         isToday: d.toDateString() === new Date().toDateString(),
@@ -249,11 +257,11 @@ const CalendarPage: React.FC = () => {
     });
   }, [currentDate]);
 
-  // Group events by Date String for quick lookup
+  // Group events by Date String for quick lookup using local date
   const eventsByDate = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
     filteredEvents.forEach((ev) => {
-      const dateKey = new Date(ev.startDate).toISOString().split("T")[0];
+      const dateKey = getLocalDateString(new Date(ev.startDate));
       if (!map[dateKey]) map[dateKey] = [];
       map[dateKey].push(ev);
     });
@@ -643,9 +651,9 @@ const CalendarPage: React.FC = () => {
                         {dayEvents.slice(0, 3).map((ev) => {
                           const cStyle = COLOR_MAP[ev.color] || COLOR_MAP.blue;
                           const startTimeStr = new Date(ev.startDate).toLocaleTimeString([], {
-                            hour: "2-digit",
+                            hour: "numeric",
                             minute: "2-digit",
-                            hour12: false,
+                            hour12: true,
                           });
                           const orgName = typeof ev.organizer === "object" && ev.organizer ? ev.organizer.username : "Team";
                           const clientName = typeof ev.clientId === "object" && ev.clientId ? ev.clientId.companyName : "";

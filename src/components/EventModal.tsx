@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { clientService, userManagementService, eventService } from "../services/api";
 import CalendarModal from "./CalendarModal";
 import TimePickerModal from "./TimePickerModal";
@@ -42,6 +43,13 @@ const EVENT_TYPES: { id: EventType; label: string }[] = [
   { id: "reminder", label: "Reminder" },
   { id: "event", label: "General Event" },
 ];
+
+const getLocalDateString = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 const EventModal: React.FC<EventModalProps> = ({
   isOpen,
@@ -111,9 +119,9 @@ const EventModal: React.FC<EventModalProps> = ({
 
         const sDate = new Date(eventToEdit.startDate);
         const eDate = new Date(eventToEdit.endDate);
-        setStartDate(sDate.toISOString().split("T")[0]);
+        setStartDate(getLocalDateString(sDate));
         setStartTime(sDate.toTimeString().slice(0, 5));
-        setEndDate(eDate.toISOString().split("T")[0]);
+        setEndDate(getLocalDateString(eDate));
         setEndTime(eDate.toTimeString().slice(0, 5));
 
         const cId =
@@ -127,7 +135,7 @@ const EventModal: React.FC<EventModalProps> = ({
         );
         setAttendeeIds(attIds);
       } else {
-        const todayStr = initialDate || new Date().toISOString().split("T")[0];
+        const todayStr = initialDate || getLocalDateString(new Date());
         const sTime = initialStartTime || "09:00";
         const [h, m] = sTime.split(":").map(Number);
         const endH = String((h + 1) % 24).padStart(2, "0");
@@ -253,8 +261,8 @@ const EventModal: React.FC<EventModalProps> = ({
     ? "Schedule Meeting"
     : "Save Activity";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
       {/* 100% Solid Opaque Modal Box with wider width to prevent overlap */}
       <div
         className="no-glass modal-card rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
@@ -662,7 +670,8 @@ const EventModal: React.FC<EventModalProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 
