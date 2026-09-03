@@ -595,6 +595,7 @@ export interface Blog {
   content: string;
   excerpt?: string;
   coverImage?: string;
+  coverImagePosition?: string;
   category: string;
   tags: string[];
   status: BlogStatus;
@@ -617,6 +618,7 @@ export interface BlogFormData {
   content: string;
   excerpt?: string;
   coverImage?: string;
+  coverImagePosition?: string;
   category: string;
   tags: string[] | string;
   status: BlogStatus;

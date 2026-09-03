@@ -359,6 +359,7 @@ const Blogs: React.FC = () => {
                   <img
                     src={blog.coverImage}
                     alt={blog.title}
+                    style={{ objectPosition: blog.coverImagePosition || '50% 50%' }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
@@ -482,7 +483,12 @@ const Blogs: React.FC = () => {
                       <div className="flex items-center gap-3.5">
                         <div className="w-12 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0">
                           {blog.coverImage ? (
-                            <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover" />
+                            <img
+                              src={blog.coverImage}
+                              alt={blog.title}
+                              style={{ objectPosition: blog.coverImagePosition || '50% 50%' }}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300">
                               <BookOpen className="w-4 h-4" />
@@ -723,10 +729,18 @@ const Blogs: React.FC = () => {
                       type="button"
                       onClick={() =>
                         handleCopy(
-                          `// In your Portfolio website (e.g. Next.js or React)
+                          `// 1. Fetch articles from OTAS CRM Public API
 const res = await fetch('${API_BASE_URL}/public/blogs');
-const data = await res.json();
-const blogs = data.data.blogs;`,
+const { data } = await res.json();
+const blogs = data.blogs;
+
+// 2. Render cover image with custom focal position:
+<img
+  src={blog.coverImage}
+  alt={blog.title}
+  style={{ objectPosition: blog.coverImagePosition || 'center' }}
+  className="w-full h-48 object-cover rounded-2xl"
+/>`,
                           'snippet'
                         )
                       }
@@ -737,12 +751,18 @@ const blogs = data.data.blogs;`,
                     </button>
                   </div>
                   <pre className="p-3 bg-slate-950 text-emerald-400 text-xs font-mono rounded-xl overflow-x-auto leading-relaxed">
-                    {`// Fetching articles in your portfolio
-const fetchPortfolioBlogs = async () => {
-  const res = await fetch('${API_BASE_URL}/public/blogs');
-  const result = await res.json();
-  return result.data.blogs; // Array of published articles
-};`}
+                    {`// 1. Fetch articles in your portfolio
+const res = await fetch('${API_BASE_URL}/public/blogs');
+const { data } = await res.json();
+const blogs = data.blogs; // Array of published articles
+
+// 2. Render cover image with custom focal position
+<img
+  src={blog.coverImage}
+  alt={blog.title}
+  style={{ objectPosition: blog.coverImagePosition || 'center' }}
+  className="w-full h-48 object-cover rounded-2xl"
+/>`}
                   </pre>
                 </div>
               </div>

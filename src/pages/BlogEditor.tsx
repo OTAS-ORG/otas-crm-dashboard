@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -15,6 +15,9 @@ import {
   UploadCloud,
   Upload,
   Link2,
+  Move,
+  Crosshair,
+  RotateCcw,
 } from 'lucide-react';
 import { blogService } from '../services/api';
 import RichTextEditor from '../components/RichTextEditor';
@@ -32,6 +35,33 @@ const DEFAULT_CATEGORIES = [
   'Company News',
 ];
 
+const PRESET_POSITIONS = [
+  { label: 'Top', val: '50% 0%' },
+  { label: 'Center', val: '50% 50%' },
+  { label: 'Bottom', val: '50% 100%' },
+  { label: 'Left', val: '0% 50%' },
+  { label: 'Right', val: '100% 50%' },
+];
+
+const parsePosition = (posStr?: string): { x: number; y: number } => {
+  if (!posStr) return { x: 50, y: 50 };
+  const parts = posStr.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    const parseCoord = (val: string, fallback: number) => {
+      if (val === 'top' || val === 'left') return 0;
+      if (val === 'center') return 50;
+      if (val === 'bottom' || val === 'right') return 100;
+      const num = parseFloat(val.replace('%', ''));
+      return isNaN(num) ? fallback : Math.max(0, Math.min(100, num));
+    };
+    return {
+      x: parseCoord(parts[0], 50),
+      y: parseCoord(parts[1], 50),
+    };
+  }
+  return { x: 50, y: 50 };
+};
+
 const BlogEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -44,6 +74,7 @@ const BlogEditor: React.FC = () => {
     content: '',
     excerpt: '',
     coverImage: '',
+    coverImagePosition: '50% 50%',
     category: 'Technology',
     tags: [],
     status: 'Draft',
@@ -55,9 +86,13 @@ const BlogEditor: React.FC = () => {
   const [tagInput, setTagInput] = useState('');
   const [originalBlog, setOriginalBlog] = useState<Blog | null>(null);
 
-  // Cover image mode & upload state
+  // Cover image mode, upload state & repositioning
   const [coverMode, setCoverMode] = useState<'upload' | 'url'>('upload');
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [isRepositioning, setIsRepositioning] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ clientX: number; clientY: number; startX: number; startY: number } | null>(null);
+  const coverContainerRef = useRef<HTMLDivElement>(null);
 
   // Loading & Feedback
   const [fetching, setFetching] = useState(isEditing);
@@ -84,6 +119,91 @@ const BlogEditor: React.FC = () => {
     }
   };
 
+  // Drag-to-Reposition Mouse & Touch Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isRepositioning) return;
+    e.preventDefault();
+    const current = parsePosition(formData.coverImagePosition);
+    dragStartRef.current = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      startX: current.x,
+      startY: current.y,
+    };
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !dragStartRef.current || !coverContainerRef.current) return;
+    const rect = coverContainerRef.current.getBoundingClientRect();
+    const deltaX = e.clientX - dragStartRef.current.clientX;
+    const deltaY = e.clientY - dragStartRef.current.clientY;
+
+    const deltaXPercent = (deltaX / rect.width) * 100;
+    const deltaYPercent = (deltaY / rect.height) * 100;
+
+    const newX = Math.round(Math.max(0, Math.min(100, dragStartRef.current.startX - deltaXPercent)));
+    const newY = Math.round(Math.max(0, Math.min(100, dragStartRef.current.startY - deltaYPercent)));
+
+    setFormData((prev) => ({
+      ...prev,
+      coverImagePosition: `${newX}% ${newY}%`,
+    }));
+  }, [isDragging]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isRepositioning || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const current = parsePosition(formData.coverImagePosition);
+    dragStartRef.current = {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      startX: current.x,
+      startY: current.y,
+    };
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !dragStartRef.current || !coverContainerRef.current || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const rect = coverContainerRef.current.getBoundingClientRect();
+    const deltaX = touch.clientX - dragStartRef.current.clientX;
+    const deltaY = touch.clientY - dragStartRef.current.clientY;
+
+    const deltaXPercent = (deltaX / rect.width) * 100;
+    const deltaYPercent = (deltaY / rect.height) * 100;
+
+    const newX = Math.round(Math.max(0, Math.min(100, dragStartRef.current.startX - deltaXPercent)));
+    const newY = Math.round(Math.max(0, Math.min(100, dragStartRef.current.startY - deltaYPercent)));
+
+    setFormData((prev) => ({
+      ...prev,
+      coverImagePosition: `${newX}% ${newY}%`,
+    }));
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
+
   // Fetch existing blog if editing
   useEffect(() => {
     if (isEditing && id) {
@@ -98,6 +218,7 @@ const BlogEditor: React.FC = () => {
             content: blog.content,
             excerpt: blog.excerpt || '',
             coverImage: blog.coverImage || '',
+            coverImagePosition: blog.coverImagePosition || '50% 50%',
             category: blog.category || 'Technology',
             tags: blog.tags || [],
             status: blog.status,
@@ -534,25 +655,134 @@ const BlogEditor: React.FC = () => {
               </div>
             )}
 
-            {/* Image Preview */}
+            {/* Image Preview with Interactive Repositioning & Presets */}
             {formData.coverImage ? (
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 h-40 bg-slate-100 group shadow-xs">
-                <img
-                  src={formData.coverImage}
-                  alt="Cover preview"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, coverImage: '' })}
-                  className="absolute top-2.5 right-2.5 p-2 rounded-xl bg-slate-950/75 text-white hover:bg-rose-600 transition-colors cursor-pointer shadow-md"
-                  title="Remove Image"
+              <div className="space-y-3">
+                <div
+                  ref={coverContainerRef}
+                  onMouseDown={handleMouseDown}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  className={`relative rounded-2xl overflow-hidden border border-slate-200 h-44 bg-slate-900 group shadow-xs select-none transition-all ${
+                    isRepositioning
+                      ? isDragging
+                        ? 'cursor-grabbing ring-2 ring-primary ring-offset-2'
+                        : 'cursor-grab ring-2 ring-primary/60'
+                      : ''
+                  }`}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  <img
+                    src={formData.coverImage}
+                    alt="Cover preview"
+                    draggable={false}
+                    style={{ objectPosition: formData.coverImagePosition || '50% 50%' }}
+                    className={`w-full h-full object-cover select-none pointer-events-none transition-[object-position] ${
+                      isDragging ? 'duration-0' : 'duration-200'
+                    }`}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+
+                  {/* Repositioning Overlay & Indicator */}
+                  {isRepositioning && (
+                    <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-between p-3 pointer-events-none">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900/80 text-white backdrop-blur-md border border-white/20 flex items-center gap-1.5 shadow-md">
+                        <Move className="w-3 h-3 text-primary animate-pulse" />
+                        <span>Drag image to adjust visible area</span>
+                      </span>
+
+                      <div className="w-8 h-8 rounded-full border border-white/50 flex items-center justify-center bg-black/20 text-white/75 backdrop-blur-xs">
+                        <Crosshair className="w-4 h-4" />
+                      </div>
+
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-black/60 text-emerald-400">
+                        {formData.coverImagePosition || '50% 50%'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Top Right Actions */}
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+                    <button
+                      type="button"
+                      onClick={() => setIsRepositioning(!isRepositioning)}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
+                        isRepositioning
+                          ? 'bg-primary text-white hover:bg-primary-600 ring-2 ring-white/50'
+                          : 'bg-slate-950/75 text-white hover:bg-slate-900 hover:text-white backdrop-blur-md'
+                      }`}
+                      title={isRepositioning ? 'Finish Repositioning' : 'Reposition Cover'}
+                    >
+                      {isRepositioning ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Done</span>
+                        </>
+                      ) : (
+                        <>
+                          <Move className="w-3.5 h-3.5" />
+                          <span>Reposition</span>
+                        </>
+                      )}
+                    </button>
+
+                    {!isRepositioning && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, coverImage: '', coverImagePosition: '50% 50%' });
+                          setIsRepositioning(false);
+                        }}
+                        className="p-1.5 rounded-xl bg-slate-950/75 text-white hover:bg-rose-600 transition-colors cursor-pointer shadow-md"
+                        title="Remove Image"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Presets & Position Controls */}
+                <div className="bg-slate-50/80 rounded-2xl p-2.5 border border-slate-200/70 space-y-2">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-slate-600 flex items-center gap-1">
+                      <Crosshair className="w-3 h-3 text-slate-400" />
+                      <span>Focal Position:</span>
+                      <span className="font-mono text-primary font-bold">{formData.coverImagePosition || '50% 50%'}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, coverImagePosition: '50% 50%' })}
+                      className="text-[10px] text-slate-400 hover:text-slate-700 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Reset to Center"
+                    >
+                      <RotateCcw className="w-2.5 h-2.5" />
+                      <span>Reset</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {PRESET_POSITIONS.map((preset) => {
+                      const isActive = (formData.coverImagePosition || '50% 50%') === preset.val;
+                      return (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, coverImagePosition: preset.val })}
+                          className={`flex-1 min-w-[50px] py-1 px-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer text-center ${
+                            isActive
+                              ? 'bg-primary text-white shadow-2xs'
+                              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="border border-dashed border-slate-200/80 rounded-2xl p-3.5 text-center text-slate-400 text-[11px] font-medium">
