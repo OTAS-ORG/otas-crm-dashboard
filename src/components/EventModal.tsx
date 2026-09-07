@@ -174,12 +174,17 @@ const EventModal: React.FC<EventModalProps> = ({
 
   const loadInitialData = async () => {
     try {
-      const [clientsData, usersData] = await Promise.all([
+      const [clientsResult, usersResult] = await Promise.allSettled([
         clientService.getClients(),
         userManagementService.getUsers(),
       ]);
-      setClients(clientsData || []);
-      setUsers(usersData || []);
+
+      if (clientsResult.status === "fulfilled") {
+        setClients(clientsResult.value || []);
+      }
+      if (usersResult.status === "fulfilled") {
+        setUsers(usersResult.value || []);
+      }
     } catch (err) {
       console.error("Error loading dropdown data for events", err);
     }

@@ -21,6 +21,7 @@ import {
   User,
   Globe,
   X,
+  ArrowUpDown,
 } from "lucide-react";
 
 type CalendarViewMode = "month" | "week" | "day" | "agenda";
@@ -267,6 +268,16 @@ const CalendarPage: React.FC = () => {
     });
     return map;
   }, [filteredEvents]);
+
+  // Agenda sort order: "desc" (latest first / reverted) or "asc" (oldest first)
+  const [agendaSortOrder, setAgendaSortOrder] = useState<"desc" | "asc">("desc");
+
+  const agendaEvents = useMemo(() => {
+    return [...filteredEvents].sort((a, b) => {
+      const diff = new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+      return agendaSortOrder === "desc" ? diff : -diff;
+    });
+  }, [filteredEvents, agendaSortOrder]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -582,6 +593,17 @@ const CalendarPage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              {viewMode === "agenda" && (
+                <button
+                  type="button"
+                  onClick={() => setAgendaSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer mr-1"
+                  title={agendaSortOrder === "desc" ? "Showing Latest First (click to switch to Oldest First)" : "Showing Oldest First (click to switch to Latest First)"}
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+                  <span>{agendaSortOrder === "desc" ? "Latest First" : "Oldest First"}</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handlePrev}
@@ -788,7 +810,7 @@ const CalendarPage: React.FC = () => {
           {/* VIEW 3: AGENDA / LIST VIEW */}
           {viewMode === "agenda" && (
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
-              {filteredEvents.length === 0 ? (
+              {agendaEvents.length === 0 ? (
                 <div className="text-center py-20 space-y-3">
                   <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300 mx-auto">
                     <CalendarIcon className="w-6 h-6" />
@@ -799,7 +821,7 @@ const CalendarPage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                filteredEvents.map((ev) => {
+                agendaEvents.map((ev) => {
                   const sDate = new Date(ev.startDate);
                   const eDate = new Date(ev.endDate);
                   const cStyle = COLOR_MAP[ev.color] || COLOR_MAP.blue;

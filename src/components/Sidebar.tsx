@@ -36,7 +36,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
   const userOnlyPaths = ['/', '/post-sale', '/calendar', '/admin/submissions', '/blogs', '/projects'];
   const financePaths = ['/invoices', '/analytics', '/salaries'];
 
+  const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
+  const isSales = user?.role === 'Sales' || (user?.departments && user.departments.includes('Sales') && user?.role !== 'Admin');
+
   const navItems = allNavItems.filter((item) => {
+    // 0. Hide Projects for Sales department users
+    if (item.path === '/projects' && isSales && !isMasterAdmin) {
+      return false;
+    }
+
     // 1. Standard user path restrictions
     if (user?.role === 'User') {
       if (!userOnlyPaths.includes(item.path)) return false;
@@ -44,7 +52,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
 
     // 2. Finance path restrictions
     if (financePaths.includes(item.path)) {
-      const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
       const isFinance = user?.departments && user.departments.includes('Finance');
       return !!(isMasterAdmin || isFinance);
     }

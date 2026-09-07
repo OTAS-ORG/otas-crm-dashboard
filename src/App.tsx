@@ -66,6 +66,17 @@ const FinanceRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const ProjectRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
+  const isSales = user?.role === 'Sales' || (user?.departments && user.departments.includes('Sales') && user?.role !== 'Admin');
+  
+  if (isSales && !isMasterAdmin) {
+    return <Navigate to="/" />;
+  }
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -86,9 +97,9 @@ function App() {
             <Route path="analytics" element={<FinanceRoute><Analytics /></FinanceRoute>} />
             <Route path="tickets" element={<RoleRoute><Tickets /></RoleRoute>} />
             <Route path="tickets/:id" element={<RoleRoute><TicketDetail /></RoleRoute>} />
-            <Route path="projects" element={<RoleRoute><Projects /></RoleRoute>} />
-            <Route path="projects/:id" element={<RoleRoute><ProjectDetail /></RoleRoute>} />
-            <Route path="projects/:id/tasks/:taskId" element={<RoleRoute><TaskDetail /></RoleRoute>} />
+            <Route path="projects" element={<ProjectRoute><Projects /></ProjectRoute>} />
+            <Route path="projects/:id" element={<ProjectRoute><ProjectDetail /></ProjectRoute>} />
+            <Route path="projects/:id/tasks/:taskId" element={<ProjectRoute><TaskDetail /></ProjectRoute>} />
             <Route path="salaries" element={<FinanceRoute><Salaries /></FinanceRoute>} />
             <Route path="documents" element={<RoleRoute allowedRoles={['Admin']}><Documents /></RoleRoute>} />
             <Route path="salaries/:id" element={<FinanceRoute><SalaryDetail /></FinanceRoute>} />
