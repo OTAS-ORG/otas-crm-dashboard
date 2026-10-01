@@ -229,6 +229,9 @@ export interface Expense {
   notes?: string;
   status?: 'Pending' | 'Approved' | 'Rejected';
   createdBy?: { _id: string; username: string };
+  isReimbursedViaPayroll?: boolean;
+  salaryId?: string;
+  reimbursedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -286,8 +289,25 @@ export interface DashboardAnalytics {
     topByRevenue: { _id: string; totalRevenue: number; invoiceCount: number }[];
   };
   payroll: {
-    summary: { totalNetPay: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; count: number };
-    byMonth: { _id: { month: number }; totalNetPay: number; totalBaseSalary: number; totalAllowances: number; totalDeductions: number; count: number }[];
+    summary: {
+      totalNetPay: number;
+      totalActualSalaryCost?: number;
+      totalBaseSalary: number;
+      totalAllowances: number;
+      totalDeductions: number;
+      totalReimbursedExpenses?: number;
+      count: number;
+    };
+    byMonth: {
+      _id: { month: number };
+      totalNetPay: number;
+      totalActualSalaryCost?: number;
+      totalBaseSalary: number;
+      totalAllowances: number;
+      totalDeductions: number;
+      totalReimbursedExpenses?: number;
+      count: number;
+    }[];
   };
   tickets: {
     total: number;
@@ -356,9 +376,48 @@ export interface UserInfo {
   username: string;
   role: string;
   departments?: { _id: string; name: string }[] | string[];
+  department?: string;
+  employeeId?: string;
+  position?: string;
+  dateOfJoining?: string;
+  baseSalary?: number;
+  fullDayDeduction?: number;
+  halfDayDeduction?: number;
   telegramChatId?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export type LeaveType = 'Full' | 'Half';
+export type LeaveSession = 'Morning' | 'Afternoon' | null;
+export type LeaveCategory = 'Unpaid' | 'Casual' | 'Medical' | 'Other';
+export type LeaveStatus = 'Approved' | 'Pending' | 'Rejected';
+
+export interface Leave {
+  _id: string;
+  userId: string | UserInfo;
+  employeeName: string;
+  date: string;
+  leaveType: LeaveType;
+  halfDaySession?: LeaveSession;
+  category: LeaveCategory;
+  status: LeaveStatus;
+  deductionAmount: number;
+  reason?: string;
+  recordedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LeaveSummary {
+  userId: string;
+  month: number;
+  year: number;
+  fullDaysCount: number;
+  halfDaysCount: number;
+  totalLeavesCount: number;
+  totalDeduction: number;
+  leaves: Leave[];
 }
 
 export interface SalaryAllowances {
@@ -367,12 +426,22 @@ export interface SalaryAllowances {
   travel: number;
   meal: number;
   commission: number;
+  bonus?: number;
+  other?: number;
 }
 
 export interface SalaryDeductions {
   unpaidLeave: number;
   latePenalty: number;
   advanceSalary: number;
+}
+
+export interface AttachedExpense {
+  expenseId: string | { _id: string; description: string; amount: number; category: string; date: string; status?: string };
+  description: string;
+  amount: number;
+  category: string;
+  date?: string;
 }
 
 export interface Salary {
@@ -382,6 +451,10 @@ export interface Salary {
   position?: string;
   dateOfJoining?: string;
   department?: string;
+  userId?: string | { _id: string; username: string };
+  attachedExpenses?: AttachedExpense[];
+  reimbursedExpensesTotal?: number;
+  actualSalaryCost?: number;
   month: number;
   year: number;
   baseSalary: number;
@@ -587,11 +660,13 @@ export interface CalendarEvent {
 }
 
 export type BlogStatus = 'Draft' | 'Published' | 'Archived';
+export type BlogProject = 'otas' | 'autoshop';
 
 export interface Blog {
   _id: string;
   title: string;
   slug: string;
+  project?: BlogProject;
   content: string;
   excerpt?: string;
   coverImage?: string;
@@ -615,6 +690,7 @@ export interface Blog {
 export interface BlogFormData {
   title: string;
   customSlug?: string;
+  project?: BlogProject;
   content: string;
   excerpt?: string;
   coverImage?: string;

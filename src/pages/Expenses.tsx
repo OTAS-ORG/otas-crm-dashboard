@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { expenseService } from '../services/api';
-import type { Expense, ExpenseSummary, ExpenseCategory, ExpenseDepartment } from '../types';
+import { expenseService, userManagementService } from '../services/api';
+import type { Expense, ExpenseSummary, ExpenseCategory, ExpenseDepartment, UserInfo } from '../types';
 import { Plus, Search, TrendingDown, Tag, Receipt, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -11,12 +11,14 @@ const Expenses: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [departments, setDepartments] = useState<ExpenseDepartment[]>([]);
+  const [users, setUsers] = useState<UserInfo[]>([]);
   const [summary, setSummary] = useState<ExpenseSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
+  const [userFilter, setUserFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,20 +34,25 @@ const Expenses: React.FC = () => {
       if (categoryFilter) params.category = categoryFilter;
       if (statusFilter) params.status = statusFilter;
       if (departmentFilter) params.department = departmentFilter;
+      if (userFilter) params.userId = userFilter;
       if (dateFrom) params.dateFrom = dateFrom;
       if (dateTo) params.dateTo = dateTo;
 
-      const [expenseData, categoryData, summaryData, departmentData] = await Promise.all([
+      const [expenseData, categoryData, summaryData, departmentData, usersData] = await Promise.all([
         expenseService.getExpenses(params),
         expenseService.getCategories(),
         expenseService.getSummary(selectedYear),
         expenseService.getDepartments(),
+        userManagementService.getUsers().catch(() => [] as UserInfo[]),
       ]);
       setExpenses(expenseData.expenses);
       setTotalPages(expenseData.pages);
       setCategories(categoryData);
       setSummary(summaryData);
       setDepartments(departmentData);
+      if (usersData && usersData.length > 0) {
+        setUsers(usersData);
+      }
     } catch (error) {
       console.error('Error fetching expenses:', error);
     } finally {
@@ -55,7 +62,7 @@ const Expenses: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [searchQuery, categoryFilter, statusFilter, departmentFilter, dateFrom, dateTo, currentPage, selectedYear]);
+  }, [searchQuery, categoryFilter, statusFilter, departmentFilter, userFilter, dateFrom, dateTo, currentPage, selectedYear]);
 
   const handleDelete = async () => {
     if (!showDeleteModal) return;
@@ -174,7 +181,7 @@ const Expenses: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -203,6 +210,16 @@ const Expenses: React.FC = () => {
             <option value="">All Departments</option>
             {departments.map((d) => (
               <option key={d._id} value={d.name}>{d.name}</option>
+            ))}
+          </select>
+          <select
+            value={userFilter}
+            onChange={(e) => { setUserFilter(e.target.value); setCurrentPage(1); }}
+            className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          >
+            <option value="">All Users</option>
+            {users.map((u) => (
+              <option key={u._id} value={u._id}>{u.username}</option>
             ))}
           </select>
           <select
@@ -253,6 +270,7 @@ const Expenses: React.FC = () => {
                     <th className="text-left px-5 py-3 font-medium text-slate-500">Description</th>
                     <th className="text-left px-5 py-3 font-medium text-slate-500">Category</th>
                     <th className="text-left px-5 py-3 font-medium text-slate-500">Department</th>
+                    <th className="text-left px-5 py-3 font-medium text-slate-500">User</th>
                     <th className="text-right px-5 py-3 font-medium text-slate-500">Amount</th>
                     <th className="text-left px-5 py-3 font-medium text-slate-500">Status</th>
                     <th className="text-left px-5 py-3 font-medium text-slate-500">Payment</th>
@@ -280,17 +298,38 @@ const Expenses: React.FC = () => {
                       <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap">
                         {expense.department || '-'}
                       </td>
+                      <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase shrink-0">
+                            {typeof expense.createdBy === 'object' && expense.createdBy?.username
+                              ? expense.createdBy.username.charAt(0)
+                              : 'S'}
+                          </div>
+                          <span className="font-medium text-slate-700">
+                            {typeof expense.createdBy === 'object' && expense.createdBy?.username
+                              ? expense.createdBy.username
+                              : 'System'}
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-5 py-3.5 text-right font-semibold text-slate-800 whitespace-nowrap">
                         {toMMK(expense.amount, expense.currency, expense.exchangeRate).toLocaleString()} MMK
                       </td>
-                      <td className="px-5 py-3.5">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                          expense.status === 'Approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                          expense.status === 'Rejected' ? 'bg-red-100 text-red-700 border-red-200' :
-                          'bg-amber-100 text-amber-700 border-amber-200'
-                        }`}>
-                          {expense.status || 'Pending'}
-                        </span>
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                            expense.status === 'Approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                            expense.status === 'Rejected' ? 'bg-red-100 text-red-700 border-red-200' :
+                            'bg-amber-100 text-amber-700 border-amber-200'
+                          }`}>
+                            {expense.status || 'Pending'}
+                          </span>
+                          {expense.isReimbursedViaPayroll && (
+                            <span className="inline-flex items-center px-2 py-0.2 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                              Paid in Payroll
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-3.5 text-slate-500 whitespace-nowrap">
                         {expense.paymentMethod || '-'}

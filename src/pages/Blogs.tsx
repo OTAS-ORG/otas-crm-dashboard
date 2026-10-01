@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import {
   BookOpen,
@@ -22,14 +22,47 @@ import {
   X,
   Code2,
   Terminal,
+  Layers,
 } from 'lucide-react';
 import { blogService } from '../services/api';
-import type { Blog, BlogStats, BlogStatus } from '../types';
+import type { Blog, BlogStats, BlogStatus, BlogProject } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Blogs: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Active Project Tab: 'otas' | 'autoshop' (persisted in localStorage & synced with URL)
+  const [activeProject, setActiveProject] = useState<BlogProject>(() => {
+    const urlParam = searchParams.get('project');
+    if (urlParam === 'autoshop' || urlParam === 'otas') {
+      return urlParam;
+    }
+    const stored = localStorage.getItem('otas_blog_active_project');
+    if (stored === 'autoshop' || stored === 'otas') {
+      return stored;
+    }
+    return 'otas';
+  });
+
+  const handleSelectProject = (project: BlogProject) => {
+    setActiveProject(project);
+    localStorage.setItem('otas_blog_active_project', project);
+    setPage(1);
+    setSearchParams({ project }, { replace: true });
+  };
+
+  // Sync if URL search params change
+  useEffect(() => {
+    const urlParam = searchParams.get('project');
+    if (urlParam === 'autoshop' || urlParam === 'otas') {
+      if (urlParam !== activeProject) {
+        setActiveProject(urlParam);
+        localStorage.setItem('otas_blog_active_project', urlParam);
+      }
+    }
+  }, [searchParams]);
 
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [stats, setStats] = useState<BlogStats>({
@@ -52,6 +85,7 @@ const Blogs: React.FC = () => {
   const [deleteBlogId, setDeleteBlogId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
+  const [apiModalTab, setApiModalTab] = useState<BlogProject>('otas');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Fetch blogs & stats
@@ -65,6 +99,7 @@ const Blogs: React.FC = () => {
         sort: sortBy,
         page,
         limit: 9,
+        project: activeProject,
       });
 
       setBlogs(data.blogs);
@@ -78,7 +113,7 @@ const Blogs: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const data = await blogService.getBlogStats();
+      const data = await blogService.getBlogStats(activeProject);
       setStats(data);
     } catch (error) {
       console.error('Error fetching blog stats:', error);
@@ -87,14 +122,14 @@ const Blogs: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [activeProject]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchBlogs();
     }, 250);
     return () => clearTimeout(timer);
-  }, [search, selectedCategory, selectedStatus, sortBy, page]);
+  }, [search, selectedCategory, selectedStatus, sortBy, page, activeProject]);
 
   const handleDelete = async () => {
     if (!deleteBlogId) return;
@@ -148,16 +183,70 @@ const Blogs: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
+      {/* ===== Top Project Switcher Tabs ===== */}
+      <div className="flex items-center gap-2 p-1.5 bg-slate-200/70 rounded-2xl w-fit shadow-2xs">
+        <button
+          type="button"
+          onClick={() => handleSelectProject('otas')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeProject === 'otas'
+              ? 'bg-white text-primary shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <BookOpen className="w-4 h-4 text-primary" />
+          <span>OTAS Hub</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeProject === 'otas' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200/80 text-slate-600'}`}>
+            {activeProject === 'otas' ? stats.total : ''}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSelectProject('autoshop')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeProject === 'autoshop'
+              ? 'bg-white text-indigo-600 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-indigo-600" />
+          <span>AutoShop Blogs</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeProject === 'autoshop' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200/80 text-slate-600'}`}>
+            {activeProject === 'autoshop' ? stats.total : ''}
+          </span>
+        </button>
+      </div>
+
       {/* ===== Header & Actions ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-primary shadow-xs">
-              <BookOpen className="w-5 h-5" />
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs border ${
+              activeProject === 'autoshop' 
+                ? 'bg-indigo-50 border-indigo-100 text-indigo-600' 
+                : 'bg-blue-50 border-blue-100 text-primary'
+            }`}>
+              {activeProject === 'autoshop' ? <Layers className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Blog & Article Hub</h1>
-              <p className="text-xs text-slate-500 font-medium">Create and publish articles to your public portfolio</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                  {activeProject === 'autoshop' ? 'AutoShop Blog & News' : 'OTAS Blog & Article Hub'}
+                </h1>
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                  activeProject === 'autoshop' 
+                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' 
+                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                }`}>
+                  {activeProject === 'autoshop' ? 'AutoShop' : 'OTAS'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-medium">
+                {activeProject === 'autoshop'
+                  ? 'Manage product updates, tutorials and articles for the AutoShop platform'
+                  : 'Create and publish articles to your public portfolio'}
+              </p>
             </div>
           </div>
         </div>
@@ -165,20 +254,27 @@ const Blogs: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => setIsApiModalOpen(true)}
+            onClick={() => {
+              setApiModalTab(activeProject);
+              setIsApiModalOpen(true);
+            }}
             className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all flex items-center gap-2 cursor-pointer"
           >
             <Code2 className="w-4 h-4 text-indigo-500" />
-            <span>Portfolio API</span>
+            <span>Public API Docs</span>
           </button>
 
           <button
             type="button"
-            onClick={() => navigate('/blogs/new')}
-            className="px-4.5 py-2.5 bg-primary hover:bg-primary-600 active:scale-[0.99] text-white font-bold text-xs rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer"
+            onClick={() => navigate(`/blogs/new?project=${activeProject}`)}
+            className={`px-4.5 py-2.5 text-white font-bold text-xs rounded-xl shadow-lg active:scale-[0.99] transition-all flex items-center gap-2 cursor-pointer ${
+              activeProject === 'autoshop'
+                ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
+                : 'bg-primary hover:bg-primary-600 shadow-primary/20'
+            }`}
           >
             <Plus className="w-4 h-4" />
-            <span>Write New Post</span>
+            <span>{activeProject === 'autoshop' ? 'New AutoShop Post' : 'Write New Post'}</span>
           </button>
         </div>
       </div>
@@ -339,112 +435,117 @@ const Blogs: React.FC = () => {
           </p>
           <button
             type="button"
-            onClick={() => navigate('/blogs/new')}
+            onClick={() => navigate(`/blogs/new?project=${activeProject}`)}
             className="px-4.5 py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-600 transition-all cursor-pointer"
           >
-            Create First Post
+            {activeProject === 'autoshop' ? 'Create First AutoShop Post' : 'Create First Post'}
           </button>
         </div>
       ) : viewMode === 'grid' ? (
         /* Grid Layout */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {blogs.map((blog) => (
-            <div
-              key={blog._id}
-              className="group bg-white rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col overflow-hidden"
-            >
-              {/* Card Cover */}
-              <div className="relative h-44 bg-gradient-to-tr from-slate-100 via-blue-50/50 to-indigo-50 overflow-hidden shrink-0">
-                {blog.coverImage ? (
-                  <img
-                    src={blog.coverImage}
-                    alt={blog.title}
-                    style={{ objectPosition: blog.coverImagePosition || '50% 50%' }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
-                    <BookOpen className="w-12 h-12 stroke-[1.2] mb-1" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                      {blog.category || 'Article'}
-                    </span>
-                  </div>
-                )}
+          {blogs.map((blog) => {
+            const blogProject = blog.project || activeProject;
+            const publicApiUrl = `${API_BASE_URL}/public/${blogProject === 'autoshop' ? 'autoshop/blogs' : 'blogs'}/${blog.slug}`;
 
-                {/* Badges on Cover */}
-                <div className="absolute top-3 left-3 flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/90 backdrop-blur-md text-slate-800 shadow-xs border border-white/60">
-                    {blog.category || 'General'}
-                  </span>
-                </div>
+            return (
+              <div
+                key={blog._id}
+                className="group bg-white rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col overflow-hidden"
+              >
+                {/* Card Cover */}
+                <div className="relative h-44 bg-gradient-to-tr from-slate-100 via-blue-50/50 to-indigo-50 overflow-hidden shrink-0">
+                  {blog.coverImage ? (
+                    <img
+                      src={blog.coverImage}
+                      alt={blog.title}
+                      style={{ objectPosition: blog.coverImagePosition || '50% 50%' }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                      <BookOpen className="w-12 h-12 stroke-[1.2] mb-1" />
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                        {blog.category || 'Article'}
+                      </span>
+                    </div>
+                  )}
 
-                <div className="absolute top-3 right-3">{getStatusBadge(blog.status)}</div>
-              </div>
-
-              {/* Card Content */}
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <h3
-                    onClick={() => navigate(`/blogs/edit/${blog._id}`)}
-                    className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 mb-2 cursor-pointer leading-snug"
-                  >
-                    {blog.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
-                    {blog.excerpt || 'No excerpt available for this post.'}
-                  </p>
-                </div>
-
-                {/* Meta & Footer */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      {blog.readTime || 1} min
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-3.5 h-3.5 text-slate-400" />
-                      {blog.views || 0}
+                  {/* Badges on Cover */}
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/90 backdrop-blur-md text-slate-800 shadow-xs border border-white/60">
+                      {blog.category || 'General'}
                     </span>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(`${API_BASE_URL}/public/blogs/${blog.slug}`, `slug-${blog._id}`)}
-                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                      title="Copy Public API Endpoint"
-                    >
-                      {copiedKey === `slug-${blog._id}` ? (
-                        <Check className="w-4 h-4 text-emerald-600" />
-                      ) : (
-                        <Share2 className="w-4 h-4" />
-                      )}
-                    </button>
+                  <div className="absolute top-3 right-3">{getStatusBadge(blog.status)}</div>
+                </div>
 
-                    <button
-                      type="button"
+                {/* Card Content */}
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3
                       onClick={() => navigate(`/blogs/edit/${blog._id}`)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                      title="Edit Article"
+                      className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2 mb-2 cursor-pointer leading-snug"
                     >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
+                      {blog.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
+                      {blog.excerpt || 'No excerpt available for this post.'}
+                    </p>
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setDeleteBlogId(blog._id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title="Delete Article"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  {/* Meta & Footer */}
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        {blog.readTime || 1} min
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5 text-slate-400" />
+                        {blog.views || 0}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(publicApiUrl, `slug-${blog._id}`)}
+                        className="p-1.5 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        title="Copy Public API Endpoint"
+                      >
+                        {copiedKey === `slug-${blog._id}` ? (
+                          <Check className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Share2 className="w-4 h-4" />
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/blogs/edit/${blog._id}`)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        title="Edit Article"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setDeleteBlogId(blog._id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Article"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         /* Table Layout */
@@ -477,92 +578,97 @@ const Blogs: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {blogs.map((blog) => (
-                  <tr key={blog._id} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0">
-                          {blog.coverImage ? (
-                            <img
-                              src={blog.coverImage}
-                              alt={blog.title}
-                              style={{ objectPosition: blog.coverImagePosition || '50% 50%' }}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300">
-                              <BookOpen className="w-4 h-4" />
-                            </div>
-                          )}
+                {blogs.map((blog) => {
+                  const blogProject = blog.project || activeProject;
+                  const publicApiUrl = `${API_BASE_URL}/public/${blogProject === 'autoshop' ? 'autoshop/blogs' : 'blogs'}/${blog.slug}`;
+
+                  return (
+                    <tr key={blog._id} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-12 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0">
+                            {blog.coverImage ? (
+                              <img
+                                src={blog.coverImage}
+                                alt={blog.title}
+                                style={{ objectPosition: blog.coverImagePosition || '50% 50%' }}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <BookOpen className="w-4 h-4" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p
+                              onClick={() => navigate(`/blogs/edit/${blog._id}`)}
+                              className="text-sm font-bold text-slate-900 hover:text-primary transition-colors cursor-pointer line-clamp-1"
+                            >
+                              {blog.title}
+                            </p>
+                            <p className="text-xs text-slate-400 line-clamp-1">{blog.slug}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p
-                            onClick={() => navigate(`/blogs/edit/${blog._id}`)}
-                            className="text-sm font-bold text-slate-900 hover:text-primary transition-colors cursor-pointer line-clamp-1"
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700">
+                          {blog.category || 'General'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(blog.status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs font-semibold text-slate-700">
+                          {typeof blog.author === 'object' && blog.author?.username
+                            ? blog.author.username
+                            : blog.authorName || 'Admin'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs font-bold text-slate-800">{blog.views || 0}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs text-slate-500 font-medium">
+                          {blog.publishedAt
+                            ? new Date(blog.publishedAt).toLocaleDateString()
+                            : new Date(blog.createdAt).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(publicApiUrl, `table-${blog._id}`)}
+                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title="Copy API Link"
                           >
-                            {blog.title}
-                          </p>
-                          <p className="text-xs text-slate-400 line-clamp-1">{blog.slug}</p>
+                            {copiedKey === `table-${blog._id}` ? (
+                              <Check className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <Share2 className="w-4 h-4" />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/blogs/edit/${blog._id}`)}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title="Edit"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteBlogId(blog._id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700">
-                        {blog.category || 'General'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(blog.status)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-semibold text-slate-700">
-                        {typeof blog.author === 'object' && blog.author?.username
-                          ? blog.author.username
-                          : blog.authorName || 'Admin'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-bold text-slate-800">{blog.views || 0}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs text-slate-500 font-medium">
-                        {blog.publishedAt
-                          ? new Date(blog.publishedAt).toLocaleDateString()
-                          : new Date(blog.createdAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(`${API_BASE_URL}/public/blogs/${blog.slug}`, `table-${blog._id}`)}
-                          className="p-1.5 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                          title="Copy API Link"
-                        >
-                          {copiedKey === `table-${blog._id}` ? (
-                            <Check className="w-4 h-4 text-emerald-600" />
-                          ) : (
-                            <Share2 className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/blogs/edit/${blog._id}`)}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                          title="Edit"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteBlogId(blog._id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -657,8 +763,14 @@ const Blogs: React.FC = () => {
                     <Terminal className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">Public Portfolio API Endpoints</h3>
-                    <p className="text-xs text-slate-500 font-medium">Use these endpoints on your personal portfolio website (No Auth needed)</p>
+                    <h3 className="text-base font-bold text-slate-900">
+                      {apiModalTab === 'autoshop' ? 'AutoShop Public API Endpoints' : 'OTAS Public Portfolio API Endpoints'}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium">
+                      {apiModalTab === 'autoshop'
+                        ? 'Dedicated REST API endpoints for your AutoShop website or apps (No Auth required)'
+                        : 'Public REST API endpoints for your personal/company portfolio website (No Auth required)'}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -670,20 +782,55 @@ const Blogs: React.FC = () => {
                 </button>
               </div>
 
+              {/* Modal Project Switcher Tabs */}
+              <div className="px-6 pt-3 bg-slate-50/70 border-b border-slate-200/60 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setApiModalTab('otas')}
+                  className={`px-4 py-2 text-xs font-bold rounded-t-xl border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                    apiModalTab === 'otas'
+                      ? 'border-primary text-primary bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>OTAS Portfolio API</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setApiModalTab('autoshop')}
+                  className={`px-4 py-2 text-xs font-bold rounded-t-xl border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                    apiModalTab === 'autoshop'
+                      ? 'border-indigo-600 text-indigo-600 bg-white shadow-2xs'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>AutoShop Product API</span>
+                </button>
+              </div>
+
               {/* Modal Body */}
               <div className="p-6 overflow-y-auto space-y-6 bg-slate-50/50">
-                {/* Endpoint 1 */}
+                {/* Endpoint 1: List articles */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
                         GET
                       </span>
-                      <span className="text-xs font-bold text-slate-800">Fetch All Published Articles</span>
+                      <span className="text-xs font-bold text-slate-800">
+                        {apiModalTab === 'autoshop' ? 'Fetch All AutoShop Articles' : 'Fetch All OTAS Published Articles'}
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleCopy(`${API_BASE_URL}/public/blogs`, 'api-1')}
+                      onClick={() =>
+                        handleCopy(
+                          `${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs' : 'blogs'}`,
+                          'api-1'
+                        )
+                      }
                       className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       {copiedKey === 'api-1' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
@@ -691,11 +838,46 @@ const Blogs: React.FC = () => {
                     </button>
                   </div>
                   <pre className="p-2.5 bg-slate-950 text-slate-200 text-xs font-mono rounded-xl overflow-x-auto">
-                    {`${API_BASE_URL}/public/blogs?page=1&limit=9&category=All`}
+                    {`${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs' : 'blogs'}?page=1&limit=9&category=All`}
+                  </pre>
+                  <p className="text-[11px] text-slate-400">
+                    Supports query params: <code className="font-mono text-slate-600">category</code>,{' '}
+                    <code className="font-mono text-slate-600">tag</code>,{' '}
+                    <code className="font-mono text-slate-600">search</code>,{' '}
+                    <code className="font-mono text-slate-600">sort</code> (newest, popular),{' '}
+                    <code className="font-mono text-slate-600">page</code>, <code className="font-mono text-slate-600">limit</code>
+                  </p>
+                </div>
+
+                {/* Endpoint 2: Categories */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                        GET
+                      </span>
+                      <span className="text-xs font-bold text-slate-800">Fetch Categories with Counts</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleCopy(
+                          `${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs/categories' : 'blogs/categories'}`,
+                          'api-cats'
+                        )
+                      }
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey === 'api-cats' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>Copy URL</span>
+                    </button>
+                  </div>
+                  <pre className="p-2.5 bg-slate-950 text-slate-200 text-xs font-mono rounded-xl overflow-x-auto">
+                    {`${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs/categories' : 'blogs/categories'}`}
                   </pre>
                 </div>
 
-                {/* Endpoint 2 */}
+                {/* Endpoint 3: Single article by slug */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -706,7 +888,12 @@ const Blogs: React.FC = () => {
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleCopy(`${API_BASE_URL}/public/blogs/:slug`, 'api-2')}
+                      onClick={() =>
+                        handleCopy(
+                          `${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs/:slug' : 'blogs/:slug'}`,
+                          'api-2'
+                        )
+                      }
                       className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       {copiedKey === 'api-2' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
@@ -714,7 +901,7 @@ const Blogs: React.FC = () => {
                     </button>
                   </div>
                   <pre className="p-2.5 bg-slate-950 text-slate-200 text-xs font-mono rounded-xl overflow-x-auto">
-                    {`${API_BASE_URL}/public/blogs/my-first-blog-post`}
+                    {`${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs/introducing-autoshop-features' : 'blogs/my-first-blog-post'}`}
                   </pre>
                   <p className="text-[11px] text-slate-500 italic">
                     * Calling this endpoint automatically increments the article's total view count by 1.
@@ -724,13 +911,15 @@ const Blogs: React.FC = () => {
                 {/* Example Frontend Code snippet */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800">React / Next.js Integration Example</span>
+                    <span className="text-xs font-bold text-slate-800">
+                      {apiModalTab === 'autoshop' ? 'AutoShop React / Next.js Integration' : 'OTAS React / Next.js Integration'}
+                    </span>
                     <button
                       type="button"
                       onClick={() =>
                         handleCopy(
-                          `// 1. Fetch articles from OTAS CRM Public API
-const res = await fetch('${API_BASE_URL}/public/blogs');
+                          `// 1. Fetch articles from CRM Public API (${apiModalTab.toUpperCase()})
+const res = await fetch('${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs' : 'blogs'}');
 const { data } = await res.json();
 const blogs = data.blogs;
 
@@ -751,8 +940,8 @@ const blogs = data.blogs;
                     </button>
                   </div>
                   <pre className="p-3 bg-slate-950 text-emerald-400 text-xs font-mono rounded-xl overflow-x-auto leading-relaxed">
-                    {`// 1. Fetch articles in your portfolio
-const res = await fetch('${API_BASE_URL}/public/blogs');
+                    {`// 1. Fetch articles in your website (${apiModalTab.toUpperCase()})
+const res = await fetch('${API_BASE_URL}/public/${apiModalTab === 'autoshop' ? 'autoshop/blogs' : 'blogs'}');
 const { data } = await res.json();
 const blogs = data.blogs; // Array of published articles
 

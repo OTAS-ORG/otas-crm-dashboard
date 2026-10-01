@@ -253,6 +253,7 @@ const Analytics: React.FC = () => {
   const totalRevenue = data?.totalRevenueMMK || 0;
   const totalExpense = data?.totalExpenseMMK || 0;
   const totalPayroll = data?.payroll.summary?.totalNetPay || 0;
+  const totalPayrollCost = data?.payroll.summary?.totalActualSalaryCost ?? totalPayroll;
   const totalPendingInvoice = data?.totalPendingInvoiceMMK || 0;
   const pendingInvoiceCount = data?.pendingInvoiceCount || 0;
   const prevRevenue = data?.prevYearRevenueMMK || 0;
@@ -527,7 +528,7 @@ const Analytics: React.FC = () => {
                   <div className="min-w-0">
                     <p className="text-xs text-slate-500">Net Profit</p>
                     <p className="text-lg font-bold text-slate-800 truncate">
-                      {(totalRevenue - totalExpense - totalPayroll).toLocaleString()} MMK
+                      {(totalRevenue - totalExpense - totalPayrollCost).toLocaleString()} MMK
                     </p>
                   </div>
                 </div>

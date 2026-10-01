@@ -85,16 +85,22 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog">
+      <div className="fixed inset-0 bg-slate-900/60" onClick={onClose} />
+      <div
+        className="no-glass modal-box relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto border border-slate-200"
+        style={{ backgroundColor: '#ffffff', opacity: 1, backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+      >
+        <div
+          className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10"
+          style={{ backgroundColor: '#ffffff' }}
+        >
           <h3 className="text-lg font-bold text-slate-900">{isEditing ? 'Edit Credential' : 'Add Credential'}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-white" style={{ backgroundColor: '#ffffff' }}>
           {!isEditing ? (
             <div className="relative">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Client <span className="font-normal normal-case text-slate-400">(optional)</span></label>
@@ -105,7 +111,7 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
                   onChange={(e) => { setClientSearch(e.target.value); setShowClientDropdown(true); setClientId(''); }}
                   onFocus={() => setShowClientDropdown(true)}
                   placeholder="Search client to link..."
-                  className="flex-1 px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="flex-1 px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-slate-800"
                 />
                 {clientId && (
                   <button
@@ -118,13 +124,13 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
                 )}
               </div>
               {showClientDropdown && clientSearch && (
-                <div className="absolute z-10 top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto no-glass" style={{ backgroundColor: '#ffffff' }}>
                   {filteredClients.length > 0 ? filteredClients.map(c => (
                     <button
                       key={c._id}
                       type="button"
                       onClick={() => handleSelectClient(c)}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 hover:text-indigo-700 transition-colors cursor-pointer"
                     >
                       <span className="font-medium">{c.companyName}</span>
                       <span className="text-slate-400 ml-2">{c.contactPerson}</span>
@@ -151,7 +157,7 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Hosting cPanel"
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-slate-800"
               required
             />
           </div>
@@ -162,7 +168,7 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as PasswordCategory)}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-slate-800"
               >
                 {CATEGORIES.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -176,7 +182,7 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-slate-800"
               />
             </div>
           </div>
@@ -188,7 +194,7 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="username@example.com"
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-slate-800"
             />
           </div>
 
@@ -203,7 +209,7 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={isEditing ? 'Leave blank to keep current' : 'Enter password'}
-                className="w-full px-3 py-2.5 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                className="w-full px-3 py-2.5 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-slate-800"
                 required={!isEditing}
               />
               <button
@@ -223,7 +229,7 @@ const PasswordVaultModal: React.FC<PasswordVaultModalProps> = ({ isOpen, onClose
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="Optional notes..."
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none bg-white text-slate-800"
             />
           </div>
 

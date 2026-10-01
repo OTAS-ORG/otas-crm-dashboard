@@ -29,6 +29,7 @@ import Documents from './pages/Documents';
 import CalendarPage from './pages/CalendarPage';
 import Blogs from './pages/Blogs';
 import BlogEditor from './pages/BlogEditor';
+import Leaves from './pages/Leaves';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AnimatedRoutes, FadeTransition } from './components/RouteTransition';
@@ -101,6 +102,7 @@ function App() {
             <Route path="projects/:id" element={<ProjectRoute><ProjectDetail /></ProjectRoute>} />
             <Route path="projects/:id/tasks/:taskId" element={<ProjectRoute><TaskDetail /></ProjectRoute>} />
             <Route path="salaries" element={<FinanceRoute><Salaries /></FinanceRoute>} />
+            <Route path="leaves" element={<RoleRoute><Leaves /></RoleRoute>} />
             <Route path="documents" element={<RoleRoute allowedRoles={['Admin']}><Documents /></RoleRoute>} />
             <Route path="salaries/:id" element={<FinanceRoute><SalaryDetail /></FinanceRoute>} />
             <Route path="vault" element={<RoleRoute><Passwords /></RoleRoute>} />

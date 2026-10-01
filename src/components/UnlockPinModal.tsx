@@ -97,10 +97,13 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
   if (checking) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog">
+      <div className="fixed inset-0 bg-slate-900/60" onClick={onClose} />
+      <div
+        className="no-glass modal-box relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 border border-slate-200 animate-in fade-in zoom-in-95 duration-150"
+        style={{ backgroundColor: '#ffffff', opacity: 1, backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
           <X className="w-5 h-5" />
         </button>
         <div className="text-center mb-6">
@@ -128,7 +131,7 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
                 placeholder="New vault PIN"
-                className="w-full px-4 py-3 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white text-slate-800"
                 autoFocus
                 maxLength={20}
               />
@@ -142,7 +145,7 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
                 value={confirmPin}
                 onChange={(e) => setConfirmPin(e.target.value)}
                 placeholder="Confirm vault PIN"
-                className="w-full px-4 py-3 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white text-slate-800"
                 maxLength={20}
               />
               <button type="button" onClick={() => setShowConfirmPin(!showConfirmPin)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -156,7 +159,7 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
                 <span>{error}</span>
               </div>
             )}
-            <button type="submit" disabled={loading || !pin || !confirmPin} className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm">
+            <button type="submit" disabled={loading || !pin || !confirmPin} className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm cursor-pointer">
               {loading ? 'Setting PIN...' : 'Set PIN & Unlock'}
             </button>
           </form>
@@ -168,7 +171,7 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
                 placeholder="Enter vault PIN"
-                className="w-full px-4 py-3 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="w-full px-4 py-3 pr-10 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white text-slate-800"
                 autoFocus
                 maxLength={20}
               />

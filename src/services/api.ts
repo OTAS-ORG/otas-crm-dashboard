@@ -37,6 +37,8 @@ import type {
   Blog,
   BlogFormData,
   BlogStats,
+  Leave,
+  LeaveSummary,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -481,6 +483,10 @@ export const expenseService = {
     dateFrom?: string;
     dateTo?: string;
     category?: string;
+    department?: string;
+    status?: string;
+    userId?: string;
+    createdBy?: string;
     search?: string;
     page?: number;
     limit?: number;
@@ -557,7 +563,33 @@ export const userManagementService = {
     const response = await api.put<ApiResponse<UserInfo>>(`/auth/users/${id}/role`, { role });
     return response.data.data;
   },
-  createUser: async (data: { username: string; password: string; role: string }) => {
+  updateEmployeeInfo: async (
+    id: string,
+    data: {
+      employeeId?: string;
+      position?: string;
+      dateOfJoining?: string;
+      department?: string;
+      baseSalary?: number;
+      fullDayDeduction?: number;
+      halfDayDeduction?: number;
+    }
+  ) => {
+    const response = await api.put<ApiResponse<UserInfo>>(`/auth/users/${id}/employee-info`, data);
+    return response.data.data;
+  },
+  createUser: async (data: {
+    username: string;
+    password: string;
+    role: string;
+    employeeId?: string;
+    position?: string;
+    dateOfJoining?: string;
+    department?: string;
+    baseSalary?: number;
+    fullDayDeduction?: number;
+    halfDayDeduction?: number;
+  }) => {
     const response = await api.post<ApiResponse<UserInfo>>('/auth/users', data);
     return response.data.data;
   },
@@ -640,6 +672,41 @@ export const salaryService = {
       params: year ? { year } : {},
     });
     return response.data.data;
+  },
+  getUnreimbursedExpenses: async (userId: string) => {
+    const response = await api.get<ApiResponse<Expense[]>>(`/salaries/unreimbursed-expenses/${userId}`);
+    return response.data.data;
+  },
+};
+
+export const leaveService = {
+  getLeaves: async (params?: {
+    userId?: string;
+    month?: number;
+    year?: number;
+    status?: string;
+    category?: string;
+  }) => {
+    const response = await api.get<ApiResponse<Leave[]>>("/leaves", { params });
+    return response.data.data;
+  },
+  getLeaveSummary: async (userId: string, month: number, year: number) => {
+    const response = await api.get<ApiResponse<LeaveSummary>>("/leaves/summary", {
+      params: { userId, month, year },
+    });
+    return response.data.data;
+  },
+  createLeave: async (data: Partial<Leave>) => {
+    const response = await api.post<ApiResponse<Leave>>("/leaves", data);
+    return response.data.data;
+  },
+  updateLeave: async (id: string, data: Partial<Leave>) => {
+    const response = await api.put<ApiResponse<Leave>>(`/leaves/${id}`, data);
+    return response.data.data;
+  },
+  deleteLeave: async (id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/leaves/${id}`);
+    return response.data;
   },
 };
 
@@ -823,6 +890,7 @@ export const blogService = {
     sort?: string;
     page?: number;
     limit?: number;
+    project?: string;
   }) => {
     const response = await api.get<
       ApiResponse<{
@@ -833,8 +901,10 @@ export const blogService = {
     return response.data.data;
   },
 
-  getBlogStats: async () => {
-    const response = await api.get<ApiResponse<BlogStats>>("/blogs/stats");
+  getBlogStats: async (project?: string) => {
+    const response = await api.get<ApiResponse<BlogStats>>("/blogs/stats", {
+      params: project ? { project } : {},
+    });
     return response.data.data;
   },
 
@@ -867,7 +937,7 @@ export const blogService = {
     return response.data;
   },
 
-  // Public portfolio methods (direct unintercepted axios calls)
+  // Public portfolio methods (OTAS) (direct unintercepted axios calls)
   getPublicBlogs: async (params?: {
     category?: string;
     tag?: string;
@@ -899,6 +969,41 @@ export const blogService = {
       success: boolean;
       data: Array<{ name: string; count: number }>;
     }>(`${API_URL}/public/blogs/categories`);
+    return response.data.data;
+  },
+
+  // Public portfolio methods (AutoShop) (direct unintercepted axios calls)
+  getPublicAutoShopBlogs: async (params?: {
+    category?: string;
+    tag?: string;
+    search?: string;
+    sort?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const response = await axios.get<{
+      success: boolean;
+      data: {
+        blogs: Blog[];
+        pagination: { total: number; page: number; pages: number; limit: number };
+      };
+    }>(`${API_URL}/public/autoshop/blogs`, { params });
+    return response.data.data;
+  },
+
+  getPublicAutoShopBlog: async (slugOrId: string) => {
+    const response = await axios.get<{
+      success: boolean;
+      data: Blog;
+    }>(`${API_URL}/public/autoshop/blogs/${slugOrId}`);
+    return response.data.data;
+  },
+
+  getPublicAutoShopCategories: async () => {
+    const response = await axios.get<{
+      success: boolean;
+      data: Array<{ name: string; count: number }>;
+    }>(`${API_URL}/public/autoshop/blogs/categories`);
     return response.data.data;
   },
 };

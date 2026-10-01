@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Save,
@@ -18,10 +18,11 @@ import {
   Move,
   Crosshair,
   RotateCcw,
+  Layers,
 } from 'lucide-react';
 import { blogService } from '../services/api';
 import RichTextEditor from '../components/RichTextEditor';
-import type { Blog, BlogFormData, BlogStatus } from '../types';
+import type { Blog, BlogFormData, BlogStatus, BlogProject } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -64,13 +65,17 @@ const parsePosition = (posStr?: string): { x: number; y: number } => {
 
 const BlogEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
+
+  const initialProject: BlogProject = (searchParams.get('project') as BlogProject) || 'otas';
 
   // Form states
   const [formData, setFormData] = useState<BlogFormData>({
     title: '',
     customSlug: '',
+    project: initialProject,
     content: '',
     excerpt: '',
     coverImage: '',
@@ -215,6 +220,7 @@ const BlogEditor: React.FC = () => {
           setFormData({
             title: blog.title,
             customSlug: blog.slug,
+            project: (blog.project as BlogProject) || 'otas',
             content: blog.content,
             excerpt: blog.excerpt || '',
             coverImage: blog.coverImage || '',
@@ -299,6 +305,8 @@ const BlogEditor: React.FC = () => {
         excerpt: formData.excerpt?.trim() || formData.title.slice(0, 160),
       };
 
+      localStorage.setItem('otas_blog_active_project', payload.project || 'otas');
+
       if (isEditing && id) {
         const updated = await blogService.updateBlog(id, payload);
         setOriginalBlog(updated);
@@ -321,7 +329,9 @@ const BlogEditor: React.FC = () => {
   const handleCopyPublicUrl = () => {
     const slug = formData.customSlug || originalBlog?.slug;
     if (!slug) return;
-    navigator.clipboard.writeText(`${API_BASE_URL}/public/blogs/${slug}`);
+    const proj = formData.project || originalBlog?.project || 'otas';
+    const basePath = proj === 'autoshop' ? '/public/autoshop/blogs' : '/public/blogs';
+    navigator.clipboard.writeText(`${API_BASE_URL}${basePath}/${slug}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -342,81 +352,110 @@ const BlogEditor: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-16">
-      {/* ===== Top Action Navigation Bar ===== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4.5 rounded-3xl border border-slate-200/80 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate('/blogs')}
-            className="w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
-            title="Back to Blogs"
+      {/* ===== Sticky Top Header Mask & Action Bar ===== */}
+      <div
+        className="sticky -top-4 md:-top-8 -mt-4 md:-mt-8 -mx-4 md:-mx-8 px-4 md:px-8 pt-4 md:pt-8 pb-3.5 z-30 bg-[#f8fafc] border-b border-slate-200/80 shadow-xs no-glass"
+        style={{ backgroundColor: '#f8fafc', opacity: 1 }}
+      >
+        <div className="max-w-7xl mx-auto space-y-2.5">
+          <div
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 sm:p-4.5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm no-glass"
+            style={{ backgroundColor: '#ffffff', opacity: 1 }}
           >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-lg font-black text-slate-900 tracking-tight">
-              {isEditing ? 'Edit Blog Post' : 'New Blog Post'}
-            </h1>
-            <p className="text-xs text-slate-500 font-medium">
-              {formData.status === 'Published' ? (
-                <span className="text-emerald-600 font-bold inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Live on Public Portfolio
-                </span>
-              ) : (
-                <span className="text-amber-600 font-bold">Draft Mode (Unpublished)</span>
-              )}
-            </p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate(`/blogs?project=${formData.project || 'otas'}`)}
+                className="w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                title="Back to Blogs"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg font-black text-slate-900 tracking-tight">
+                    {isEditing ? 'Edit Blog Post' : 'New Blog Post'}
+                  </h1>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                    formData.project === 'autoshop'
+                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      : 'bg-blue-50 text-blue-700 border border-blue-200'
+                  }`}>
+                    {formData.project === 'autoshop' ? 'AutoShop' : 'OTAS'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  {formData.status === 'Published' ? (
+                    <span className="text-emerald-600 font-bold inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Live on {formData.project === 'autoshop' ? 'AutoShop Website' : 'OTAS Portfolio'}
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 font-bold">Draft Mode (Unpublished)</span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => handleSubmit('Draft')}
+                className="px-4.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Draft</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => handleSubmit('Published')}
+                className="px-5 py-2.5 bg-primary hover:bg-primary-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>{formData.status === 'Published' ? 'Update Post' : 'Publish to Portfolio'}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => handleSubmit('Draft')}
-            className="px-4.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            <span>Save Draft</span>
-          </button>
+          {/* Notifications */}
+          {error && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-2xl flex items-center justify-between gap-2.5 shadow-sm animate-in fade-in no-glass" style={{ backgroundColor: '#fff1f2' }}>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4.5 h-4.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+              <button type="button" onClick={() => setError(null)} className="text-rose-500 hover:text-rose-800 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => handleSubmit('Published')}
-            className="px-5 py-2.5 bg-primary hover:bg-primary-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                <span>{formData.status === 'Published' ? 'Update Post' : 'Publish to Portfolio'}</span>
-              </>
-            )}
-          </button>
+          {successMessage && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-2xl flex items-center justify-between gap-2.5 shadow-sm animate-in fade-in no-glass" style={{ backgroundColor: '#ecfdf5' }}>
+              <div className="flex items-center gap-2">
+                <Check className="w-4.5 h-4.5 shrink-0" />
+                <span>{successMessage}</span>
+              </div>
+              <button type="button" onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-800 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Notifications */}
-      {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-2xl flex items-center gap-2.5 animate-in fade-in">
-          <AlertCircle className="w-4.5 h-4.5 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-2xl flex items-center gap-2.5 animate-in fade-in">
-          <Check className="w-4.5 h-4.5 shrink-0" />
-          <span>{successMessage}</span>
-        </div>
-      )}
 
       {/* ===== Main Editor Grid ===== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -479,6 +518,43 @@ const BlogEditor: React.FC = () => {
               <Globe className="w-4 h-4 text-primary" />
               <span>Publishing Settings</span>
             </h3>
+
+            {/* Target Product (OTAS vs AutoShop) */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5">Target Product</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, project: 'otas' });
+                    localStorage.setItem('otas_blog_active_project', 'otas');
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    (formData.project || 'otas') === 'otas'
+                      ? 'bg-blue-50 border-primary text-primary shadow-2xs'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>OTAS Hub</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, project: 'autoshop' });
+                    localStorage.setItem('otas_blog_active_project', 'autoshop');
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    formData.project === 'autoshop'
+                      ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-2xs'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>AutoShop</span>
+                </button>
+              </div>
+            </div>
 
             {/* Status Selector */}
             <div>
@@ -810,7 +886,7 @@ const BlogEditor: React.FC = () => {
             <div className="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-md space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-300">
-                  Public API Endpoint
+                  {(formData.project || originalBlog.project) === 'autoshop' ? 'AutoShop Public API' : 'OTAS Public API'}
                 </span>
                 <button
                   type="button"
@@ -822,7 +898,7 @@ const BlogEditor: React.FC = () => {
                 </button>
               </div>
               <p className="text-xs font-mono text-slate-300 break-all bg-black/30 p-2.5 rounded-xl">
-                {`${API_BASE_URL}/public/blogs/${originalBlog.slug}`}
+                {`${API_BASE_URL}/public/${(formData.project || originalBlog.project) === 'autoshop' ? 'autoshop/blogs' : 'blogs'}/${originalBlog.slug}`}
               </p>
             </div>
           )}

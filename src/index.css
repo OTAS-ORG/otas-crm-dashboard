@@ -70,7 +70,6 @@ body {
 
 /* Solid Opaque Containers (No Glass) */
 .no-glass,
-[role="dialog"],
 .modal-card,
 .modal-box,
 .calendar-card {
@@ -143,11 +142,22 @@ body.dark .hover\:bg-slate-50\/50:hover {
 }
 
 /* Dark glass cards — more specific than the plain .bg-white rule above, so it wins */
-body.dark .bg-white.rounded-2xl,
-body.dark .bg-white.rounded-3xl {
+body.dark .bg-white.rounded-2xl:not(.no-glass):not(.modal-box):not(.modal-card):not([role="dialog"]),
+body.dark .bg-white.rounded-3xl:not(.no-glass):not(.modal-box):not(.modal-card):not([role="dialog"]) {
   background-color: var(--glass-bg) !important;
   border-color: var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
+}
+
+body.dark .no-glass,
+body.dark [role="dialog"],
+body.dark .modal-card,
+body.dark .modal-box {
+  background-color: #0f172a !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important;
+  border-color: #334155 !important;
 }
 
 /* Translucent card faces used by the flip ClientCard (no backdrop-filter) */
