@@ -374,6 +374,7 @@ export interface TicketDetailData {
 export interface UserInfo {
   _id: string;
   username: string;
+  fullName?: string;
   role: string;
   departments?: { _id: string; name: string }[] | string[];
   department?: string;

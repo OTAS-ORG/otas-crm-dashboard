@@ -306,7 +306,7 @@ const SalaryDetail: React.FC = () => {
     setForm(prev => ({
       ...prev,
       userId: selectedUserId,
-      employeeName: selectedUser.username || prev.employeeName,
+      employeeName: selectedUser.fullName || selectedUser.username || prev.employeeName,
       employeeId: selectedUser.employeeId || prev.employeeId,
       position: selectedUser.position || prev.position,
       dateOfJoining: selectedUser.dateOfJoining ? selectedUser.dateOfJoining.slice(0, 10) : prev.dateOfJoining,
@@ -325,7 +325,7 @@ const SalaryDetail: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const finalEmployeeName = form.employeeName.trim() || users.find(u => u._id === form.userId)?.username || '';
+    const finalEmployeeName = form.employeeName.trim() || users.find(u => u._id === form.userId)?.fullName || users.find(u => u._id === form.userId)?.username || '';
     if (!finalEmployeeName) return;
     try {
       setSaving(true);
@@ -518,10 +518,13 @@ const SalaryDetail: React.FC = () => {
                   )}
                   {users.map((u) => (
                     <option key={u._id} value={u._id}>
-                      {u.username} {u.employeeId ? `[${u.employeeId}]` : ''} {u.position ? `- ${u.position}` : `(${u.role})`}
+                      {u.fullName ? `${u.fullName} (${u.username})` : u.username} {u.employeeId ? `[${u.employeeId}]` : ''} {u.position ? `- ${u.position}` : `(${u.role})`}
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="col-span-2">
+                <FormInput isEditing={isEditing} label="Full Name (Payslip)" value={form.employeeName} onChange={(e: any) => setForm({ ...form, employeeName: e.target.value })} />
               </div>
               <FormInput isEditing={isEditing} label="Employee ID" value={form.employeeId} onChange={(e: any) => setForm({ ...form, employeeId: e.target.value })} />
               <FormInput isEditing={isEditing} label="Position" value={form.position} onChange={(e: any) => setForm({ ...form, position: e.target.value })} />

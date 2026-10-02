@@ -566,6 +566,7 @@ export const userManagementService = {
   updateEmployeeInfo: async (
     id: string,
     data: {
+      fullName?: string;
       employeeId?: string;
       position?: string;
       dateOfJoining?: string;
@@ -581,6 +582,7 @@ export const userManagementService = {
   createUser: async (data: {
     username: string;
     password: string;
+    fullName?: string;
     role: string;
     employeeId?: string;
     position?: string;

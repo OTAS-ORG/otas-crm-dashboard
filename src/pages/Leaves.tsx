@@ -117,7 +117,7 @@ const Leaves: React.FC = () => {
     setErrorMsg('');
     const defaultUser = users[0];
     const initialUserId = defaultUser?._id || '';
-    const initialName = defaultUser?.username || '';
+    const initialName = defaultUser?.fullName || defaultUser?.username || '';
     const initialDeduction = defaultUser ? calculateDefaultDeduction(initialUserId, 'Full', 'Unpaid') : 0;
 
     setFormData({
@@ -154,7 +154,7 @@ const Leaves: React.FC = () => {
 
   const handleUserChange = (uId: string) => {
     const selected = users.find((u) => u._id === uId);
-    const empName = selected ? selected.username : '';
+    const empName = selected ? (selected.fullName || selected.username) : '';
     const autoDeduction = calculateDefaultDeduction(uId, formData.leaveType, formData.category);
     setFormData((prev) => ({
       ...prev,
@@ -396,7 +396,7 @@ const Leaves: React.FC = () => {
               <option value="">All Employees</option>
               {users.map((u) => (
                 <option key={u._id} value={u._id}>
-                  {u.username} {u.employeeId ? `(${u.employeeId})` : ''}
+                  {u.fullName ? `${u.fullName} (${u.username})` : u.username} {u.employeeId ? `(${u.employeeId})` : ''}
                 </option>
               ))}
             </select>
@@ -609,7 +609,7 @@ const Leaves: React.FC = () => {
                     <option value="" disabled>Select Employee</option>
                     {users.map((u) => (
                       <option key={u._id} value={u._id}>
-                        {u.username} {u.employeeId ? `(${u.employeeId})` : ''} - {u.position || 'Employee'}
+                        {u.fullName ? `${u.fullName} (${u.username})` : u.username} {u.employeeId ? `(${u.employeeId})` : ''} - {u.position || 'Employee'}
                       </option>
                     ))}
                   </select>

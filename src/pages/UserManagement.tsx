@@ -31,6 +31,7 @@ const UserManagement: React.FC = () => {
   // Edit Employee Info modal state
   const [editingEmployeeUser, setEditingEmployeeUser] = useState<UserInfo | null>(null);
   const [employeeForm, setEmployeeForm] = useState({
+    fullName: '',
     employeeId: '',
     position: '',
     department: '',
@@ -45,6 +46,7 @@ const UserManagement: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newFullName, setNewFullName] = useState("");
   const [newRole, setNewRole] = useState("User");
   const [newEmployeeId, setNewEmployeeId] = useState("");
   const [newPosition, setNewPosition] = useState("");
@@ -171,6 +173,7 @@ const UserManagement: React.FC = () => {
       ? (typeof user.departments[0] === 'object' ? (user.departments[0] as any).name : user.departments[0])
       : '');
     setEmployeeForm({
+      fullName: user.fullName || '',
       employeeId: user.employeeId || '',
       position: user.position || '',
       department: defaultDept || '',
@@ -185,7 +188,10 @@ const UserManagement: React.FC = () => {
     if (!editingEmployeeUser) return;
     try {
       setSavingEmployeeInfo(true);
-      await userManagementService.updateEmployeeInfo(editingEmployeeUser._id, employeeForm);
+      await userManagementService.updateEmployeeInfo(editingEmployeeUser._id, {
+        ...employeeForm,
+        fullName: employeeForm.fullName.trim(),
+      });
       setEditingEmployeeUser(null);
       fetchData();
     } catch (error) {
@@ -203,6 +209,7 @@ const UserManagement: React.FC = () => {
       await userManagementService.createUser({
         username: newUsername.trim(),
         password: newPassword.trim(),
+        fullName: newFullName.trim(),
         role: newRole,
         employeeId: newEmployeeId.trim(),
         position: newPosition.trim(),
@@ -215,6 +222,7 @@ const UserManagement: React.FC = () => {
       setShowCreateModal(false);
       setNewUsername("");
       setNewPassword("");
+      setNewFullName("");
       setNewRole("User");
       setNewEmployeeId("");
       setNewPosition("");
@@ -269,22 +277,25 @@ const UserManagement: React.FC = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <table className="w-full">
+            <table className="w-full min-w-[960px]">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
-                    Username
+                <tr className="border-b border-slate-100 bg-slate-50/70">
+                  <th className="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">
+                    Employee
                   </th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">
+                    Position & Dept
+                  </th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
-                    Departments
+                  <th className="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">
+                    Ticket Depts
                   </th>
-                  <th className="text-left px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">
                     Telegram
                   </th>
-                  <th className="text-right px-5 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="text-right px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -299,34 +310,38 @@ const UserManagement: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                           <span className="text-sm font-bold text-primary">
-                            {user.username.charAt(0).toUpperCase()}
+                            {(user.fullName || user.username).charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-800">
-                              {user.username}
+                            <span className="font-semibold text-slate-800 text-sm whitespace-nowrap">
+                              {user.fullName || user.username}
                             </span>
                             {user.employeeId && (
-                              <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                              <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
                                 {user.employeeId}
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                            {user.position ? (
-                              <span className="text-indigo-600 font-medium">{user.position}</span>
-                            ) : (
-                              <span className="text-slate-400 italic text-[11px]">No position</span>
-                            )}
-                            {user.department && (
-                              <>
-                                <span className="text-slate-300">•</span>
-                                <span className="text-slate-500">{user.department}</span>
-                              </>
-                            )}
-                          </div>
+                          {user.fullName && (
+                            <span className="text-xs text-slate-400 font-normal block whitespace-nowrap mt-0.5">
+                              @{user.username}
+                            </span>
+                          )}
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div>
+                        <span className="text-xs font-semibold text-slate-700 block whitespace-nowrap">
+                          {user.position || <span className="text-slate-400 font-normal italic text-[11px]">No position</span>}
+                        </span>
+                        {user.department && (
+                          <span className="text-[11px] text-slate-500 block whitespace-nowrap mt-0.5">
+                            {user.department}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
@@ -508,7 +523,7 @@ const UserManagement: React.FC = () => {
                 {users.length === 0 && !loading && (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       className="px-5 py-10 text-center text-sm text-slate-400"
                     >
                       No users found
@@ -606,6 +621,19 @@ const UserManagement: React.FC = () => {
                   Employee Details (Auto-fills into Payroll)
                 </p>
                 <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                      Full Name (for Payroll / Documents)
+                    </label>
+                    <input
+                      type="text"
+                      value={newFullName}
+                      onChange={(e) => setNewFullName(e.target.value)}
+                      placeholder="e.g. John Doe / U Kyaw Kyaw"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-slate-600 mb-1">
@@ -709,6 +737,7 @@ const UserManagement: React.FC = () => {
                   setCreateError("");
                   setNewUsername("");
                   setNewPassword("");
+                  setNewFullName("");
                   setNewRole("User");
                   setNewEmployeeId("");
                   setNewPosition("");
@@ -768,7 +797,21 @@ const UserManagement: React.FC = () => {
             </div>
             <div className="p-6 space-y-4">
               <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-700 leading-relaxed">
-                These employee details (Employee ID, Position, Department, Joining Date, and Base Salary) will be automatically populated when selecting this user in <strong>Salary / Payroll</strong>.
+                These employee details (Full Name, Employee ID, Position, Department, Joining Date, and Base Salary) will be automatically populated when selecting this user in <strong>Salary / Payroll</strong>.
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Full Name (for Payroll / Documents)
+                </label>
+                <input
+                  type="text"
+                  value={employeeForm.fullName}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, fullName: e.target.value })}
+                  placeholder="e.g. John Doe / U Kyaw Kyaw"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white text-slate-800"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Full legal or professional name displayed on payslips and payroll</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
