@@ -709,3 +709,80 @@ export interface BlogStats {
   totalViews: number;
 }
 
+export type MilestoneStatus = 'Pending' | 'In-Progress' | 'Completed';
+
+export interface ProjectMilestone {
+  _id: string;
+  project_id: string;
+  phase_name: string;
+  start_date: string;
+  end_date: string;
+  release_version: string;
+  status: MilestoneStatus;
+  notes?: string;
+  sort_order?: number;
+  createdBy?: {
+    _id: string;
+    username: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProjectPlan {
+  _id: string;
+  projectId: string | Project;
+  charterContent: string;
+  scope?: string;
+  goals?: string;
+  risks?: string;
+  targetReleaseVersion?: string;
+  updatedBy?: {
+    _id: string;
+    username: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProjectPlanDetails {
+  project: Project;
+  plan: ProjectPlan;
+  milestones: ProjectMilestone[];
+}
+
+export interface TimelineMilestone {
+  _id: string;
+  phase_name: string;
+  release_version: string;
+  status: MilestoneStatus;
+  start_date: string;
+  end_date: string;
+  startPercent: number;
+  endPercent: number;
+}
+
+export interface ProjectPlanWidgetData {
+  projects: Project[];
+  selectedProject: Project | null;
+  upcomingRelease: {
+    _id: string;
+    phase_name: string;
+    release_version: string;
+    start_date: string;
+    end_date: string;
+    status: MilestoneStatus;
+    daysRemaining: number | null;
+  } | null;
+  timeline: {
+    overallStartDate: string | null;
+    overallEndDate: string | null;
+    totalMilestones: number;
+    completedMilestones: number;
+    inProgressMilestones: number;
+    pendingMilestones: number;
+    progressPercentage: number;
+    milestones: TimelineMilestone[];
+  } | null;
+}
+

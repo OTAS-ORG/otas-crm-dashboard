@@ -21,6 +21,7 @@ import SubmissionDetail from './pages/SubmissionDetail';
 import OnboardingFormPage from './pages/OnboardingFormPage';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
+import ProjectPlanPage from './pages/ProjectPlan';
 import TaskDetail from './pages/TaskDetail';
 import AIContentGenerator from './pages/AIContentGenerator';
 import AIInsights from './pages/AIInsights';
@@ -100,6 +101,8 @@ function App() {
             <Route path="tickets/:id" element={<RoleRoute><TicketDetail /></RoleRoute>} />
             <Route path="projects" element={<ProjectRoute><Projects /></ProjectRoute>} />
             <Route path="projects/:id" element={<ProjectRoute><ProjectDetail /></ProjectRoute>} />
+            <Route path="projects/:id/plan" element={<ProjectRoute><ProjectPlanPage /></ProjectRoute>} />
+            <Route path="project-plan" element={<ProjectRoute><ProjectPlanPage /></ProjectRoute>} />
             <Route path="projects/:id/tasks/:taskId" element={<ProjectRoute><TaskDetail /></ProjectRoute>} />
             <Route path="salaries" element={<FinanceRoute><Salaries /></FinanceRoute>} />
             <Route path="leaves" element={<RoleRoute><Leaves /></RoleRoute>} />

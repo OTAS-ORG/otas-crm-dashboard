@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, X, Receipt, BarChart3, LifeBuoy, Wallet, FolderOpen, Calendar, BookOpen, Layers, CalendarOff } from 'lucide-react';
+import { Users, UserCheck, FileText, Lock, Settings2, ClipboardList, X, Receipt, BarChart3, LifeBuoy, Wallet, FolderOpen, Calendar, BookOpen, Layers, CalendarOff, Rocket } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/otas.png';
 
@@ -21,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Expenses', path: '/expenses', icon: Receipt },
     { name: 'Projects', path: '/projects', icon: Layers },
+    { name: 'Project Plan', path: '/project-plan', icon: Rocket },
     { name: 'Tickets', path: '/tickets', icon: LifeBuoy },
     { name: 'Payroll', path: '/salaries', icon: Wallet },
     { name: 'Leaves', path: '/leaves', icon: CalendarOff },
@@ -34,15 +35,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
     // { name: 'AI', path: '/ai', icon: Sparkles },
   ];
 
-  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/admin/submissions', '/blogs', '/projects'];
+  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/admin/submissions', '/blogs', '/projects', '/project-plan'];
   const financePaths = ['/invoices', '/analytics', '/salaries'];
 
   const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
   const isSales = user?.role === 'Sales' || (user?.departments && user.departments.includes('Sales') && user?.role !== 'Admin');
 
   const navItems = allNavItems.filter((item) => {
-    // 0. Hide Projects for Sales department users
-    if (item.path === '/projects' && isSales && !isMasterAdmin) {
+    // 0. Hide Projects and Project Plan for Sales department users
+    if ((item.path === '/projects' || item.path === '/project-plan') && isSales && !isMasterAdmin) {
       return false;
     }
 

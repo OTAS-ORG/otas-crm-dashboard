@@ -39,6 +39,11 @@ import type {
   BlogStats,
   Leave,
   LeaveSummary,
+  ProjectPlan,
+  ProjectMilestone,
+  ProjectPlanDetails,
+  ProjectPlanWidgetData,
+  MilestoneStatus,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -1006,6 +1011,71 @@ export const blogService = {
       success: boolean;
       data: Array<{ name: string; count: number }>;
     }>(`${API_URL}/public/autoshop/blogs/categories`);
+    return response.data.data;
+  },
+};
+
+export const projectPlanService = {
+  getProjectPlan: async (projectId: string) => {
+    const response = await api.get<ApiResponse<ProjectPlanDetails>>(`/project-plans/${projectId}`);
+    return response.data.data;
+  },
+  saveProjectCharter: async (
+    projectId: string,
+    data: {
+      charterContent: string;
+      scope?: string;
+      goals?: string;
+      risks?: string;
+      targetReleaseVersion?: string;
+    }
+  ) => {
+    const response = await api.put<ApiResponse<ProjectPlan>>(`/project-plans/${projectId}/charter`, data);
+    return response.data.data;
+  },
+  getMilestones: async (projectId: string) => {
+    const response = await api.get<ApiResponse<ProjectMilestone[]>>(`/project-plans/${projectId}/milestones`);
+    return response.data.data;
+  },
+  createMilestone: async (
+    projectId: string,
+    data: {
+      phase_name: string;
+      start_date: string;
+      end_date: string;
+      release_version: string;
+      status: MilestoneStatus;
+      notes?: string;
+      sort_order?: number;
+    }
+  ) => {
+    const response = await api.post<ApiResponse<ProjectMilestone>>(`/project-plans/${projectId}/milestones`, data);
+    return response.data.data;
+  },
+  updateMilestone: async (
+    projectId: string,
+    id: string,
+    data: Partial<{
+      phase_name: string;
+      start_date: string;
+      end_date: string;
+      release_version: string;
+      status: MilestoneStatus;
+      notes?: string;
+      sort_order?: number;
+    }>
+  ) => {
+    const response = await api.put<ApiResponse<ProjectMilestone>>(`/project-plans/${projectId}/milestones/${id}`, data);
+    return response.data.data;
+  },
+  deleteMilestone: async (projectId: string, id: string) => {
+    const response = await api.delete<ApiResponse<null>>(`/project-plans/${projectId}/milestones/${id}`);
+    return response.data;
+  },
+  getDashboardWidgetSummary: async (projectId?: string) => {
+    const response = await api.get<ApiResponse<ProjectPlanWidgetData>>('/project-plans/widget/summary', {
+      params: projectId ? { projectId } : {},
+    });
     return response.data.data;
   },
 };

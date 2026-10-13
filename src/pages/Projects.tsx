@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { projectService } from "../services/api";
 import type { Project } from "../types";
-import { Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen, Rocket } from "lucide-react";
+import { ProjectPlanWidget } from "../components/ProjectPlanWidget";
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
@@ -54,14 +55,26 @@ const Projects: React.FC = () => {
           <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-violet-500 to-indigo-600 bg-clip-text text-transparent tracking-tight">Projects</h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Manage SDLC projects and tasks</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary to-indigo-500 text-white text-sm rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          New Project
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/project-plan')}
+            className="relative z-10 flex items-center justify-center px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all font-semibold shadow-xs"
+          >
+            <Rocket className="w-4 h-4 mr-2 text-primary" />
+            Project Plan & Charter
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary to-indigo-500 text-white text-sm rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            New Project
+          </button>
+        </div>
       </div>
+
+      {/* Dashboard Widget: Upcoming Release & Roadmap Timeline */}
+      <ProjectPlanWidget />
 
       {/* Project Grid */}
       {loading ? (
