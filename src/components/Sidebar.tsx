@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
     // { name: 'AI', path: '/ai', icon: Sparkles },
   ];
 
-  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/tickets', '/admin/submissions', '/blogs', '/projects', '/project-plan'];
+  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/expenses', '/tickets', '/admin/submissions', '/blogs', '/projects', '/project-plan'];
   const financePaths = ['/invoices', '/analytics', '/salaries'];
 
   const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
