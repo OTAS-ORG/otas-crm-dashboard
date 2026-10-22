@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { expenseService, clientService } from '../services/api';
 import type { Expense, ExpenseCategory, ExpenseDepartment, Client } from '../types';
 import { ArrowLeft, Save, Trash2, Calendar, Tag, DollarSign, FileText, MessageSquare } from 'lucide-react';
@@ -8,6 +9,8 @@ const ExpenseDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isNew = id === 'new';
+  const { user } = useAuth();
+  const canManageStatus = user?.role === 'Admin' || (user?.departments && user.departments.includes('Finance'));
 
   const [expense, setExpense] = useState<Expense | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -410,13 +413,20 @@ const ExpenseDetail: React.FC = () => {
           <select
             value={form.status}
             onChange={(e) => setForm({ ...form, status: e.target.value })}
-            disabled={!isEditing}
+            disabled={!isEditing || !canManageStatus}
             className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-slate-50 disabled:text-slate-500"
           >
             <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
+            {canManageStatus && (
+              <>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </>
+            )}
           </select>
+          {!canManageStatus && (
+            <p className="text-[11px] text-slate-400 mt-1">Status can only be changed by Admin or Finance team.</p>
+          )}
         </div>
 
         {/* Payment Method */}

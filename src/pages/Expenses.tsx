@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { expenseService, userManagementService } from '../services/api';
 import type { Expense, ExpenseSummary, ExpenseCategory, ExpenseDepartment, UserInfo } from '../types';
 import { Plus, Search, TrendingDown, Tag, Receipt, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
@@ -8,6 +9,9 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const Expenses: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canViewAll = user?.role === 'Admin' || (user?.departments && user.departments.includes('Finance'));
+
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [departments, setDepartments] = useState<ExpenseDepartment[]>([]);
@@ -34,7 +38,7 @@ const Expenses: React.FC = () => {
       if (categoryFilter) params.category = categoryFilter;
       if (statusFilter) params.status = statusFilter;
       if (departmentFilter) params.department = departmentFilter;
-      if (userFilter) params.userId = userFilter;
+      if (canViewAll && userFilter) params.userId = userFilter;
       if (dateFrom) params.dateFrom = dateFrom;
       if (dateTo) params.dateTo = dateTo;
 
@@ -43,7 +47,7 @@ const Expenses: React.FC = () => {
         expenseService.getCategories(),
         expenseService.getSummary(selectedYear),
         expenseService.getDepartments(),
-        userManagementService.getUsers().catch(() => [] as UserInfo[]),
+        canViewAll ? userManagementService.getUsers().catch(() => [] as UserInfo[]) : Promise.resolve([] as UserInfo[]),
       ]);
       setExpenses(expenseData.expenses);
       setTotalPages(expenseData.pages);
@@ -101,7 +105,9 @@ const Expenses: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
         <div className="relative z-10 mb-4 sm:mb-0">
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Expenses</h2>
-          <p className="text-sm text-slate-500 mt-1">Track and manage business expenses</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {canViewAll ? 'Track and manage business expenses' : 'Track and manage your submitted expenses'}
+          </p>
         </div>
         <button
           onClick={() => navigate('/expenses/new')}
@@ -212,16 +218,18 @@ const Expenses: React.FC = () => {
               <option key={d._id} value={d.name}>{d.name}</option>
             ))}
           </select>
-          <select
-            value={userFilter}
-            onChange={(e) => { setUserFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-          >
-            <option value="">All Users</option>
-            {users.map((u) => (
-              <option key={u._id} value={u._id}>{u.username}</option>
-            ))}
-          </select>
+          {canViewAll && (
+            <select
+              value={userFilter}
+              onChange={(e) => { setUserFilter(e.target.value); setCurrentPage(1); }}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            >
+              <option value="">All Users</option>
+              {users.map((u) => (
+                <option key={u._id} value={u._id}>{u.username}</option>
+              ))}
+            </select>
+          )}
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
