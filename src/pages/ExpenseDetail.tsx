@@ -10,7 +10,7 @@ const ExpenseDetail: React.FC = () => {
   const { id } = useParams();
   const isNew = id === 'new';
   const { user } = useAuth();
-  const canManageStatus = user?.role === 'Admin' || (user?.departments && user.departments.includes('Finance'));
+  const canManageStatus = user?.roles.some(role => ['ceo_bd', 'finance_admin'].includes(role));
 
   const [expense, setExpense] = useState<Expense | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);

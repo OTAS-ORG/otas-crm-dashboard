@@ -32,6 +32,7 @@ import Blogs from './pages/Blogs';
 import BlogEditor from './pages/BlogEditor';
 import Leaves from './pages/Leaves';
 import Login from './pages/Login';
+import ChangePassword from './pages/ChangePassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AnimatedRoutes, FadeTransition } from './components/RouteTransition';
 
@@ -45,13 +46,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
   
   if (!user) return <Navigate to="/login" />;
+  if (user.mustChangePassword) return <Navigate to="/change-password" replace />;
   
   return <>{children}</>;
 };
 
 const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
   const { user } = useAuth();
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && !user.roles.some(role => allowedRoles.includes(role))) {
     return <Navigate to="/" />;
   }
   return <>{children}</>;
@@ -59,8 +61,8 @@ const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allo
 
 const FinanceRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
-  const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
-  const isFinance = user?.departments && user.departments.includes('Finance');
+  const isMasterAdmin = user?.roles.includes('ceo_bd');
+  const isFinance = user?.roles.includes('finance_admin');
   
   if (!(isMasterAdmin || isFinance)) {
     return <Navigate to="/" />;
@@ -70,8 +72,8 @@ const FinanceRoute = ({ children }: { children: React.ReactNode }) => {
 
 const ProjectRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
-  const isMasterAdmin = user?.role === 'Admin' && (!user.departments || user.departments.length === 0);
-  const isSales = user?.role === 'Sales' || (user?.departments && user.departments.includes('Sales') && user?.role !== 'Admin');
+  const isMasterAdmin = user?.roles.includes('ceo_bd');
+  const isSales = user?.roles.includes('sales');
   
   if (isSales && !isMasterAdmin) {
     return <Navigate to="/" />;
@@ -85,6 +87,7 @@ function App() {
       <Router>
         <AnimatedRoutes>
           <Route path="/login" element={<FadeTransition><Login /></FadeTransition>} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/public/form/:type/:clientId" element={<FadeTransition><PublicFormPage /></FadeTransition>} />
           <Route path="/onboarding/:token" element={<FadeTransition><OnboardingFormPage /></FadeTransition>} />
           <Route path="/" element={<ProtectedRoute><FadeTransition><Layout /></FadeTransition></ProtectedRoute>}>
@@ -106,14 +109,14 @@ function App() {
             <Route path="projects/:id/tasks/:taskId" element={<ProjectRoute><TaskDetail /></ProjectRoute>} />
             <Route path="salaries" element={<FinanceRoute><Salaries /></FinanceRoute>} />
             <Route path="leaves" element={<RoleRoute><Leaves /></RoleRoute>} />
-            <Route path="documents" element={<RoleRoute allowedRoles={['Admin']}><Documents /></RoleRoute>} />
+            <Route path="documents" element={<RoleRoute allowedRoles={['ceo_bd']}><Documents /></RoleRoute>} />
             <Route path="salaries/:id" element={<FinanceRoute><SalaryDetail /></FinanceRoute>} />
             <Route path="vault" element={<RoleRoute><Passwords /></RoleRoute>} />
             <Route path="blogs" element={<RoleRoute><Blogs /></RoleRoute>} />
             <Route path="blogs/new" element={<RoleRoute><BlogEditor /></RoleRoute>} />
             <Route path="blogs/edit/:id" element={<RoleRoute><BlogEditor /></RoleRoute>} />
             <Route path="admin/form-builder" element={<RoleRoute><FormBuilder /></RoleRoute>} />
-            <Route path="admin/users" element={<RoleRoute><UserManagement /></RoleRoute>} />
+            <Route path="admin/users" element={<RoleRoute allowedRoles={['ceo_bd']}><UserManagement /></RoleRoute>} />
             <Route path="admin/submissions" element={<RoleRoute><Submissions /></RoleRoute>} />
             <Route path="admin/submissions/:id" element={<RoleRoute><SubmissionDetail /></RoleRoute>} />
             <Route path="ai" element={<RoleRoute><AIContentGenerator /></RoleRoute>} />

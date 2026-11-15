@@ -130,7 +130,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, collapsed, onToggleCollap
                 {user?.username}
               </p>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                {user?.role}
+                {user?.roles.join(', ')}
               </p>
             </div>
 
@@ -159,7 +159,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuToggle, collapsed, onToggleCollap
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-slate-800 truncate">{user?.username}</p>
                   <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200/60">
-                    {user?.role}
+                    {user?.roles.join(', ')}
                   </span>
                 </div>
               </div>

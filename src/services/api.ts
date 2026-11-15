@@ -71,7 +71,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED') {
+      window.location.href = '/change-password';
+    } else if (error.response?.status === 401 && ['USER_DISABLED', 'TOKEN_REVOKED', 'NOT_AUTHORIZED'].includes(error.response?.data?.code)) {
       localStorage.removeItem("otas_user");
       window.location.href = "/login";
     }
@@ -313,9 +315,9 @@ export const passwordService = {
     const response = await api.delete<ApiResponse<null>>(`/passwords/${id}`);
     return response.data;
   },
-  decryptPassword: async (id: string) => {
+  decryptPassword: async (id: string, pin: string) => {
     const response = await api.post<ApiResponse<{ password: string }>>(
-      `/passwords/${id}/decrypt`,
+      `/passwords/${id}/decrypt`, { pin },
     );
     return response.data.data;
   },
@@ -600,6 +602,13 @@ export const userManagementService = {
     const response = await api.post<ApiResponse<UserInfo>>('/auth/users', data);
     return response.data.data;
   },
+};
+
+export const roleManagementService = {
+  list: async () => (await api.get('/auth/users')).data.data as Array<{ _id: string; username: string; fullName: string; roles: string[]; active: boolean }> ,
+  create: async (data: { username: string; fullName: string; roles: string[] }) => (await api.post('/auth/users', data)).data.data,
+  roles: async (id: string, roles: string[]) => (await api.put(`/auth/users/${id}/roles`, { roles })).data.data,
+  action: async (id: string, action: 'disable' | 'enable' | 'reset-password') => (await api.post(`/auth/users/${id}/${action}`)).data.data,
 };
 
 export const ticketService = {

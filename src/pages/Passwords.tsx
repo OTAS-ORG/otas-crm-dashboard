@@ -27,7 +27,8 @@ const Passwords: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<PasswordEntry | null>(null);
   const [showUnlock, setShowUnlock] = useState(false);
-  const [vaultUnlocked, setVaultUnlocked] = useState(false);
+  const [vaultPin, setVaultPin] = useState('');
+  const vaultUnlocked = Boolean(vaultPin);
   const [pendingEntry, setPendingEntry] = useState<PasswordEntry | null>(null);
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, string>>({});
   const [revealTimers, setRevealTimers] = useState<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -80,9 +81,9 @@ const Passwords: React.FC = () => {
     await doReveal(entry);
   };
 
-  const doReveal = async (entry: PasswordEntry) => {
+  const doReveal = async (entry: PasswordEntry, pin = vaultPin) => {
     try {
-      const result = await passwordService.decryptPassword(entry._id);
+      const result = await passwordService.decryptPassword(entry._id, pin);
       const id = entry._id;
       setRevealedPasswords(prev => ({ ...prev, [id]: result.password }));
       if (revealTimers[id]) clearTimeout(revealTimers[id]);
@@ -95,6 +96,9 @@ const Passwords: React.FC = () => {
       }, 30000);
       setRevealTimers(prev => ({ ...prev, [id]: timer }));
     } catch (err) {
+      setVaultPin('');
+      setPendingEntry(entry);
+      setShowUnlock(true);
       console.error('Failed to decrypt password', err);
     }
   };
@@ -137,14 +141,20 @@ const Passwords: React.FC = () => {
     }
   };
 
-  const handleUnlockVerified = () => {
-    setVaultUnlocked(true);
+  const handleUnlockVerified = (pin: string) => {
+    setVaultPin(pin);
     setShowUnlock(false);
     if (pendingEntry) {
-      doReveal(pendingEntry);
+      doReveal(pendingEntry, pin);
       setPendingEntry(null);
     }
   };
+
+  useEffect(() => {
+    if (!vaultPin) return;
+    const timeout = setTimeout(() => { setVaultPin(''); setRevealedPasswords({}); }, 5 * 60 * 1000);
+    return () => clearTimeout(timeout);
+  }, [vaultPin]);
 
   const revealPassword = (entry: PasswordEntry) => revealedPasswords[entry._id];
 

@@ -42,7 +42,7 @@ const Layout: React.FC = () => {
           </main>
         </div>
       </div>
-      {user?.role === 'Admin' && <AIAssistant />}
+      {user?.roles.includes('ceo_bd') && <AIAssistant />}
     </div>
   );
 };

@@ -92,11 +92,14 @@ const InvoiceDetail: React.FC = () => {
 
         if (!isNew && id) {
           const invData = await invoiceService.getInvoice(id);
+          const invoiceClient: unknown = invData.clientId;
           setInvoice(invData);
           setInvoiceType(invData.type || "customize_project");
           setServiceType(invData.serviceType || "server");
           setEditData({
-            clientId: invData.clientId || "",
+            clientId: typeof invoiceClient === "string" ? invoiceClient :
+              invoiceClient && typeof invoiceClient === "object" && "_id" in invoiceClient
+                ? String(invoiceClient._id) : "",
             companyName: invData.companyName || "",
             contactPerson: invData.contactPerson || "",
             contactInfo: invData.contactInfo || "",
@@ -232,6 +235,7 @@ const InvoiceDetail: React.FC = () => {
       const platformFee = Math.round((editData.amount || 0) * (feeRate / 100));
       const payload = {
         ...editData,
+        clientId: editData.clientId || undefined,
         type: invoiceType,
         serviceType: invoiceType === "service_fee" ? serviceType : undefined,
         platformFee,

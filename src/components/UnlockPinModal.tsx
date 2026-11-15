@@ -5,13 +5,14 @@ import { passwordService } from '../services/api';
 interface UnlockPinModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onVerified: () => void;
+  onVerified: (pin: string) => void;
 }
 
 const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVerified }) => {
   const [mode, setMode] = useState<'unlock' | 'setup'>('unlock');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [error, setError] = useState('');
@@ -22,6 +23,7 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
     if (isOpen) {
       setPin('');
       setConfirmPin('');
+      setCurrentPassword('');
       setError('');
       setMode('unlock');
       setChecking(true);
@@ -51,7 +53,7 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
       const result = await passwordService.verifyVaultPin(pin);
       if (result.success) {
         setPin('');
-        onVerified();
+        onVerified(pin);
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || '';
@@ -81,11 +83,12 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
 
     setLoading(true);
     try {
-      const result = await passwordService.setVaultPin(pin, '');
+      const result = await passwordService.setVaultPin(pin, currentPassword);
       if (result.success) {
         setPin('');
         setConfirmPin('');
-        onVerified();
+        setCurrentPassword('');
+        onVerified(pin);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to set PIN');
@@ -125,6 +128,11 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
 
         {mode === 'setup' ? (
           <form onSubmit={handleSetup} className="space-y-4">
+            <label className="block text-sm text-slate-700">အကောင့်၏ လက်ရှိ password
+              <input type="password" autoComplete="current-password" required value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Current account password"
+                className="block w-full px-4 py-3 border border-slate-300 rounded-xl text-sm bg-white text-slate-800" />
+            </label>
             <div className="relative">
               <input
                 type={showPin ? 'text' : 'password'}
@@ -159,7 +167,7 @@ const UnlockPinModal: React.FC<UnlockPinModalProps> = ({ isOpen, onClose, onVeri
                 <span>{error}</span>
               </div>
             )}
-            <button type="submit" disabled={loading || !pin || !confirmPin} className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm cursor-pointer">
+            <button type="submit" disabled={loading || !pin || !confirmPin || !currentPassword} className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm cursor-pointer">
               {loading ? 'Setting PIN...' : 'Set PIN & Unlock'}
             </button>
           </form>

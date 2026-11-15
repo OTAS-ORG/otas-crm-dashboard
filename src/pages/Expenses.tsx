@@ -10,7 +10,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const Expenses: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const canViewAll = user?.role === 'Admin' || (user?.departments && user.departments.includes('Finance'));
+  const canViewAll = user?.roles.some(role => ['ceo_bd', 'finance_admin'].includes(role));
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
