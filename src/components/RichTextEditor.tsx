@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import {
   Bold,
   Italic,
@@ -34,6 +35,7 @@ interface RichTextEditorProps {
   onChange: (content: string) => void;
   placeholder?: string;
   minHeight?: string;
+  readOnly?: boolean;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -41,6 +43,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onChange,
   placeholder = 'Write your article content here...',
   minHeight = '420px',
+  readOnly = false,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<'visual' | 'html' | 'preview'>('visual');
@@ -147,6 +150,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const wordCount = textOnly.trim() ? textOnly.trim().split(/\s+/).filter(Boolean).length : 0;
   const charCount = textOnly.length;
   const estimatedMins = Math.max(1, Math.ceil(wordCount / 200));
+
+  if (readOnly) return <div className="rounded-2xl border border-slate-200 bg-white p-4 prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(value) }} />;
 
   return (
     <div className="border border-slate-200/90 rounded-2xl bg-white shadow-xs overflow-hidden flex flex-col transition-all">

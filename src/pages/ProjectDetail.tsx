@@ -8,7 +8,8 @@ import type {
   TaskPriority,
   UserInfo,
 } from "../types";
-import { ArrowLeft, Plus, Trash2, Calendar, Check, Rocket } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Check, Rocket } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const COLUMNS: { key: SDLCStatus; label: string; color: string }[] = [
   { key: "backlog", label: "Backlog", color: "bg-slate-400" },
@@ -44,10 +45,35 @@ const isOverdue = (dateStr: string): boolean => {
 const ProjectDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const roles = user?.roles || [];
+  const isCeo = roles.includes('ceo_bd');
+  const hasProjectText = isCeo;
+  const canReadTasks = isCeo || roles.some(role => ['pd_head', 'developer', 'uiux', 'dqa_head', 'dqa'].includes(role));
+  const allowedNextStatuses = (task: Task): SDLCStatus[] => {
+    const allowed = new Set<SDLCStatus>();
+    const refId = (value: Task['assignedTo']) => typeof value === 'string' ? value : value?._id;
+    if (isCeo) {
+      if (task.status === 'backlog') allowed.add('todo');
+      if (task.status === 'todo') allowed.add('in-progress');
+      if (task.status === 'in-progress') allowed.add('code-review');
+      if (task.status === 'code-review') { allowed.add('in-progress'); allowed.add('qa-testing'); }
+    }
+    if (user?._id && refId(task.assignedTo) === user._id && roles.some(role => ['developer', 'uiux', 'dqa'].includes(role))) {
+      if (task.status === 'todo') allowed.add('in-progress');
+      if (task.status === 'in-progress') allowed.add('code-review');
+    }
+    if (user?._id && refId(task.qaAssignedTo) === user._id && roles.some(role => ['dqa', 'dqa_head'].includes(role)) && task.status === 'qa-testing') {
+      allowed.add('done'); allowed.add('in-progress');
+    }
+    return [...allowed];
+  };
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<UserInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [taskError, setTaskError] = useState(false);
+  const [statusError, setStatusError] = useState(false);
 
   // Create task modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -62,10 +88,6 @@ const ProjectDetail: React.FC = () => {
     estimatedHours: "",
   });
 
-  // Delete confirmation
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
   // Status change dropdown
   const [statusDropdown, setStatusDropdown] = useState<string | null>(null);
 
@@ -73,14 +95,18 @@ const ProjectDetail: React.FC = () => {
     if (!id) return;
     try {
       setLoading(true);
-      const [projectData, taskData, userData] = await Promise.all([
-        projectService.getProject(id),
-        projectService.getTasks(id),
-        userManagementService.getUsers(),
-      ]);
+      const projectData = await projectService.getProject(id);
       setProject(projectData);
-      setTasks(taskData);
-      setUsers(userData);
+      setTaskError(false);
+      setTasks([]);
+      if (canReadTasks) {
+        try { setTasks(await projectService.getTasks(id)); }
+        catch (error) { console.error('Error fetching tasks:', error); setTaskError(true); }
+      }
+      if (isCeo) {
+        try { setUsers(await userManagementService.getUsers()); }
+        catch (error) { console.error('Error fetching staff:', error); setUsers([]); }
+      }
     } catch (error) {
       console.error("Error fetching project:", error);
     } finally {
@@ -90,7 +116,7 @@ const ProjectDetail: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id, canReadTasks, isCeo]);
 
   // Group tasks by status
   const groupedTasks = COLUMNS.reduce(
@@ -135,30 +161,17 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleStatusChange = async (taskId: string, status: SDLCStatus) => {
+    const current = tasks.find(task => task._id === taskId);
+    if (!current || !allowedNextStatuses(current).includes(status)) return;
     try {
       setStatusDropdown(null);
-      // Optimistic update
-      setTasks((prev) =>
-        prev.map((t) => (t._id === taskId ? { ...t, status } : t)),
-      );
-      await projectService.updateTaskStatus(taskId, status);
+      setStatusError(false);
+      const updated = await projectService.updateTaskStatus(taskId, status);
+      setTasks((prev) => prev.map((task) => task._id === taskId ? updated : task));
     } catch (error) {
       console.error("Error updating task status:", error);
-      fetchData(); // Rollback on error
-    }
-  };
-
-  const handleDeleteTask = async () => {
-    if (!deleteTarget) return;
-    try {
-      setDeleting(true);
-      await projectService.deleteTask(deleteTarget);
-      setDeleteTarget(null);
+      setStatusError(true);
       fetchData();
-    } catch (error) {
-      console.error("Error deleting task:", error);
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -211,7 +224,7 @@ const ProjectDetail: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2.5">
+        {isCeo && <div className="flex items-center gap-2.5">
           <button
             onClick={() => navigate(`/projects/${id}/plan`)}
             className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-2xs"
@@ -226,11 +239,17 @@ const ProjectDetail: React.FC = () => {
             <Plus className="w-4 h-4" />
             Add Task
           </button>
-        </div>
+        </div>}
       </div>
 
+      {!hasProjectText && <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">ငွေကြေးအချက်အလက် မပါစေရန် project အမည်ကို ယာယီအစားထိုးပြထားပါသည်။</p>}
+      {!isCeo && canReadTasks && <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">ငွေကြေးအချက်အလက် မပါစေရန် task အမည်များကို ယာယီအစားထိုးပြထားပါသည်။</p>}
+      {!canReadTasks && <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700">ဤ role တွင် project task များကို ကြည့်ရှုခွင့် မရှိပါ။</p>}
+      {taskError && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">Task များကို ဖွင့်မရပါ။ ခဏအကြာ ထပ်စမ်းပါ။</p>}
+      {statusError && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">Task status ကို ပြောင်းမရပါ။ အချက်အလက်အသစ်ကို ပြန်စစ်ပါ။</p>}
+
       {/* Kanban Board */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {canReadTasks && !taskError && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {COLUMNS.map((column) => {
           const columnTasks = groupedTasks[column.key];
           return (
@@ -266,17 +285,6 @@ const ProjectDetail: React.FC = () => {
                     }
                     className="group relative bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
                   >
-                    {/* Delete button (top-right, visible on hover) */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTarget(task._id);
-                      }}
-                      className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-
                     {/* Title + Priority */}
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <h4 className="text-sm font-medium text-slate-800 leading-snug flex-1">
@@ -306,6 +314,8 @@ const ProjectDetail: React.FC = () => {
                       {/* Status badge (clickable dropdown) */}
                       <div className="relative">
                         <button
+                          disabled={allowedNextStatuses(task).length === 0}
+                          title={allowedNextStatuses(task).length === 0 ? 'လက်ရှိ status မှ ပြောင်းလဲခွင့်မရှိပါ။' : undefined}
                           onClick={(e) => {
                             e.stopPropagation();
                             setStatusDropdown(
@@ -333,7 +343,7 @@ const ProjectDetail: React.FC = () => {
                               onClick={() => setStatusDropdown(null)}
                             />
                             <div className="absolute right-0 top-full mt-1 z-20 bg-white rounded-xl border border-slate-200 shadow-xl py-1.5 min-w-[140px]">
-                              {COLUMNS.map((col) => (
+                              {COLUMNS.filter(col => allowedNextStatuses(task).includes(col.key)).map((col) => (
                                 <button
                                   key={col.key}
                                   onClick={() =>
@@ -397,10 +407,10 @@ const ProjectDetail: React.FC = () => {
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {/* Create Task Modal */}
-      {showCreateModal && (
+      {isCeo && showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100">
@@ -550,36 +560,7 @@ const ProjectDetail: React.FC = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="px-6 py-5">
-              <h3 className="text-lg font-bold text-slate-800 mb-2">
-                Delete Task?
-              </h3>
-              <p className="text-sm text-slate-500">
-                This action cannot be undone.
-              </p>
-            </div>
-            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteTask}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:opacity-50 transition-colors"
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

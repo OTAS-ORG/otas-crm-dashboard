@@ -2,24 +2,34 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { projectService } from "../services/api";
 import type { Project } from "../types";
-import { Plus, FolderOpen, Rocket } from "lucide-react";
+import { FolderOpen, Rocket } from "lucide-react";
 import { ProjectPlanWidget } from "../components/ProjectPlanWidget";
+import { useAuth } from "../context/AuthContext";
+
+const formatCreatedDate = (value?: string) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString();
+};
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isCeo = user?.roles.includes('ceo_bd') === true;
+  const hasProjectText = isCeo;
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "" });
-  const [creating, setCreating] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const data = await projectService.getProjects();
       setProjects(data);
     } catch (error) {
       console.error("Error fetching projects:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -29,24 +39,6 @@ const Projects: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleCreate = async () => {
-    if (!form.name.trim()) return;
-    try {
-      setCreating(true);
-      await projectService.createProject({
-        name: form.name.trim(),
-        description: form.description.trim(),
-      });
-      setShowCreateModal(false);
-      setForm({ name: "", description: "" });
-      fetchData();
-    } catch (error) {
-      console.error("Error creating project:", error);
-    } finally {
-      setCreating(false);
-    }
-  };
-
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -55,7 +47,7 @@ const Projects: React.FC = () => {
           <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-violet-500 to-indigo-600 bg-clip-text text-transparent tracking-tight">Projects</h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Manage SDLC projects and tasks</p>
         </div>
-        <div className="flex items-center gap-3">
+        {isCeo && <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/project-plan')}
             className="relative z-10 flex items-center justify-center px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all font-semibold shadow-xs"
@@ -63,38 +55,25 @@ const Projects: React.FC = () => {
             <Rocket className="w-4 h-4 mr-2 text-primary" />
             Project Plan & Charter
           </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="relative z-10 flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary to-indigo-500 text-white text-sm rounded-xl hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 font-semibold"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            New Project
-          </button>
-        </div>
+        </div>}
       </div>
 
+      {!hasProjectText && <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">ငွေကြေးအချက်အလက် မပါစေရန် project အမည်များကို ယာယီအစားထိုးပြထားပါသည်။</p>}
+
       {/* Dashboard Widget: Upcoming Release & Roadmap Timeline */}
-      <ProjectPlanWidget />
+      {isCeo && <ProjectPlanWidget />}
 
       {/* Project Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
+      ) : loadError ? (
+        <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">Project စာရင်းကို ဖွင့်မရပါ။ ခဏအကြာ ထပ်စမ်းပါ။</p>
       ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
           <FolderOpen className="w-16 h-16 mb-4" />
           <p className="text-lg font-medium">No projects yet</p>
-          <p className="text-sm mt-1">
-            Create your first project to get started
-          </p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="mt-4 px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4 inline mr-1" />
-            Create Project
-          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -122,7 +101,7 @@ const Projects: React.FC = () => {
               </p>
               <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <span className="text-xs text-slate-400">
-                  Created {new Date(project.createdAt).toLocaleDateString()}
+                  Created {formatCreatedDate(project.createdAt)}
                 </span>
                 <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                   Open Board →
@@ -133,66 +112,6 @@ const Projects: React.FC = () => {
         </div>
       )}
 
-      {/* Create Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800">New Project</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Create a new SDLC project
-              </p>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Project Name *
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Client Management System"
-                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Description
-                </label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
-                  placeholder="Brief description of the project..."
-                  rows={3}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                />
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setForm({ name: "", description: "" });
-                }}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={creating || !form.name.trim()}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors"
-              >
-                {creating ? "Creating..." : "Create Project"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

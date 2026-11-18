@@ -222,7 +222,6 @@ const TaskDetail: React.FC = () => {
       const payload: Partial<Task> = {
         title: task.title,
         description: task.description,
-        status: task.status,
         priority: task.priority,
         assignedTo:
           typeof task.assignedTo === "object"
@@ -253,11 +252,10 @@ const TaskDetail: React.FC = () => {
 
   // Quick Status change
   const handleStatusChange = async (newStatus: SDLCStatus) => {
-    if (!task) return;
-    const updated = { ...task, status: newStatus };
-    setTask(updated);
+    if (!task || !taskId) return;
     setShowStatusDropdown(false);
-    await handleSave({ status: newStatus });
+    try { setTask(await projectService.updateTaskStatus(taskId, newStatus)); }
+    catch (error) { console.error('Error updating task status:', error); }
   };
 
   // Quick Priority change
@@ -473,6 +471,23 @@ const TaskDetail: React.FC = () => {
 
   const currentStatusConfig = STATUS_CONFIG[task.status] || STATUS_CONFIG.todo;
   const currentPriorityConfig = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.normal;
+  const nextStatuses = new Set<SDLCStatus>();
+  const taskRoles: string[] = Array.isArray(currentUser?.roles) ? currentUser.roles : [];
+  const assignedId = typeof task.assignedTo === 'string' ? task.assignedTo : task.assignedTo?._id;
+  const qaId = typeof task.qaAssignedTo === 'string' ? task.qaAssignedTo : task.qaAssignedTo?._id;
+  if (taskRoles.includes('ceo_bd')) {
+    if (task.status === 'backlog') nextStatuses.add('todo');
+    if (task.status === 'todo') nextStatuses.add('in-progress');
+    if (task.status === 'in-progress') nextStatuses.add('code-review');
+    if (task.status === 'code-review') { nextStatuses.add('qa-testing'); nextStatuses.add('in-progress'); }
+  }
+  if (assignedId === currentUser?._id && taskRoles.some(role => ['developer', 'uiux', 'dqa'].includes(role))) {
+    if (task.status === 'todo') nextStatuses.add('in-progress');
+    if (task.status === 'in-progress') nextStatuses.add('code-review');
+  }
+  if (qaId === currentUser?._id && task.status === 'qa-testing' && taskRoles.some(role => ['dqa', 'dqa_head'].includes(role))) {
+    nextStatuses.add('done'); nextStatuses.add('in-progress');
+  }
 
   // Overdue check
   const isOverdue =
@@ -534,7 +549,8 @@ const TaskDetail: React.FC = () => {
 
             {showStatusDropdown && (
               <div className="absolute left-0 mt-1.5 w-44 bg-white rounded-2xl shadow-2xl border border-slate-200 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-                {(Object.keys(STATUS_CONFIG) as SDLCStatus[]).map((st) => {
+                {nextStatuses.size === 0 && <p className="px-3 py-2 text-xs text-slate-500">ဤအဆင့်တွင် ပြောင်းခွင့်မရှိပါ။</p>}
+                {[...nextStatuses].map((st) => {
                   const cfg = STATUS_CONFIG[st];
                   const isSelected = task.status === st;
                   return (
@@ -610,8 +626,9 @@ const TaskDetail: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowDelete(true)}
+            disabled
             className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-            title="Delete Task"
+            title="Task deletion is unavailable"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -885,7 +902,7 @@ const TaskDetail: React.FC = () => {
                   type="file"
                   ref={attachmentInputRef}
                   onChange={handleAttachmentUpload}
-                  disabled={uploadingAttachment}
+                  disabled
                   className="hidden"
                 />
                 {uploadingAttachment ? (

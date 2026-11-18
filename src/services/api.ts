@@ -81,6 +81,34 @@ api.interceptors.response.use(
   }
 );
 
+export interface OwnPayslip {
+  _id: string;
+  employeeName: string;
+  employeeId?: string;
+  position?: string;
+  department?: string;
+  month: number;
+  year: number;
+  baseSalary: number;
+  allowances?: Record<string, number>;
+  deductions?: Record<string, number>;
+  totalAllowances: number;
+  totalDeductions: number;
+  reimbursedExpensesTotal?: number;
+  netPay: number;
+  currency: string;
+  status: 'Paid';
+  paidDate?: string;
+  paymentChannel?: string;
+}
+
+export const ownPayslipService = {
+  list: async (page = 1) => {
+    const response = await api.get<ApiResponse<{ payslips: OwnPayslip[]; page: number; hasMore: boolean }>>('/salaries/me', { params: { page } });
+    return response.data.data;
+  },
+};
+
 export const clientService = {
   getClients: async (params?: {
     search?: string;

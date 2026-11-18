@@ -24,6 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
     { name: 'Project Plan', path: '/project-plan', icon: Rocket },
     { name: 'Tickets', path: '/tickets', icon: LifeBuoy },
     { name: 'Payroll', path: '/salaries', icon: Wallet },
+    { name: 'My Payslips', path: '/my-payslips', icon: Wallet },
     { name: 'Leaves', path: '/leaves', icon: CalendarOff },
     { name: 'Vault', path: '/vault', icon: Lock },
     { name: 'Blogs', path: '/blogs', icon: BookOpen },
@@ -35,15 +36,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose, collapsed = 
     // { name: 'AI', path: '/ai', icon: Sparkles },
   ];
 
-  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/expenses', '/tickets', '/admin/submissions', '/blogs', '/projects', '/project-plan'];
+  const userOnlyPaths = ['/', '/post-sale', '/calendar', '/expenses', '/tickets', '/admin/submissions', '/blogs', '/projects', '/project-plan', '/my-payslips'];
   const financePaths = ['/invoices', '/analytics', '/salaries'];
 
   const isMasterAdmin = user?.roles.includes('ceo_bd');
-  const isSales = user?.roles.includes('sales');
+  const canReadProjects = user?.roles.some(role => ['ceo_bd', 'finance_admin', 'pd_head', 'developer', 'uiux', 'dqa_head', 'dqa'].includes(role));
 
   const navItems = allNavItems.filter((item) => {
-    // 0. Hide Projects and Project Plan for Sales department users
-    if ((item.path === '/projects' || item.path === '/project-plan') && isSales && !isMasterAdmin) {
+    if (item.path === '/project-plan' && !isMasterAdmin) return false;
+    if ((item.path === '/projects' || item.path === '/project-plan') && !canReadProjects) {
       return false;
     }
 

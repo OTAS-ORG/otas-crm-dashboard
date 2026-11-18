@@ -11,6 +11,7 @@ import ExpenseDetail from './pages/ExpenseDetail';
 import Analytics from './pages/Analytics';
 import Salaries from './pages/Salaries';
 import SalaryDetail from './pages/SalaryDetail';
+import MyPayslips from './pages/MyPayslips';
 import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import Passwords from './pages/Passwords';
@@ -23,6 +24,7 @@ import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import ProjectPlanPage from './pages/ProjectPlan';
 import TaskDetail from './pages/TaskDetail';
+import RestrictedTaskDetail from './pages/RestrictedTaskDetail';
 import AIContentGenerator from './pages/AIContentGenerator';
 import AIInsights from './pages/AIInsights';
 import Contacts from './pages/Contacts';
@@ -72,13 +74,18 @@ const FinanceRoute = ({ children }: { children: React.ReactNode }) => {
 
 const ProjectRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
-  const isMasterAdmin = user?.roles.includes('ceo_bd');
-  const isSales = user?.roles.includes('sales');
-  
-  if (isSales && !isMasterAdmin) {
+  const canReadProjects = user?.roles.some(role => ['ceo_bd', 'finance_admin', 'pd_head', 'developer', 'uiux', 'dqa_head', 'dqa'].includes(role));
+  if (!canReadProjects) {
     return <Navigate to="/" />;
   }
   return <>{children}</>;
+};
+
+const TaskRoute = () => {
+  const { user } = useAuth();
+  if (user?.roles.includes('ceo_bd')) return <TaskDetail />;
+  if (!user?.roles.some(role => ['pd_head', 'developer', 'uiux', 'dqa_head', 'dqa'].includes(role))) return <Navigate to="/" />;
+  return <RestrictedTaskDetail />;
 };
 
 function App() {
@@ -104,10 +111,11 @@ function App() {
             <Route path="tickets/:id" element={<RoleRoute><TicketDetail /></RoleRoute>} />
             <Route path="projects" element={<ProjectRoute><Projects /></ProjectRoute>} />
             <Route path="projects/:id" element={<ProjectRoute><ProjectDetail /></ProjectRoute>} />
-            <Route path="projects/:id/plan" element={<ProjectRoute><ProjectPlanPage /></ProjectRoute>} />
-            <Route path="project-plan" element={<ProjectRoute><ProjectPlanPage /></ProjectRoute>} />
-            <Route path="projects/:id/tasks/:taskId" element={<ProjectRoute><TaskDetail /></ProjectRoute>} />
+            <Route path="projects/:id/plan" element={<RoleRoute allowedRoles={['ceo_bd']}><ProjectPlanPage /></RoleRoute>} />
+            <Route path="project-plan" element={<RoleRoute allowedRoles={['ceo_bd']}><ProjectPlanPage /></RoleRoute>} />
+            <Route path="projects/:id/tasks/:taskId" element={<TaskRoute />} />
             <Route path="salaries" element={<FinanceRoute><Salaries /></FinanceRoute>} />
+            <Route path="my-payslips" element={<MyPayslips />} />
             <Route path="leaves" element={<RoleRoute><Leaves /></RoleRoute>} />
             <Route path="documents" element={<RoleRoute allowedRoles={['ceo_bd']}><Documents /></RoleRoute>} />
             <Route path="salaries/:id" element={<FinanceRoute><SalaryDetail /></FinanceRoute>} />

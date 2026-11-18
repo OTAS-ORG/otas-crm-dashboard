@@ -168,7 +168,7 @@ const ProjectPlanPage: React.FC = () => {
       setCurrentProject(res.project);
       setPlan(res.plan);
       setMilestones(res.milestones || []);
-      setCharterContent(res.plan?.charterContent || DEFAULT_CHARTER_TEMPLATE);
+      setCharterContent(res.plan?.charterContent || '');
     } catch (err) {
       console.error('Error loading project plan:', err);
     } finally {
@@ -316,7 +316,7 @@ const ProjectPlanPage: React.FC = () => {
         </div>
         <h2 className="text-xl font-bold text-slate-800">No Projects Found</h2>
         <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
-          Please create a project first before setting up the Project Charter and High-Level Roadmap.
+          Project plans will appear here when an eligible project is available.
         </p>
         <button
           onClick={() => navigate('/projects')}
@@ -330,6 +330,7 @@ const ProjectPlanPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
+      <p role="status" className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">Project plan ကို လက်ရှိ ဖတ်ရှုရန်သာ ရပါသည်။ ပြင်ဆင်ခြင်းနှင့် သိမ်းဆည်းခြင်းကို ယာယီပိတ်ထားပါသည်။</p>
       {/* Top Header & Project Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -453,6 +454,7 @@ const ProjectPlanPage: React.FC = () => {
 
                 <button
                   type="button"
+                  disabled
                   onClick={() => setCharterContent(DEFAULT_CHARTER_TEMPLATE)}
                   className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors cursor-pointer"
                   title="Insert starter template with Goals, Scope, and Risks"
@@ -463,7 +465,7 @@ const ProjectPlanPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleSaveCharter}
-                  disabled={savingCharter}
+                  disabled
                   className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary-600 rounded-xl transition-all shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {savingCharter ? (
@@ -483,8 +485,9 @@ const ProjectPlanPage: React.FC = () => {
 
             <div className="p-5">
               <RichTextEditor
-                value={charterContent}
+                value={charterContent || '<p>No charter has been recorded.</p>'}
                 onChange={setCharterContent}
+                readOnly
                 placeholder="Draft scope, deliverables, goals and risks for this project..."
                 minHeight="340px"
               />
@@ -513,6 +516,7 @@ const ProjectPlanPage: React.FC = () => {
 
               <button
                 type="button"
+                disabled
                 onClick={handleOpenCreateMilestone}
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-primary to-indigo-600 hover:shadow-md hover:shadow-primary/20 rounded-xl transition-all cursor-pointer self-start sm:self-auto"
               >
@@ -575,7 +579,6 @@ const ProjectPlanPage: React.FC = () => {
                           className="relative flex flex-col items-center group cursor-pointer"
                           onMouseEnter={() => setHoveredMilestoneId(m._id)}
                           onMouseLeave={() => setHoveredMilestoneId(null)}
-                          onClick={() => handleOpenEditMilestone(m)}
                         >
                           {/* Step Icon Node */}
                           <div
@@ -586,7 +589,7 @@ const ProjectPlanPage: React.FC = () => {
                                 ? 'bg-blue-600 border-blue-700 text-white shadow-blue-500/35 ring-4 ring-blue-100 group-hover:scale-115'
                                 : 'bg-white border-slate-300 text-slate-400 group-hover:border-slate-400 group-hover:scale-110'
                             }`}
-                            title={`Click to view or edit ${m.phase_name}`}
+                            title={m.phase_name}
                           >
                             {isCompleted ? (
                               <Check className="w-5 h-5 text-white stroke-[2.5]" />
@@ -658,9 +661,6 @@ const ProjectPlanPage: React.FC = () => {
                                   </p>
                                 )}
 
-                                <div className="pt-1 text-[10px] text-indigo-300 font-medium">
-                                  💡 Click step to edit details
-                                </div>
                               </div>
 
                               {/* Tooltip Arrow */}
@@ -726,7 +726,7 @@ const ProjectPlanPage: React.FC = () => {
                         <Rocket className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                         <p className="text-sm font-semibold text-slate-600">No Milestones Defined Yet</p>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          Click "Add Milestone" to schedule the first release phase for this project.
+                          There are no milestones to display.
                         </p>
                       </td>
                     </tr>
@@ -787,6 +787,7 @@ const ProjectPlanPage: React.FC = () => {
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 type="button"
+                                disabled
                                 onClick={() => handleOpenEditMilestone(milestone)}
                                 className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                                 title="Edit Milestone"
@@ -795,6 +796,7 @@ const ProjectPlanPage: React.FC = () => {
                               </button>
                               <button
                                 type="button"
+                                disabled
                                 onClick={() => setDeletingMilestone(milestone)}
                                 className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                                 title="Delete Milestone"
