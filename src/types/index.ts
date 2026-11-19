@@ -71,11 +71,19 @@ export interface ClientDashboardData {
   submissions: Submission[];
 }
 
+export type DiscountType = 'none' | 'fixed' | 'percent';
+
 export interface InvoiceItem {
   _id?: string;
   description: string;
-  quantity: number;
-  unitPrice: number;
+  quantity?: number;
+  unitPrice?: number;
+  originalAmount?: number;
+  isFoc?: boolean;
+  discountType?: DiscountType;
+  discountValue?: number;
+  discountAmount?: number;
+  discountReason?: string;
   amount: number;
   paymentTerm?: string;
   startDate?: string;
@@ -107,6 +115,10 @@ export interface Invoice {
   projectId?: string;
   items: InvoiceItem[];
   amount: number;
+  discountType?: DiscountType;
+  discountValue?: number;
+  discountAmount?: number;
+  discountReason?: string;
   currency: 'MMK' | 'USD';
   exchangeRate: number;
   platformFeeRate: number;

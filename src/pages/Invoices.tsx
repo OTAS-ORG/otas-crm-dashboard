@@ -149,11 +149,24 @@ const Invoices: React.FC = () => {
                       <span className="text-sm font-semibold text-slate-800">{inv.companyName}</span>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-sm font-bold text-slate-800">
-                        {inv.currency === 'USD'
-                          ? `${Math.round(inv.grandTotal * (inv.exchangeRate || 0)).toLocaleString()} MMK`
-                          : `${inv.grandTotal?.toLocaleString()} MMK`}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-bold text-slate-800">
+                          {inv.currency === 'USD'
+                            ? `${Math.round(inv.grandTotal * (inv.exchangeRate || 0)).toLocaleString()} MMK`
+                            : `${inv.grandTotal?.toLocaleString()} MMK`}
+                        </span>
+                        {inv.items?.some((item) => item.isFoc) && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                            FOC
+                          </span>
+                        )}
+                        {((inv.discountAmount || 0) > 0 ||
+                          inv.items?.some((item) => (item.discountAmount || 0) > 0)) && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
+                            Disc.
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${getStatusColor(inv.status, 'status')}`}>

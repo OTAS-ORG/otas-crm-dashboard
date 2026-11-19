@@ -2,8 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { invoiceService } from "../services/api";
 import { clientService } from "../services/api";
-import type { Invoice, Client, InvoiceItem } from "../types";
+import type { Invoice, Client, InvoiceItem, DiscountType } from "../types";
 import { downloadAsImage, downloadAsPDF } from "../utils/export";
+import {
+  calculateItemPricing,
+  calculateInvoiceTotals,
+  formatDiscountLabel,
+  formatMoney,
+  getItemOriginalAmount,
+  hydrateInvoiceItem,
+  type InvoiceCurrency,
+} from "../utils/invoicePricing";
 import {
   ArrowLeft,
   FileText,
@@ -16,6 +25,8 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Tag,
+  Gift,
 } from "lucide-react";
 import InvoiceTypePicker from "../components/InvoiceTypePicker";
 import type { InvoiceType, ServiceFeeType } from "../types";
@@ -34,6 +45,75 @@ const PaidSeal: React.FC = () => (
     }}
   />
 );
+
+const createEmptyItem = (type: InvoiceType | null): InvoiceItem =>
+  type === "service_fee"
+    ? {
+        description: "",
+        originalAmount: 0,
+        isFoc: false,
+        discountType: "none",
+        discountValue: 0,
+        discountAmount: 0,
+        discountReason: "",
+        amount: 0,
+        startDate: "",
+        endDate: "",
+      }
+    : {
+        description: "",
+        paymentTerm: "",
+        originalAmount: 0,
+        isFoc: false,
+        discountType: "none",
+        discountValue: 0,
+        discountAmount: 0,
+        discountReason: "",
+        amount: 0,
+      };
+
+const buildEditDataFromInvoice = (invData: Invoice) => {
+  const currency: InvoiceCurrency = invData.currency === "USD" ? "USD" : "MMK";
+  const clientVal: unknown = invData.clientId;
+  const normalizedClientId =
+    typeof clientVal === "string"
+      ? clientVal
+      : clientVal && typeof clientVal === "object" && "_id" in clientVal
+        ? String((clientVal as { _id: string })._id)
+        : "";
+
+  const hydratedItems = invData.items?.length
+    ? invData.items.map((item) => hydrateInvoiceItem(item, currency))
+    : [createEmptyItem(invData.type || "customize_project")];
+
+  return {
+    clientId: normalizedClientId,
+    companyName: invData.companyName || "",
+    contactPerson: invData.contactPerson || "",
+    contactInfo: invData.contactInfo || "",
+    projectId: invData.projectId || "",
+    items: hydratedItems,
+    amount: invData.amount || 0,
+    discountType: (invData.discountType || "none") as DiscountType,
+    discountValue: invData.discountValue || 0,
+    discountReason: invData.discountReason || "",
+    currency,
+    exchangeRate: invData.exchangeRate || 0,
+    platformFeeRate: invData.platformFeeRate || 0,
+    additionalCharges: invData.additionalCharges || [],
+    date: invData.date
+      ? invData.date.split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    dueDate: invData.dueDate ? invData.dueDate.split("T")[0] : "",
+    serviceStartDate: invData.serviceStartDate
+      ? invData.serviceStartDate.split("T")[0]
+      : "",
+    serviceEndDate: invData.serviceEndDate
+      ? invData.serviceEndDate.split("T")[0]
+      : "",
+    paymentMethod: invData.paymentMethod || "KBZPay (Kpay)",
+  };
+};
 
 const InvoiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -71,8 +151,11 @@ const InvoiceDetail: React.FC = () => {
     contactPerson: "",
     contactInfo: "",
     projectId: "",
-    items: [{ description: "", paymentTerm: "", amount: 0 }],
+    items: [createEmptyItem("customize_project")],
     amount: 0,
+    discountType: "none" as DiscountType,
+    discountValue: 0,
+    discountReason: "",
     currency: "MMK",
     exchangeRate: 0,
     platformFeeRate: 0,
@@ -95,34 +178,7 @@ const InvoiceDetail: React.FC = () => {
           setInvoice(invData);
           setInvoiceType(invData.type || "customize_project");
           setServiceType(invData.serviceType || "server");
-          setEditData({
-            clientId: invData.clientId || "",
-            companyName: invData.companyName || "",
-            contactPerson: invData.contactPerson || "",
-            contactInfo: invData.contactInfo || "",
-            projectId: invData.projectId || "",
-            items: invData.items?.length
-              ? invData.items
-              : invData.type === "service_fee"
-                ? [{ description: "", amount: 0, startDate: "", endDate: "" }]
-                : [{ description: "", quantity: 1, unitPrice: 0, amount: 0 }],
-            amount: invData.amount || 0,
-            currency: invData.currency || "MMK",
-            exchangeRate: invData.exchangeRate || 0,
-            platformFeeRate: invData.platformFeeRate || 0,
-            additionalCharges: invData.additionalCharges || [],
-            date: invData.date
-              ? invData.date.split("T")[0]
-              : new Date().toISOString().split("T")[0],
-            dueDate: invData.dueDate ? invData.dueDate.split("T")[0] : "",
-            serviceStartDate: invData.serviceStartDate
-              ? invData.serviceStartDate.split("T")[0]
-              : "",
-            serviceEndDate: invData.serviceEndDate
-              ? invData.serviceEndDate.split("T")[0]
-              : "",
-            paymentMethod: invData.paymentMethod || "KBZPay (Kpay)",
-          });
+          setEditData(buildEditDataFromInvoice(invData));
         }
       } catch (error) {
         console.error("Error initializing:", error);
@@ -131,7 +187,7 @@ const InvoiceDetail: React.FC = () => {
       }
     };
     init();
-  }, [id]);
+  }, [id, isNew]);
 
   const handleClientSelect = (clientId: string) => {
     const client = clients.find((c) => c._id === clientId);
@@ -147,16 +203,13 @@ const InvoiceDetail: React.FC = () => {
     }
   };
 
-  const recalcItem = (items: InvoiceItem[]) => {
-    return items.map((item) => ({
-      ...item,
-      amount:
-        invoiceType === "service_fee" ? item.amount || 0 : item.amount || 0,
-    }));
-  };
-
-  const recalcAmount = (items: InvoiceItem[]) => {
-    return items.reduce((sum, item) => sum + (item.amount || 0), 0);
+  const recalcItemsWithCurrency = (
+    items: InvoiceItem[],
+    currency: InvoiceCurrency = editData.currency === "USD" ? "USD" : "MMK",
+  ) => {
+    const recalculated = items.map((item) => calculateItemPricing(item, currency));
+    const totalAmount = recalculated.reduce((sum, item) => sum + (item.amount || 0), 0);
+    return { recalculated, totalAmount };
   };
 
   const handleItemChange = (
@@ -165,9 +218,20 @@ const InvoiceDetail: React.FC = () => {
     value: any,
   ) => {
     const newItems = [...editData.items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    const recalculated = recalcItem(newItems);
-    const totalAmount = recalcAmount(recalculated);
+    const updatedItem: InvoiceItem = { ...newItems[index], [field]: value };
+    if (field === "isFoc" && value === true) {
+      updatedItem.discountType = "none";
+      updatedItem.discountValue = 0;
+      updatedItem.discountAmount = 0;
+      updatedItem.discountReason = "";
+    }
+    if (field === "discountType" && value === "none") {
+      updatedItem.discountValue = 0;
+      updatedItem.discountAmount = 0;
+      updatedItem.discountReason = "";
+    }
+    newItems[index] = updatedItem;
+    const { recalculated, totalAmount } = recalcItemsWithCurrency(newItems);
     setEditData({
       ...editData,
       items: recalculated,
@@ -176,10 +240,7 @@ const InvoiceDetail: React.FC = () => {
   };
 
   const addItem = () => {
-    const newItem =
-      invoiceType === "service_fee"
-        ? { description: "", amount: 0, startDate: "", endDate: "" }
-        : { description: "", paymentTerm: "", amount: 0 };
+    const newItem = createEmptyItem(invoiceType);
     setEditData({
       ...editData,
       items: [...editData.items, newItem],
@@ -189,10 +250,10 @@ const InvoiceDetail: React.FC = () => {
   const removeItem = (index: number) => {
     if (editData.items.length <= 1) return;
     const newItems = editData.items.filter((_: any, i: number) => i !== index);
-    const totalAmount = recalcAmount(recalcItem(newItems));
+    const { recalculated, totalAmount } = recalcItemsWithCurrency(newItems);
     setEditData({
       ...editData,
-      items: newItems,
+      items: recalculated,
       amount: totalAmount,
     });
   };
@@ -228,15 +289,33 @@ const InvoiceDetail: React.FC = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const feeRate = editData.platformFeeRate || 0;
-      const platformFee = Math.round((editData.amount || 0) * (feeRate / 100));
+      const currency: InvoiceCurrency = editData.currency === "USD" ? "USD" : "MMK";
+      const filteredItems = (editData.items || [])
+        .filter((i: InvoiceItem) => i.description.trim())
+        .map((i: InvoiceItem) => calculateItemPricing(i, currency));
+
+      const calculatedTotals = calculateInvoiceTotals({
+        items: filteredItems,
+        discountType: editData.discountType,
+        discountValue: editData.discountValue,
+        platformFeeRate: editData.platformFeeRate || 0,
+        additionalCharges: editData.additionalCharges || [],
+        currency,
+      });
+
       const payload = {
         ...editData,
+        clientId: editData.clientId || undefined,
         type: invoiceType,
         serviceType: invoiceType === "service_fee" ? serviceType : undefined,
-        platformFee,
-        platformFeeRate: feeRate,
-        items: editData.items?.filter((i: InvoiceItem) => i.description.trim()),
+        items: filteredItems,
+        amount: calculatedTotals.subtotal,
+        discountType: editData.discountType || "none",
+        discountValue: editData.discountType === "none" ? 0 : editData.discountValue || 0,
+        discountReason:
+          editData.discountType === "none" ? "" : (editData.discountReason || "").trim(),
+        platformFee: calculatedTotals.platformFee,
+        platformFeeRate: editData.platformFeeRate || 0,
         date: editData.date ? new Date(editData.date).toISOString() : undefined,
         dueDate: editData.dueDate
           ? new Date(editData.dueDate).toISOString()
@@ -252,10 +331,12 @@ const InvoiceDetail: React.FC = () => {
       if (isNew) {
         const created = await invoiceService.createInvoice(payload);
         setInvoice(created);
+        setEditData(buildEditDataFromInvoice(created));
         navigate(`/invoices/${created._id}`, { replace: true });
       } else if (id) {
         const updated = await invoiceService.updateInvoice(id, payload);
         setInvoice(updated);
+        setEditData(buildEditDataFromInvoice(updated));
         setUpdateSuccess(true);
         setTimeout(() => setUpdateSuccess(false), 3000);
       }
@@ -273,28 +354,7 @@ const InvoiceDetail: React.FC = () => {
       return;
     }
     if (invoice) {
-      setEditData({
-        clientId: invoice.clientId || "",
-        companyName: invoice.companyName || "",
-        contactPerson: invoice.contactPerson || "",
-        contactInfo: invoice.contactInfo || "",
-        projectId: invoice.projectId || "",
-        items: invoice.items?.length
-          ? invoice.items
-          : [{ description: "", quantity: 1, unitPrice: 0, amount: 0 }],
-        amount: invoice.amount || 0,
-        platformFeeRate: invoice.platformFeeRate || 0,
-        additionalCharges: invoice.additionalCharges || [],
-        date: invoice.date ? invoice.date.split("T")[0] : "",
-        dueDate: invoice.dueDate ? invoice.dueDate.split("T")[0] : "",
-        serviceStartDate: invoice.serviceStartDate
-          ? invoice.serviceStartDate.split("T")[0]
-          : "",
-        serviceEndDate: invoice.serviceEndDate
-          ? invoice.serviceEndDate.split("T")[0]
-          : "",
-        paymentMethod: invoice.paymentMethod || "KBZPay (Kpay)",
-      });
+      setEditData(buildEditDataFromInvoice(invoice));
     }
     setIsEditing(false);
   };
@@ -306,6 +366,7 @@ const InvoiceDetail: React.FC = () => {
         .updateInvoiceStatus(invoice._id, { paymentStatus: "Pending" })
         .then(setInvoice);
     } else {
+      setPaymentAmount(defaultPaymentAmountMMK);
       setIsModalOpen(true);
     }
   };
@@ -315,7 +376,7 @@ const InvoiceDetail: React.FC = () => {
     try {
       const data = {
         channel: paymentMethod,
-        amount: paymentAmount || invoice.amount + (invoice.platformFee || 0),
+        amount: paymentAmount || defaultPaymentAmountMMK,
         senderName: senderName || invoice.companyName,
         dateTime: new Date(paymentDate).toISOString(),
         note: additionalNote,
@@ -370,17 +431,34 @@ const InvoiceDetail: React.FC = () => {
   const isLocked = invoice?.isLocked || false;
   const canEdit = !isLocked && !isNew;
 
-  const displayData = isNew ? editData : invoice || editData;
-  const currentPlatformFeeRate = displayData.platformFeeRate || 0;
-  const currentPlatformFee =
-    displayData.platformFee ||
-    Math.round((displayData.amount || 0) * (currentPlatformFeeRate / 100));
-  const additionalTotal = (displayData.additionalCharges || []).reduce(
-    (sum: number, c: any) => sum + (c.amount || 0),
-    0,
+  const displayData = isNew || isEditing ? editData : invoice || editData;
+  const displayCurrency: InvoiceCurrency =
+    displayData.currency === "USD" ? "USD" : "MMK";
+  const totals = calculateInvoiceTotals({
+    items: displayData.items,
+    amount: displayData.amount,
+    discountType: displayData.discountType,
+    discountValue: displayData.discountValue,
+    discountAmount: displayData.discountAmount,
+    platformFeeRate: displayData.platformFeeRate,
+    platformFee: displayData.platformFee,
+    additionalCharges: displayData.additionalCharges,
+    currency: displayCurrency,
+  });
+  const subtotal = totals.subtotal;
+  const invoiceDiscountAmount = totals.discountAmount;
+  const grandTotal = totals.grandTotal;
+  const defaultPaymentAmountMMK =
+    displayCurrency === "USD" && (displayData.exchangeRate || 0) > 0
+      ? Math.round(grandTotal * (displayData.exchangeRate || 0))
+      : grandTotal;
+  const invoiceDiscountMeta = formatDiscountLabel(
+    displayData.discountType,
+    displayData.discountValue,
+    invoiceDiscountAmount,
+    displayData.discountReason,
+    displayCurrency,
   );
-  const grandTotal =
-    (displayData.amount || 0) + currentPlatformFee + additionalTotal;
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "N/A";
@@ -426,17 +504,11 @@ const InvoiceDetail: React.FC = () => {
               contactPerson: "",
               contactInfo: "",
               projectId: "",
-              items:
-                type === "service_fee"
-                  ? [{ description: "", amount: 0, startDate: "", endDate: "" }]
-                  : [
-                    {
-                      description: "",
-                      paymentTerm: "",
-                      amount: 0,
-                    },
-                  ],
+              items: [createEmptyItem(type)],
               amount: 0,
+              discountType: "none" as DiscountType,
+              discountValue: 0,
+              discountReason: "",
               currency: "MMK",
               exchangeRate: 0,
               platformFeeRate: 0,
@@ -698,141 +770,264 @@ const InvoiceDetail: React.FC = () => {
                           <Plus size={10} /> Add Item
                         </button>
                       </div>
-                      <div className="space-y-2">
-                        {editData.items?.map((item: InvoiceItem, i: number) => (
-                          <div
-                            key={i}
-                            className="flex gap-2 items-start p-2 bg-white rounded-lg border border-slate-100"
-                          >
-                            <div className="flex-1">
-                              <input
-                                type="text"
-                                placeholder="Description"
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs mb-1"
-                                value={item.description}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    i,
-                                    "description",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-                              {invoiceType === "service_fee" ? (
-                                <div className="flex gap-2">
-                                  <div className="flex-1">
-                                    <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
-                                      Start Date
-                                    </label>
+                      <div className="space-y-2.5">
+                        {editData.items?.map((item: InvoiceItem, i: number) => {
+                          const editCurrency: InvoiceCurrency =
+                            editData.currency === "USD" ? "USD" : "MMK";
+                          const computed = calculateItemPricing(item, editCurrency);
+                          const itemOrig = getItemOriginalAmount(computed);
+                          return (
+                            <div
+                              key={i}
+                              className="flex gap-2 items-start p-2.5 bg-white rounded-lg border border-slate-100"
+                            >
+                              <div className="flex-1 space-y-2">
+                                <input
+                                  type="text"
+                                  placeholder="Description"
+                                  className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs"
+                                  value={item.description}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      i,
+                                      "description",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                                {invoiceType === "service_fee" ? (
+                                  <div className="flex gap-2">
+                                    <div className="flex-1">
+                                      <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
+                                        Start Date
+                                      </label>
+                                      <input
+                                        type="date"
+                                        className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs"
+                                        value={
+                                          item.startDate
+                                            ? new Date(item.startDate)
+                                                .toISOString()
+                                                .split("T")[0]
+                                            : ""
+                                        }
+                                        onChange={(e) =>
+                                          handleItemChange(
+                                            i,
+                                            "startDate",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
+                                        End Date
+                                      </label>
+                                      <input
+                                        type="date"
+                                        className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs"
+                                        value={
+                                          item.endDate
+                                            ? new Date(item.endDate)
+                                                .toISOString()
+                                                .split("T")[0]
+                                            : ""
+                                        }
+                                        onChange={(e) =>
+                                          handleItemChange(
+                                            i,
+                                            "endDate",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <div className="w-28">
+                                      <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
+                                        {editCurrency === "USD"
+                                          ? "Price (USD)"
+                                          : "Price (MMK)"}
+                                      </label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step={editCurrency === "USD" ? "0.01" : "1"}
+                                        placeholder="Amount"
+                                        className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs"
+                                        value={itemOrig || ""}
+                                        onChange={(e) =>
+                                          handleItemChange(
+                                            i,
+                                            "originalAmount",
+                                            parseFloat(e.target.value) || 0,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex gap-2">
                                     <input
-                                      type="date"
-                                      className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs"
-                                      value={
-                                        item.startDate
-                                          ? new Date(item.startDate)
-                                            .toISOString()
-                                            .split("T")[0]
-                                          : ""
-                                      }
+                                      type="text"
+                                      placeholder="Payment Term"
+                                      className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-xs"
+                                      value={item.paymentTerm || ""}
                                       onChange={(e) =>
                                         handleItemChange(
                                           i,
-                                          "startDate",
+                                          "paymentTerm",
                                           e.target.value,
                                         )
                                       }
                                     />
-                                  </div>
-                                  <div className="flex-1">
-                                    <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
-                                      End Date
-                                    </label>
-                                    <input
-                                      type="date"
-                                      className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs"
-                                      value={
-                                        item.endDate
-                                          ? new Date(item.endDate)
-                                            .toISOString()
-                                            .split("T")[0]
-                                          : ""
-                                      }
-                                      onChange={(e) =>
-                                        handleItemChange(
-                                          i,
-                                          "endDate",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </div>
-                                  <div className="w-28">
-                                    <label className="text-[9px] text-slate-400 font-medium mb-0.5 block">
-                                      {editData.currency === "USD"
-                                        ? "Total (USD)"
-                                        : "Total (MMK)"}
-                                    </label>
                                     <input
                                       type="number"
                                       min="0"
-                                      placeholder="Amount"
-                                      className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs"
-                                      value={item.amount || ""}
+                                      step={editCurrency === "USD" ? "0.01" : "1"}
+                                      placeholder="Price"
+                                      className="w-28 border border-slate-200 rounded px-2 py-1.5 text-xs"
+                                      value={itemOrig || ""}
                                       onChange={(e) =>
                                         handleItemChange(
                                           i,
-                                          "amount",
+                                          "originalAmount",
                                           parseFloat(e.target.value) || 0,
                                         )
                                       }
                                     />
+                                    <span className="text-xs font-bold text-slate-700 self-center whitespace-nowrap">
+                                      {editCurrency}
+                                    </span>
                                   </div>
-                                </div>
-                              ) : (
-                                <div className="flex gap-2">
-                                  <input
-                                    type="text"
-                                    placeholder="Payment Term"
-                                    className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-xs"
-                                    value={item.paymentTerm || ""}
-                                    onChange={(e) =>
-                                      handleItemChange(
-                                        i,
-                                        "paymentTerm",
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="Amount"
-                                    className="w-28 border border-slate-200 rounded px-2 py-1.5 text-xs"
-                                    value={item.amount || ""}
-                                    onChange={(e) =>
-                                      handleItemChange(
-                                        i,
-                                        "amount",
-                                        parseFloat(e.target.value) || 0,
-                                      )
-                                    }
-                                  />
-                                  <span className="text-xs font-bold text-slate-700 self-center whitespace-nowrap">
-                                    MMK
-                                  </span>
-                                </div>
-                              )}
+                                )}
 
+                                {/* Item-level FOC & Discount Controls */}
+                                <div className="pt-1.5 border-t border-slate-100 space-y-1.5">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleItemChange(i, "isFoc", !item.isFoc)
+                                      }
+                                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${
+                                        item.isFoc
+                                          ? "bg-emerald-50 border-emerald-300 text-emerald-700 shadow-2xs"
+                                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                                      }`}
+                                    >
+                                      <Gift size={11} />
+                                      FOC
+                                    </button>
 
+                                    {!item.isFoc && (
+                                      <>
+                                        <select
+                                          className="border border-slate-200 rounded px-2 py-1 text-[11px] bg-white text-slate-700"
+                                          value={item.discountType || "none"}
+                                          onChange={(e) =>
+                                            handleItemChange(
+                                              i,
+                                              "discountType",
+                                              e.target.value as DiscountType,
+                                            )
+                                          }
+                                        >
+                                          <option value="none">No Discount</option>
+                                          <option value="fixed">
+                                            Discount ({editCurrency})
+                                          </option>
+                                          <option value="percent">Discount (%)</option>
+                                        </select>
+
+                                        {item.discountType &&
+                                          item.discountType !== "none" && (
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              max={
+                                                item.discountType === "percent"
+                                                  ? 100
+                                                  : undefined
+                                              }
+                                              step={
+                                                item.discountType === "percent" ||
+                                                editCurrency === "USD"
+                                                  ? "0.01"
+                                                  : "1"
+                                              }
+                                              placeholder={
+                                                item.discountType === "percent"
+                                                  ? "%"
+                                                  : editCurrency
+                                              }
+                                              className="w-24 border border-slate-200 rounded px-2 py-1 text-[11px]"
+                                              value={item.discountValue || ""}
+                                              onChange={(e) =>
+                                                handleItemChange(
+                                                  i,
+                                                  "discountValue",
+                                                  parseFloat(e.target.value) || 0,
+                                                )
+                                              }
+                                            />
+                                          )}
+                                      </>
+                                    )}
+
+                                    <div className="ml-auto flex items-center gap-1.5 text-[11px]">
+                                      {computed.isFoc ? (
+                                        <>
+                                          {itemOrig > 0 && (
+                                            <span className="line-through text-slate-400">
+                                              {formatMoney(itemOrig, editCurrency)}
+                                            </span>
+                                          )}
+                                          <span className="font-bold text-emerald-600">
+                                            FOC
+                                          </span>
+                                        </>
+                                      ) : (computed.discountAmount || 0) > 0 ? (
+                                        <>
+                                          <span className="line-through text-slate-400">
+                                            {formatMoney(itemOrig, editCurrency)}
+                                          </span>
+                                          <span className="font-bold text-indigo-600">
+                                            {formatMoney(computed.amount, editCurrency)}
+                                          </span>
+                                        </>
+                                      ) : null}
+                                    </div>
+                                  </div>
+
+                                  {!item.isFoc &&
+                                    item.discountType &&
+                                    item.discountType !== "none" && (
+                                      <input
+                                        type="text"
+                                        placeholder="Discount reason (optional)"
+                                        className="w-full border border-slate-200 rounded px-2 py-1 text-[11px] bg-slate-50/50"
+                                        value={item.discountReason || ""}
+                                        onChange={(e) =>
+                                          handleItemChange(
+                                            i,
+                                            "discountReason",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    )}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => removeItem(i)}
+                                className="p-1 text-red-400 hover:text-red-600 mt-1"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
-                            <button
-                              onClick={() => removeItem(i)}
-                              className="p-1 text-red-400 hover:text-red-600 mt-1"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -872,16 +1067,25 @@ const InvoiceDetail: React.FC = () => {
                           <select
                             className={inputClasses}
                             value={editData.currency}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const nextCurrency: InvoiceCurrency =
+                                e.target.value === "USD" ? "USD" : "MMK";
+                              const { recalculated, totalAmount } =
+                                recalcItemsWithCurrency(
+                                  editData.items || [],
+                                  nextCurrency,
+                                );
                               setEditData({
                                 ...editData,
-                                currency: e.target.value,
+                                currency: nextCurrency,
+                                items: recalculated,
+                                amount: totalAmount,
                                 exchangeRate:
-                                  e.target.value === "MMK"
+                                  nextCurrency === "MMK"
                                     ? 0
                                     : editData.exchangeRate,
-                              })
-                            }
+                              });
+                            }}
                           >
                             <option value="MMK">MMK (Myanmar Kyat)</option>
                             <option value="USD">USD (US Dollar)</option>
@@ -908,6 +1112,105 @@ const InvoiceDetail: React.FC = () => {
                           </div>
                         )}
                       </div>
+                    </div>
+
+                    {/* Whole-Invoice Discount */}
+                    <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                          <Tag size={12} className="text-indigo-500" />
+                          Invoice Discount (Optional)
+                        </h3>
+                        {invoiceDiscountAmount > 0 && (
+                          <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                            -{formatMoney(invoiceDiscountAmount, displayCurrency)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className={labelClasses}>Discount Type</label>
+                          <select
+                            className={inputClasses}
+                            value={editData.discountType || "none"}
+                            onChange={(e) => {
+                              const nextType = e.target.value as DiscountType;
+                              setEditData({
+                                ...editData,
+                                discountType: nextType,
+                                discountValue:
+                                  nextType === "none" ? 0 : editData.discountValue,
+                                discountReason:
+                                  nextType === "none" ? "" : editData.discountReason,
+                              });
+                            }}
+                          >
+                            <option value="none">No Discount</option>
+                            <option value="fixed">
+                              Fixed Amount ({displayCurrency})
+                            </option>
+                            <option value="percent">Percentage (%)</option>
+                          </select>
+                        </div>
+                        {editData.discountType &&
+                          editData.discountType !== "none" && (
+                            <div>
+                              <label className={labelClasses}>
+                                {editData.discountType === "percent"
+                                  ? "Discount (%)"
+                                  : `Discount (${displayCurrency})`}
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max={
+                                  editData.discountType === "percent"
+                                    ? 100
+                                    : undefined
+                                }
+                                step={
+                                  editData.discountType === "percent" ||
+                                  displayCurrency === "USD"
+                                    ? "0.01"
+                                    : "1"
+                                }
+                                className={inputClasses}
+                                value={editData.discountValue || ""}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    discountValue:
+                                      parseFloat(e.target.value) || 0,
+                                  })
+                                }
+                                placeholder={
+                                  editData.discountType === "percent"
+                                    ? "e.g. 10"
+                                    : "e.g. 50000"
+                                }
+                              />
+                            </div>
+                          )}
+                      </div>
+                      {editData.discountType && editData.discountType !== "none" && (
+                        <div className="mt-2.5">
+                          <label className={labelClasses}>
+                            Reason / Label (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            className={inputClasses}
+                            value={editData.discountReason || ""}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                discountReason: e.target.value,
+                              })
+                            }
+                            placeholder="e.g. Early Bird Discount, Returning Client"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Additional Charges */}
@@ -963,11 +1266,22 @@ const InvoiceDetail: React.FC = () => {
                           Subtotal (Items)
                         </span>
                         <span className="font-bold text-slate-700">
-                          {editData.currency === "USD"
-                            ? `${(editData.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                            : `${(editData.amount || 0).toLocaleString()} MMK`}
+                          {formatMoney(subtotal, displayCurrency)}
                         </span>
                       </div>
+                      {invoiceDiscountAmount > 0 && (
+                        <div className="flex items-center justify-between text-sm mt-1">
+                          <span className="text-rose-600 text-xs">
+                            Discount
+                            {invoiceDiscountMeta
+                              ? ` (${invoiceDiscountMeta})`
+                              : ""}
+                          </span>
+                          <span className="font-semibold text-rose-600">
+                            -{formatMoney(invoiceDiscountAmount, displayCurrency)}
+                          </span>
+                        </div>
+                      )}
                       {editData.additionalCharges
                         ?.filter((c: any) => c.name)
                         .map((c: any, i: number) => (
@@ -1013,9 +1327,7 @@ const InvoiceDetail: React.FC = () => {
                           Grand Total
                         </span>
                         <span className="font-extrabold text-indigo-600">
-                          {editData.currency === "USD"
-                            ? `${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                            : `${grandTotal.toLocaleString()} MMK`}
+                          {formatMoney(grandTotal, displayCurrency)}
                         </span>
                       </div>
                     </div>
@@ -1108,26 +1420,71 @@ const InvoiceDetail: React.FC = () => {
                       </h3>
                       {displayData.items
                         ?.filter((i: InvoiceItem) => i.description)
-                        .map((item: InvoiceItem, i: number) => (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0"
-                          >
-                            <div>
-                              <p className="text-xs font-semibold text-slate-800">
-                                {item.description}
-                              </p>
-                              <p className="text-[10px] text-slate-400">
-                                {item.paymentTerm || "-"}
-                              </p>
+                        .map((item: InvoiceItem, i: number) => {
+                          const computed = calculateItemPricing(item, displayCurrency);
+                          const itemOrig = getItemOriginalAmount(computed);
+                          const itemDiscMeta = formatDiscountLabel(
+                            computed.discountType,
+                            computed.discountValue,
+                            computed.discountAmount,
+                            computed.discountReason,
+                            displayCurrency,
+                          );
+                          return (
+                            <div
+                              key={i}
+                              className="flex items-start justify-between gap-2 py-1.5 border-b border-slate-50 last:border-0"
+                            >
+                              <div>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <p className="text-xs font-semibold text-slate-800">
+                                    {item.description}
+                                  </p>
+                                  {computed.isFoc && (
+                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-700">
+                                      FOC
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-slate-400">
+                                  {item.paymentTerm || "-"}
+                                </p>
+                                {!computed.isFoc && (computed.discountAmount || 0) > 0 && (
+                                  <p className="text-[10px] text-rose-500 font-medium">
+                                    Discount: -{itemDiscMeta}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="text-right shrink-0">
+                                {computed.isFoc ? (
+                                  <div className="flex flex-col items-end">
+                                    {itemOrig > 0 && (
+                                      <span className="text-[10px] line-through text-slate-400">
+                                        {formatMoney(itemOrig, displayCurrency)}
+                                      </span>
+                                    )}
+                                    <span className="text-xs font-bold text-emerald-600">
+                                      FOC
+                                    </span>
+                                  </div>
+                                ) : (computed.discountAmount || 0) > 0 ? (
+                                  <div className="flex flex-col items-end">
+                                    <span className="text-[10px] line-through text-slate-400">
+                                      {formatMoney(itemOrig, displayCurrency)}
+                                    </span>
+                                    <span className="text-xs font-bold text-slate-700">
+                                      {formatMoney(computed.amount, displayCurrency)}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs font-bold text-slate-700">
+                                    {formatMoney(computed.amount, displayCurrency)}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            <span className="text-xs font-bold text-slate-700">
-                              {displayData.currency === "USD"
-                                ? `${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                                : `${item.amount.toLocaleString()} MMK`}
-                            </span>
-                          </div>
-                        ))}
+                          );
+                        })}
                       {(!displayData.items ||
                         displayData.items.filter(
                           (i: InvoiceItem) => i.description,
@@ -1146,11 +1503,22 @@ const InvoiceDetail: React.FC = () => {
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-500">Subtotal</span>
                           <span className="font-semibold">
-                            {displayData.currency === "USD"
-                              ? `${(displayData.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                              : `${(displayData.amount || 0).toLocaleString()} MMK`}
+                            {formatMoney(subtotal, displayCurrency)}
                           </span>
                         </div>
+                        {invoiceDiscountAmount > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-rose-600">
+                              Discount
+                              {invoiceDiscountMeta
+                                ? ` (${invoiceDiscountMeta})`
+                                : ""}
+                            </span>
+                            <span className="font-semibold text-rose-600">
+                              -{formatMoney(invoiceDiscountAmount, displayCurrency)}
+                            </span>
+                          </div>
+                        )}
                         {displayData.additionalCharges
                           ?.filter((c: any) => c.name)
                           .map((c: any, i: number) => (
@@ -1195,9 +1563,7 @@ const InvoiceDetail: React.FC = () => {
                             Grand Total
                           </span>
                           <span className="font-extrabold text-indigo-600">
-                            {displayData.currency === "USD"
-                              ? `${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                              : `${grandTotal.toLocaleString()} MMK`}
+                            {formatMoney(grandTotal, displayCurrency)}
                           </span>
                         </div>
                       </div>
@@ -1641,61 +2007,21 @@ const InvoiceDetail: React.FC = () => {
                           <tbody>
                             {displayData.items
                               ?.filter((i: InvoiceItem) => i.description)
-                              .map((item: InvoiceItem, idx: number) => (
-                                <tr key={idx}>
-                                  <td
-                                    style={{
-                                      padding: "14px 12px",
-                                      fontSize: "12px",
-                                      color: "#374151",
-                                      borderBottom: "1px solid #e5e7eb",
-                                      borderLeft: "none",
-                                      borderRight: "none",
-                                      borderTop: "none",
-                                      verticalAlign: "top",
-                                      lineHeight: 1.5,
-                                    }}
-                                  >
-                                    {item.description}
-                                  </td>
-                                  {invoiceType === "service_fee" ? (
-                                    <>
-                                      <td
-                                        style={{
-                                          padding: "14px 12px",
-                                          fontSize: "12px",
-                                          color: "#374151",
-                                          borderBottom: "1px solid #e5e7eb",
-                                          borderLeft: "none",
-                                          borderRight: "none",
-                                          borderTop: "none",
-                                        }}
-                                      >
-                                        {item.startDate
-                                          ? new Date(
-                                            item.startDate,
-                                          ).toLocaleDateString("en-GB")
-                                          : "-"}
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: "14px 12px",
-                                          fontSize: "12px",
-                                          color: "#374151",
-                                          borderBottom: "1px solid #e5e7eb",
-                                          borderLeft: "none",
-                                          borderRight: "none",
-                                          borderTop: "none",
-                                        }}
-                                      >
-                                        {item.endDate
-                                          ? new Date(
-                                            item.endDate,
-                                          ).toLocaleDateString("en-GB")
-                                          : "-"}
-                                      </td>
-                                    </>
-                                  ) : (
+                              .map((item: InvoiceItem, idx: number) => {
+                                const computed = calculateItemPricing(
+                                  item,
+                                  displayCurrency,
+                                );
+                                const itemOrig = getItemOriginalAmount(computed);
+                                const itemDiscMeta = formatDiscountLabel(
+                                  computed.discountType,
+                                  computed.discountValue,
+                                  computed.discountAmount,
+                                  computed.discountReason,
+                                  displayCurrency,
+                                );
+                                return (
+                                  <tr key={idx}>
                                     <td
                                       style={{
                                         padding: "14px 12px",
@@ -1705,30 +2031,155 @@ const InvoiceDetail: React.FC = () => {
                                         borderLeft: "none",
                                         borderRight: "none",
                                         borderTop: "none",
+                                        verticalAlign: "top",
+                                        lineHeight: 1.5,
                                       }}
                                     >
-                                      {item.paymentTerm || "-"}
+                                      <div>{item.description}</div>
+                                      {!computed.isFoc &&
+                                        (computed.discountAmount || 0) > 0 && (
+                                          <div
+                                            style={{
+                                              fontSize: "10px",
+                                              color: "#6b7280",
+                                              marginTop: "2px",
+                                            }}
+                                          >
+                                            Discount: -{itemDiscMeta}
+                                          </div>
+                                        )}
                                     </td>
-                                  )}
-                                  <td
-                                    style={{
-                                      padding: "14px 12px",
-                                      fontSize: "12px",
-                                      fontWeight: 700,
-                                      color: "#374151",
-                                      borderBottom: "1px solid #e5e7eb",
-                                      borderLeft: "none",
-                                      borderRight: "none",
-                                      borderTop: "none",
-                                      textAlign: "right",
-                                    }}
-                                  >
-                                    {displayData.currency === "USD"
-                                      ? `${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
-                                      : `${item.amount.toLocaleString()} MMK`}
-                                  </td>
-                                </tr>
-                              ))}
+                                    {invoiceType === "service_fee" ? (
+                                      <>
+                                        <td
+                                          style={{
+                                            padding: "14px 12px",
+                                            fontSize: "12px",
+                                            color: "#374151",
+                                            borderBottom: "1px solid #e5e7eb",
+                                            borderLeft: "none",
+                                            borderRight: "none",
+                                            borderTop: "none",
+                                            verticalAlign: "top",
+                                          }}
+                                        >
+                                          {item.startDate
+                                            ? new Date(
+                                                item.startDate,
+                                              ).toLocaleDateString("en-GB")
+                                            : "-"}
+                                        </td>
+                                        <td
+                                          style={{
+                                            padding: "14px 12px",
+                                            fontSize: "12px",
+                                            color: "#374151",
+                                            borderBottom: "1px solid #e5e7eb",
+                                            borderLeft: "none",
+                                            borderRight: "none",
+                                            borderTop: "none",
+                                            verticalAlign: "top",
+                                          }}
+                                        >
+                                          {item.endDate
+                                            ? new Date(
+                                                item.endDate,
+                                              ).toLocaleDateString("en-GB")
+                                            : "-"}
+                                        </td>
+                                      </>
+                                    ) : (
+                                      <td
+                                        style={{
+                                          padding: "14px 12px",
+                                          fontSize: "12px",
+                                          color: "#374151",
+                                          borderBottom: "1px solid #e5e7eb",
+                                          borderLeft: "none",
+                                          borderRight: "none",
+                                          borderTop: "none",
+                                          verticalAlign: "top",
+                                        }}
+                                      >
+                                        {item.paymentTerm || "-"}
+                                      </td>
+                                    )}
+                                    <td
+                                      style={{
+                                        padding: "14px 12px",
+                                        fontSize: "12px",
+                                        fontWeight: 700,
+                                        color: "#374151",
+                                        borderBottom: "1px solid #e5e7eb",
+                                        borderLeft: "none",
+                                        borderRight: "none",
+                                        borderTop: "none",
+                                        textAlign: "right",
+                                        verticalAlign: "top",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {computed.isFoc ? (
+                                        <div>
+                                          {itemOrig > 0 && (
+                                            <span
+                                              style={{
+                                                textDecoration: "line-through",
+                                                color: "#9ca3af",
+                                                fontSize: "11px",
+                                                fontWeight: 500,
+                                                marginRight: "6px",
+                                              }}
+                                            >
+                                              {formatMoney(
+                                                itemOrig,
+                                                displayCurrency,
+                                              )}
+                                            </span>
+                                          )}
+                                          <span
+                                            style={{
+                                              color: "#059669",
+                                              fontWeight: 800,
+                                              letterSpacing: "0.5px",
+                                            }}
+                                          >
+                                            FOC
+                                          </span>
+                                        </div>
+                                      ) : (computed.discountAmount || 0) > 0 ? (
+                                        <div>
+                                          <div
+                                            style={{
+                                              textDecoration: "line-through",
+                                              color: "#9ca3af",
+                                              fontSize: "10px",
+                                              fontWeight: 500,
+                                              lineHeight: 1.2,
+                                            }}
+                                          >
+                                            {formatMoney(
+                                              itemOrig,
+                                              displayCurrency,
+                                            )}
+                                          </div>
+                                          <div>
+                                            {formatMoney(
+                                              computed.amount,
+                                              displayCurrency,
+                                            )}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        formatMoney(
+                                          computed.amount,
+                                          displayCurrency,
+                                        )
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             {(!displayData.items ||
                               displayData.items.filter(
                                 (i: InvoiceItem) => i.description,
@@ -1758,8 +2209,72 @@ const InvoiceDetail: React.FC = () => {
                         </table>
 
                         {/* Total */}
-                        {displayData.currency === "USD" ? (
-                          <div style={{ marginTop: "60px" }}>
+                        {displayCurrency === "USD" ? (
+                          <div style={{ marginTop: "40px" }}>
+                            {invoiceDiscountAmount > 0 && (
+                              <>
+                                <div
+                                  style={{
+                                    padding: "10px 0",
+                                    borderTop: "1px solid #e5e7eb",
+                                    borderBottom: "1px solid #e5e7eb",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#4b5563",
+                                      textTransform: "uppercase",
+                                    }}
+                                  >
+                                    SUBTOTAL
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#4b5563",
+                                    }}
+                                  >
+                                    {formatMoney(subtotal, "USD")}
+                                  </span>
+                                </div>
+                                <div
+                                  style={{
+                                    padding: "10px 0",
+                                    borderBottom: "1px solid #e5e7eb",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#dc2626",
+                                      textTransform: "uppercase",
+                                    }}
+                                  >
+                                    DISCOUNT
+                                    {invoiceDiscountMeta
+                                      ? ` (${invoiceDiscountMeta})`
+                                      : ""}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#dc2626",
+                                    }}
+                                  >
+                                    -{formatMoney(invoiceDiscountAmount, "USD")}
+                                  </span>
+                                </div>
+                              </>
+                            )}
                             <div
                               style={{
                                 padding: "14px 0",
@@ -1785,11 +2300,7 @@ const InvoiceDetail: React.FC = () => {
                                   color: "#1e293b",
                                 }}
                               >
-                                {grandTotal.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}{" "}
-                                $
+                                {formatMoney(grandTotal, "USD")}
                               </span>
                             </div>
                             <div
@@ -1861,40 +2372,105 @@ const InvoiceDetail: React.FC = () => {
                             </div>
                           </div>
                         ) : (
-                          <div
-                            style={{
-                              marginTop: "60px",
-                              padding: "14px 0",
-                              borderTop: "2px solid #1e293b",
-                              borderBottom: "2px solid #1e293b",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <span
+                          <div style={{ marginTop: "40px" }}>
+                            {invoiceDiscountAmount > 0 && (
+                              <>
+                                <div
+                                  style={{
+                                    padding: "10px 0",
+                                    borderTop: "1px solid #e5e7eb",
+                                    borderBottom: "1px solid #e5e7eb",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#4b5563",
+                                      textTransform: "uppercase",
+                                    }}
+                                  >
+                                    SUBTOTAL
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#4b5563",
+                                    }}
+                                  >
+                                    {formatMoney(subtotal, "MMK")}
+                                  </span>
+                                </div>
+                                <div
+                                  style={{
+                                    padding: "10px 0",
+                                    borderBottom: "1px solid #e5e7eb",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#dc2626",
+                                      textTransform: "uppercase",
+                                    }}
+                                  >
+                                    DISCOUNT
+                                    {invoiceDiscountMeta
+                                      ? ` (${invoiceDiscountMeta})`
+                                      : ""}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      color: "#dc2626",
+                                    }}
+                                  >
+                                    -{formatMoney(invoiceDiscountAmount, "MMK")}
+                                  </span>
+                                </div>
+                              </>
+                            )}
+                            <div
                               style={{
-                                fontSize: "14px",
-                                fontWeight: 900,
-                                color: "#1e293b",
-                                textTransform: "uppercase",
+                                padding: "14px 0",
+                                borderTop: "2px solid #1e293b",
+                                borderBottom: "2px solid #1e293b",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
                               }}
                             >
-                              {viewMode === "customer"
-                                ? "TOTAL (MMK)"
-                                : invoiceType === "service_fee"
-                                  ? "Total Service Fees (MMK)"
-                                  : "Total Usage Charges (MMK)"}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "14px",
-                                fontWeight: 900,
-                                color: "#1e293b",
-                              }}
-                            >
-                              {grandTotal.toLocaleString()} MMK
-                            </span>
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {viewMode === "customer"
+                                  ? "TOTAL (MMK)"
+                                  : invoiceType === "service_fee"
+                                    ? "Total Service Fees (MMK)"
+                                    : "Total Usage Charges (MMK)"}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 900,
+                                  color: "#1e293b",
+                                }}
+                              >
+                                {grandTotal.toLocaleString()} MMK
+                              </span>
+                            </div>
                           </div>
                         )}
 
@@ -2202,10 +2778,7 @@ const InvoiceDetail: React.FC = () => {
                   type="number"
                   min="0"
                   className="block w-full border border-slate-300 rounded-xl p-3 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-slate-50 font-medium"
-                  value={
-                    paymentAmount ||
-                    (invoice ? invoice.amount + (invoice.platformFee || 0) : 0)
-                  }
+                  value={paymentAmount}
                   onChange={(e) =>
                     setPaymentAmount(parseFloat(e.target.value) || 0)
                   }
